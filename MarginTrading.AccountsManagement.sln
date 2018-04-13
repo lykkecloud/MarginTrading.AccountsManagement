@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.AccountsManagement", "src\MarginTrading.AccountsManagement\MarginTrading.AccountsManagement.csproj", "{CCA3EBE8-B7B6-4635-BF84-EEB3E789962C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.AccountsManagement.Contracts", "src\MarginTrading.AccountsManagement.Contracts\MarginTrading.AccountsManagement.Contracts.csproj", "{3010F320-31E3-46F1-B57B-467B48D2B363}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.AccountsManagement.TestClient", "tests\MarginTrading.AccountsManagement.TestClient\MarginTrading.AccountsManagement.TestClient.csproj", "{409737BF-F328-4D5D-ADAB-FFABD64267B5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.AccountsManagement.Tests", "tests\MarginTrading.AccountsManagement.Tests\MarginTrading.AccountsManagement.Tests.csproj", "{67B3E67F-91FC-4769-8864-7A7B251CC344}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CCA3EBE8-B7B6-4635-BF84-EEB3E789962C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCA3EBE8-B7B6-4635-BF84-EEB3E789962C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCA3EBE8-B7B6-4635-BF84-EEB3E789962C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCA3EBE8-B7B6-4635-BF84-EEB3E789962C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3010F320-31E3-46F1-B57B-467B48D2B363}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3010F320-31E3-46F1-B57B-467B48D2B363}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3010F320-31E3-46F1-B57B-467B48D2B363}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3010F320-31E3-46F1-B57B-467B48D2B363}.Release|Any CPU.Build.0 = Release|Any CPU
+		{409737BF-F328-4D5D-ADAB-FFABD64267B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{409737BF-F328-4D5D-ADAB-FFABD64267B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{409737BF-F328-4D5D-ADAB-FFABD64267B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{409737BF-F328-4D5D-ADAB-FFABD64267B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67B3E67F-91FC-4769-8864-7A7B251CC344}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67B3E67F-91FC-4769-8864-7A7B251CC344}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67B3E67F-91FC-4769-8864-7A7B251CC344}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67B3E67F-91FC-4769-8864-7A7B251CC344}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
