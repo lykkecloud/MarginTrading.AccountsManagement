@@ -41,7 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models" />
-    <Folder Include="Services\Implementation" />
+    <Folder Include="Repositories\Implementation" />
   </ItemGroup>
   <ProjectExtensions>
     <VisualStudio>

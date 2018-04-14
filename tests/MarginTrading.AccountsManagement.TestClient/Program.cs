@@ -67,9 +67,9 @@ namespace MarginTrading.AccountsManagement.TestClient
             var client = clientGenerator.Generate<IAccountsApi>();
             await client.List().Dump();
             await client.Insert(new AccountContract {Id = "smth"}).Dump();
-            await client.Get("smth").Dump();
+            await client.GetByClientAndId(TODO, "smth").Dump();
             await client.Update("smth", new AccountContract {Id = "smth", ClientId = "some client"}).Dump();
-            await client.Delete("smth").Dump();
+            await client.Delete(TODO, "smth").Dump();
         }
 
         [CanBeNull]
