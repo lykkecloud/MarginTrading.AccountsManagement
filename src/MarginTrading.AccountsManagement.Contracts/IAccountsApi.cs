@@ -39,13 +39,10 @@ namespace MarginTrading.AccountsManagement.Contracts
         Task<AccountContract> Create(string clientId, [Body] CreateAccountRequest request);
 
         /// <summary>
-        /// Changes an account. Now the only editable fields are <see cref="AccountContract.TradingConditionId"/>
-        /// and the <see cref="AccountContract.IsDisabled"/>, others are ignored.
-        /// The <paramref name="account"/>.Id and <paramref name="account"/>.ClientId should match
-        /// <paramref name="accountId"/> and <paramref name="clientId"/> 
+        /// Changes an account.
         /// </summary>
         [Patch("/api/accounts/{clientId}/{accountId}")]
-        Task<AccountContract> Change(string clientId, string accountId, [Body] AccountContract account);
+        Task<AccountContract> Change(string clientId, string accountId, [Body] ChangeAccountRequest request);
 
         /// <summary>
         /// Manually charge client's account. Amount is absolute, i.e. negative value goes for charging.
@@ -57,7 +54,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// <summary>
         /// Creates default accounts for client by trading conditions id.
         /// </summary>
-        [Post("/api/accounts/{clientId}/create-default-accounts")]
+        [Post("/api/accounts/{clientId}/default-accounts")]
         Task<List<AccountContract>> CreateDefaultAccounts(string clientId, 
             [Body] CreateDefaultAccountsRequest request);
         
@@ -65,8 +62,15 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// Create accounts with requested base asset for all users 
         /// that already have accounts with requested trading condition
         /// </summary>
-        [Post("/api/accounts/create-for-base-asset")]
-        Task<List<AccountContract>> CreateAccountsForBaseAsset(
+        [Post("/api/accounts/new-base-asset")]
+        Task<List<AccountContract>> CreateAccountsForNewBaseAsset(
             [Body] CreateAccountsForBaseAssetRequest request);
+
+        /// <summary>
+        /// Reset account balance to default value (from settings)
+        /// </summary>
+        /// <returns></returns>
+        [Post("/api/accounts/{clientId}/{accountId}/reset")]
+        Task<AccountContract> Reset(string clientId, string accountId);
     }
 }

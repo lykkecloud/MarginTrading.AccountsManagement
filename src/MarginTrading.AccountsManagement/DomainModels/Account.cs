@@ -26,14 +26,5 @@ namespace MarginTrading.AccountsManagement.DomainModels
         public string LegalEntity { get; }
         public bool IsDisabled { get; }
 
-        /// <summary>
-        /// Returns new account instance with changed <paramref name="tradingConditionId"/>
-        /// and <paramref name="isDisabled"/> 
-        /// </summary>
-        public Account Apply(string tradingConditionId, bool isDisabled)
-        {
-            return new Account(Id, ClientId, tradingConditionId, BaseAssetId, Balance, WithdrawTransferLimit,
-                LegalEntity, isDisabled);
-        }
     }
 }

@@ -7,13 +7,12 @@ using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.DomainModels;
 using MarginTrading.AccountsManagement.Infrastructure;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/accounts")]
     public class AccountsController : Controller, IAccountsApi
     {
         private readonly IAccountManagementService _accountManagementService;
@@ -32,7 +31,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         [Route("")]
         public Task<List<AccountContract>> List()
         {
-            return Convert(_accountManagementService.List());
+            return Convert(_accountManagementService.ListAsync());
         }
 
         /// <summary>
@@ -42,7 +41,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         [Route("{clientId}")]
         public Task<List<AccountContract>> GetByClient(string clientId)
         {
-            return Convert(_accountManagementService.GetByClient(clientId));
+            return Convert(_accountManagementService.GetByClientAsync(clientId));
         }
 
         /// <summary>
@@ -52,7 +51,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         [Route("{clientId}/{accountId}")]
         public Task<AccountContract> GetByClientAndId(string clientId, string accountId)
         {
-            return Convert(_accountManagementService.GetByClientAndId(clientId, accountId));
+            return Convert(_accountManagementService.GetByClientAndIdAsync(clientId, accountId));
         }
 
         /// <summary>
@@ -62,22 +61,35 @@ namespace MarginTrading.AccountsManagement.Controllers
         [Route("{clientId}")]
         public Task<AccountContract> Create(string clientId, [FromBody] CreateAccountRequest request)
         {
-            return Convert(_accountManagementService.Create(clientId, request.TradingConditionId, request.BaseAssetId));
+            return Convert(_accountManagementService.CreateAsync(clientId, request.TradingConditionId, request.BaseAssetId));
         }
 
         /// <summary>
-        /// Changes an account. Now the only editable fields are <see cref="AccountContract.TradingConditionId"/>
-        /// and the <see cref="AccountContract.IsDisabled"/>, others are ignored.
-        /// The <paramref name="account"/>.Id and <paramref name="account"/>.ClientId should match
-        /// <paramref name="accountId"/> and <paramref name="clientId"/> 
+        /// Changes an account.
+        /// If the field is set, it will be changed, otherwise it will be ignored.
         /// </summary>
         [HttpPatch]
         [Route("{clientId}/{accountId}")]
-        public Task<AccountContract> Change(string clientId, string accountId, [FromBody] AccountContract account)
+        public async Task<AccountContract> Change(string clientId, string accountId, [FromBody] ChangeAccountRequest request)
         {
-            account.Id.RequiredEqualsTo(accountId, nameof(account.Id));
-            account.ClientId.RequiredEqualsTo(clientId, nameof(account.ClientId));
-            return Convert(_accountManagementService.Change(Convert(account)));
+            Account result = null;
+
+            if (!request.IsDisabled.HasValue && string.IsNullOrEmpty(request.TradingConditionId))
+            {
+                throw new ArgumentOutOfRangeException(nameof(request), "At least one parameter should be set");
+            }
+
+            if (request.IsDisabled.HasValue)
+            {
+                result = await _accountManagementService.SetDisabledAsync(clientId, accountId, request.IsDisabled.Value);
+            }
+            
+            if (!string.IsNullOrEmpty(request.TradingConditionId))
+            {
+                result = await _accountManagementService.SetTradingConditionAsync(clientId, accountId, request.TradingConditionId);
+            }
+            
+            return Convert(result);
         }
 
         /// <summary>
@@ -88,17 +100,28 @@ namespace MarginTrading.AccountsManagement.Controllers
         public Task<AccountContract> ChargeManually(string clientId, string accountId,
             [FromBody] AccountChargeManuallyRequest request)
         {
-            return Convert(_accountManagementService.ChargeManually(clientId, accountId, request.AmountDelta, request.Reason));
+            return Convert(_accountManagementService.ChargeManuallyAsync(clientId, accountId, request.AmountDelta, request.Reason));
+        }
+        
+        /// <summary>
+        /// Reset account balance to default value (from settings)
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("{clientId}/{accountId}/reset")]
+        public Task<AccountContract> Reset(string clientId, string accountId)
+        {
+            return Convert(_accountManagementService.ResetAccountAsync(clientId, accountId));
         }
 
         /// <summary>
         /// Creates default accounts for client by trading conditions id.
         /// </summary>
         [HttpPost]
-        [Route("{clientId}/create-default-accounts")]
+        [Route("{clientId}/default-accounts")]
         public Task<List<AccountContract>> CreateDefaultAccounts(string clientId, CreateDefaultAccountsRequest request)
         {
-            return Convert(_accountManagementService.CreateDefaultAccounts(clientId, request.TradingConditionsId));
+            return Convert(_accountManagementService.CreateDefaultAccountsAsync(clientId, request.TradingConditionsId));
         }
 
         /// <summary>
@@ -106,10 +129,10 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// that already have accounts with requested trading condition
         /// </summary>
         [HttpPost]
-        [Route("create-for-base-asset")]
-        public Task<List<AccountContract>> CreateAccountsForBaseAsset(CreateAccountsForBaseAssetRequest request)
+        [Route("new-base-asset")]
+        public Task<List<AccountContract>> CreateAccountsForNewBaseAsset(CreateAccountsForBaseAssetRequest request)
         {
-            return Convert(_accountManagementService.CreateAccountsForBaseAsset(request.TradingConditionId,
+            return Convert(_accountManagementService.CreateAccountsForNewBaseAssetAsync(request.TradingConditionId,
                 request.BaseAssetId));
         }
 
@@ -124,12 +147,12 @@ namespace MarginTrading.AccountsManagement.Controllers
             return Convert(await account);
         }
 
-        public AccountContract Convert(Account account)
+        private AccountContract Convert(Account account)
         {
             return _convertService.Convert<Account, AccountContract>(account);
         }
 
-        public Account Convert(AccountContract account)
+        private Account Convert(AccountContract account)
         {
             return _convertService.Convert<AccountContract, Account>(account);
         }

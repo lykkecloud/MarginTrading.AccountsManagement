@@ -1,8 +1,11 @@
-﻿namespace MarginTrading.AccountsManagement.Settings
+﻿using JetBrains.Annotations;
+
+namespace MarginTrading.AccountsManagement.Settings
 {
+    [UsedImplicitly]
     public class RabbitMqSettings
     {
-        public RabbitMqPublishersSettings Publishers { get; set; }
-        public RabbitMqConsumersSettings Consumers { get; set; }
+        public RabbitConnectionSettings AccountChangedExchange { get; set; }
+        public RabbitConnectionSettings AccountHistoryExchange { get; set; }
     }
 }

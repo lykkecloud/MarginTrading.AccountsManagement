@@ -4,6 +4,10 @@ using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
+using MarginTrading.AccountsManagement.Repositories.AzureServices;
+using MarginTrading.AccountsManagement.Repositories.AzureServices.Implementations;
+using MarginTrading.AccountsManagement.Services;
+using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.Extensions.Internal;
 
@@ -22,14 +26,20 @@ namespace MarginTrading.AccountsManagement.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            RegisterDefaultImplementations(builder);
-
             builder.RegisterInstance(_settings.Nested(s => s.MarginTradingAccountManagement)).SingleInstance();
-            builder.RegisterInstance(_log).As<ILog>().SingleInstance();
+            builder.RegisterInstance(_settings.Nested(s => s.MarginTradingAccountManagement).CurrentValue)
+                .SingleInstance();
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
+            builder.RegisterInstance(_log).As<ILog>().SingleInstance();
 
-            builder.RegisterInstance(new RabbitMqService(_log))
-                .As<IRabbitMqService>().SingleInstance();
+            //TODO: implement service, that will call MT settings service
+            builder.RegisterType<TradingConditionsServiceMock>().As<ITradingConditionsService>().SingleInstance();
+
+            builder.RegisterType<EventSender>().As<IEventSender>().SingleInstance();
+            builder.RegisterType<AzureTableStorageFactoryService>().As<IAzureTableStorageFactoryService>()
+                .SingleInstance();
+            
+            RegisterDefaultImplementations(builder);
         }
 
         /// <summary>

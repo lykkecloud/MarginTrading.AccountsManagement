@@ -6,13 +6,47 @@ namespace MarginTrading.AccountsManagement.Services
 {
     public interface IAccountManagementService
     {
-        Task<List<Account>> List();
-        Task<List<Account>> GetByClient(string clientId);
-        Task<Account> GetByClientAndId(string clientId, string accountId);
-        Task<Account> Create(string clientId, string tradingConditionId, string baseAssetId);
-        Task<Account> Change(Account account);
-        Task<Account> ChargeManually(string clientId, string accountId, decimal amountDelta, string reason);
-        Task<List<Account>> CreateDefaultAccounts(string clientId, string tradingConditionsId);
-        Task<List<Account>> CreateAccountsForBaseAsset(string tradingConditionId, string baseAssetId);
+        
+        #region Create 
+        
+        Task<Account> CreateAsync(string clientId, string tradingConditionId, string baseAssetId);
+        
+        /// <summary>
+        /// Creates default accounts for client by trading conditions id.
+        /// </summary>
+        Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionsId);
+        
+        /// <summary>
+        /// Create accounts with requested base asset for all users 
+        /// that already have accounts with requested trading condition
+        /// </summary>
+        Task<List<Account>> CreateAccountsForNewBaseAssetAsync(string tradingConditionId, string baseAssetId);
+        
+        #endregion
+        
+        
+        #region Get
+        
+        Task<List<Account>> ListAsync();
+        
+        Task<List<Account>> GetByClientAsync(string clientId);
+        
+        Task<Account> GetByClientAndIdAsync(string clientId, string accountId);
+        
+        #endregion
+        
+        
+        #region Modify
+        
+        Task<Account> SetTradingConditionAsync(string clientId, string accountId, string tradingConditionId);
+        
+        Task<Account> SetDisabledAsync(string clientId, string accountId, bool isDisabled);
+        
+        Task<Account> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta, string reason);
+        
+        Task<Account> ResetAccountAsync(string clientId, string accountId);
+        
+        #endregion
+        
     }
 }

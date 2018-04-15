@@ -1,52 +1,281 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Common.Log;
+using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Contracts.Messages;
+using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.DomainModels;
+using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Settings;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
+    [UsedImplicitly]
     public class AccountManagementService : IAccountManagementService
     {
-        public Task<List<Account>> List()
+        private readonly IAccountsRepository _accountsRepository;
+        private readonly ITradingConditionsService _tradingConditionsService;
+        private readonly AccountManagementSettings _settings;
+        private readonly IEventSender _eventSender;
+        private readonly ILog _log;
+        private readonly ISystemClock _systemClock;
+
+        public AccountManagementService(IAccountsRepository accountsRepository,
+            ITradingConditionsService tradingConditionsService,
+            AccountManagementSettings settings,
+            IEventSender eventSender,
+            ILog log,
+            ISystemClock systemClock)
         {
-            throw new System.NotImplementedException();
+            _accountsRepository = accountsRepository;
+            _tradingConditionsService = tradingConditionsService;
+            _settings = settings;
+            _eventSender = eventSender;
+            _log = log;
+            _systemClock = systemClock;
+        }
+        
+        
+        #region Create 
+        
+        public async Task<Account> CreateAsync(string clientId, string tradingConditionId, string baseAssetId)
+        {
+            
+            #region Validations
+            
+            var isAccountGroupExists =
+                _tradingConditionsService.IsAccountGroupExists(tradingConditionId, baseAssetId);
+
+            if (! await isAccountGroupExists)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
+                    $"Account group with base asset [{baseAssetId}] and trading condition [{tradingConditionId}] is not found");
+            }
+
+            var clientAccounts = await GetByClientAsync(clientId);
+
+            if (clientAccounts.Any(a => a.BaseAssetId == baseAssetId && a.TradingConditionId == tradingConditionId))
+            {
+                throw new NotSupportedException(
+                    $"Client [{clientId}] already has account with base asset [{baseAssetId}] and trading condition [{tradingConditionId}]");
+            }
+            
+            #endregion
+
+            var legalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionId);
+            
+            return await CreateAccount(clientId, baseAssetId, tradingConditionId, legalEntity);
         }
 
-        public Task<List<Account>> GetByClient(string clientId)
+        public async Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionsId)
         {
-            throw new System.NotImplementedException();
+            var existingAccounts = (await _accountsRepository.GetAllAsync(clientId)).ToList();
+
+            if (existingAccounts.Any())
+            {
+                return existingAccounts;
+            }
+
+            if (string.IsNullOrEmpty(tradingConditionsId))
+                throw new ArgumentNullException(nameof(tradingConditionsId));
+
+            var baseAssets = await _tradingConditionsService.GetBaseAccountAssets(tradingConditionsId);
+            var legalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionsId);
+
+            var newAccounts = new List<Account>();
+
+            foreach (var baseAsset in baseAssets)
+            {
+                try
+                {
+                    var account = await CreateAccount(clientId, baseAsset, tradingConditionsId, legalEntity);
+                    newAccounts.Add(account);
+                }
+                catch (Exception e)
+                {
+                    _log.WriteError(nameof(AccountManagementService),
+                        $"Create default accounts: clientId={clientId}, tradingConditionsId={tradingConditionsId}", e);
+                }
+            }
+
+            return newAccounts;
         }
 
-        public Task<Account> GetByClientAndId(string clientId, string accountId)
+        public async Task<List<Account>> CreateAccountsForNewBaseAssetAsync(string tradingConditionId, string baseAssetId)
         {
-            throw new System.NotImplementedException();
+            var result = new List<Account>();
+
+            var clientAccountGroups = (await _accountsRepository.GetAllAsync())
+                .GroupBy(a => a.ClientId)
+                .Where(g =>
+                    g.Any(a => a.TradingConditionId == tradingConditionId)
+                    && g.All(a => a.BaseAssetId != baseAssetId));
+            var legalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionId);
+
+            foreach (var group in clientAccountGroups)
+            {
+                try
+                {
+                    var account = await CreateAccount(group.Key, baseAssetId, tradingConditionId, legalEntity);
+                    result.Add(account);
+                }
+                catch (Exception e)
+                {
+                    _log.WriteError(nameof(AccountManagementService),
+                        $"Create accounts by account group : clientId={group.Key}, tradingConditionsId={tradingConditionId}, baseAssetId={baseAssetId}",
+                        e);
+                }
+            }
+
+            return result;
         }
 
-        public Task<Account> Create(string clientId, string tradingConditionId, string baseAssetId)
+        #endregion
+        
+        
+        #region Get
+        
+        public Task<List<Account>> ListAsync()
         {
-            throw new System.NotImplementedException();
+            return _accountsRepository.GetAllAsync();
         }
 
-        public async Task<Account> Change(Account account)
+        public Task<List<Account>> GetByClientAsync(string clientId)
         {
-            var oldAccount = await GetByClientAndId(account.ClientId, account.Id);
-            var newAccount = oldAccount.Apply(account.TradingConditionId, account.IsDisabled);
-            _repository.Update(newAccount);
-            return newAccount;
+            return _accountsRepository.GetAllAsync(clientId);
         }
 
-        public Task<Account> ChargeManually(string clientId, string accountId, decimal amountDelta, string reason)
+        public Task<Account> GetByClientAndIdAsync(string clientId, string accountId)
         {
-            throw new System.NotImplementedException();
+            return _accountsRepository.GetAsync(clientId, accountId);
+        }
+        
+        #endregion
+
+        
+        #region Modify
+        
+        public async Task<Account> SetTradingConditionAsync(string clientId, string accountId, string tradingConditionId)
+        {
+            if (! await _tradingConditionsService.IsTradingConditionExists(tradingConditionId))
+            {
+                throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
+                    $"No trading condition {tradingConditionId} exists");
+            }
+
+            var account = await _accountsRepository.GetAsync(clientId, accountId);
+
+            if (account == null)
+                throw new ArgumentOutOfRangeException($"Account for client [{clientId}] with id [{accountId}] does not exist");
+            
+            var currentLegalEntity = account.LegalEntity;
+            var newLegalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionId);
+
+            if (currentLegalEntity != newLegalEntity)
+            {
+                throw new NotSupportedException(
+                    $"Account for client [{clientId}] with id [{accountId}] has LegalEntity " +
+                    $"[{account.LegalEntity}], but trading condition wit id [{tradingConditionId}] has " +
+                    $"LegalEntity [{newLegalEntity}]"
+                );
+            }
+            
+            var result =
+                await _accountsRepository.UpdateTradingConditionIdAsync(clientId, accountId, tradingConditionId);
+
+            await _eventSender.SendAccountUpdatedEvent(result);
+            
+            return result;
         }
 
-        public Task<List<Account>> CreateDefaultAccounts(string clientId, string tradingConditionsId)
+        public async Task<Account> SetDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
-            throw new System.NotImplementedException();
+            var account = await _accountsRepository.ChangeIsDisabledAsync(clientId, accountId, isDisabled);
+
+            await _eventSender.SendAccountDisabledEvent(account);
+
+            return account;
         }
 
-        public Task<List<Account>> CreateAccountsForBaseAsset(string tradingConditionId, string baseAssetId)
+        public Task<Account> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta, string reason)
         {
-            throw new System.NotImplementedException();
+            return UpdateBalanceAsync(clientId, accountId, amountDelta, AccountHistoryType.Manual, reason);
         }
+        
+        public async Task<Account> ResetAccountAsync(string clientId, string accountId)
+        {
+            if (_settings.Defaults?.BalanceResetIsEnabled != true)
+            {
+                throw new NotSupportedException("Account reset is not supported");
+            }
+            
+            var account = await _accountsRepository.GetAsync(clientId, accountId);
+
+            if (account == null)
+                throw new ArgumentOutOfRangeException(
+                    $"Account for client [{clientId}] with id [{accountId}] does not exist");
+
+            return await UpdateBalanceAsync(clientId, accountId, _settings.Defaults.DefaultBalance - account.Balance,
+                AccountHistoryType.Reset, "Reset account");
+        }
+        
+        #endregion
+        
+        
+        #region Helpers
+        
+        private async Task<Account> CreateAccount(string clientId, string baseAssetId, string tradingConditionId, string legalEntityId)
+        {
+            var id = $"{_settings.Defaults?.AccountIdPrefix}{Guid.NewGuid():N}";
+
+            var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false);
+            
+            await _accountsRepository.AddAsync(account);
+            
+            await _eventSender.SendAccountCreatedEvent(account);
+
+            if (_settings.Defaults?.DefaultBalance != null)
+            {
+                account = await UpdateBalanceAsync(account.ClientId, account.Id, _settings.Defaults.DefaultBalance,
+                    AccountHistoryType.Deposit, "Initial deposit");
+            }
+
+            return account;
+        }
+
+        private async Task<Account> UpdateBalanceAsync(string clientId, string accountId, decimal amountDelta,
+            AccountHistoryType historyType, string comment, string eventSourceId = null,
+            bool changeTransferLimit = false, string auditLog = null)
+        {
+            var account =
+                await _accountsRepository.UpdateBalanceAsync(clientId, accountId, amountDelta, changeTransferLimit);
+
+            await _eventSender.SendAccountUpdatedEvent(account);
+
+            var historyRecord = new AccountHistoryContract
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                AccountId = accountId,
+                ClientId = clientId,
+                Type = Enum.Parse<AccountHistoryTypeContract>(historyType.ToString()),
+                Amount = amountDelta,
+                Balance = account.Balance,
+                WithdrawTransferLimit = account.WithdrawTransferLimit,
+                Date = _systemClock.UtcNow.UtcDateTime,
+                Comment = comment,
+                OrderId = historyType == AccountHistoryType.OrderClosed ? eventSourceId : null,
+                AuditLog = auditLog,
+                LegalEntity = account.LegalEntity
+            };
+            
+            await _eventSender.SendAccountHistoryEvent(historyRecord);
+
+            return account;
+        }
+
+        #endregion
     }
 }

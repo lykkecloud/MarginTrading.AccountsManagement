@@ -1,7 +1,10 @@
-﻿namespace MarginTrading.AccountsManagement.Settings
+﻿using JetBrains.Annotations;
+
+namespace MarginTrading.AccountsManagement.Settings
 {
+    [UsedImplicitly]
     internal class AppSettings
     {
-        public MarginTradingAccountManagementSettings MarginTradingAccountManagement { get; set; }
+        public AccountManagementSettings MarginTradingAccountManagement { get; set; }
     }
 }
