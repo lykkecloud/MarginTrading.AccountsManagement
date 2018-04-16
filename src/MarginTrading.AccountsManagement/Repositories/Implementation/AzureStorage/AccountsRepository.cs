@@ -5,7 +5,7 @@ using AutoMapper;
 using AzureStorage;
 using Common.Log;
 using Lykke.SettingsReader;
-using MarginTrading.AccountsManagement.DomainModels;
+using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;

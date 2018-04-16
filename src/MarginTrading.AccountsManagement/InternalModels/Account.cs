@@ -1,6 +1,6 @@
 ﻿using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 
-namespace MarginTrading.AccountsManagement.DomainModels
+namespace MarginTrading.AccountsManagement.InternalModels
 {
     public class Account
     {

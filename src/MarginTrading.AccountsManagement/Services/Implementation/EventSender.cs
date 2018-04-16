@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Contracts.Messages;
 using MarginTrading.AccountsManagement.Contracts.Models;
-using MarginTrading.AccountsManagement.DomainModels;
+using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.Extensions.Internal;

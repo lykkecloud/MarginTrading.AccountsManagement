@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.AccountsManagement.DomainModels
+﻿namespace MarginTrading.AccountsManagement.InternalModels
 {
     public enum AccountHistoryType
     {

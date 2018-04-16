@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using MarginTrading.AccountsManagement.Contracts.Messages;
 using MarginTrading.AccountsManagement.Contracts.Models;
-using MarginTrading.AccountsManagement.DomainModels;
+using MarginTrading.AccountsManagement.InternalModels;
 
 namespace MarginTrading.AccountsManagement.Services
 {
