@@ -115,13 +115,13 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
-        /// Creates default accounts for client by trading conditions id.
+        /// Creates default accounts for client by trading condition id.
         /// </summary>
         [HttpPost]
         [Route("{clientId}/default-accounts")]
         public Task<List<AccountContract>> CreateDefaultAccounts(string clientId, CreateDefaultAccountsRequest request)
         {
-            return Convert(_accountManagementService.CreateDefaultAccountsAsync(clientId, request.TradingConditionsId));
+            return Convert(_accountManagementService.CreateDefaultAccountsAsync(clientId, request.TradingConditionId));
         }
 
         /// <summary>

@@ -52,7 +52,7 @@ namespace MarginTrading.AccountsManagement.Contracts
             [Body] AccountChargeManuallyRequest request);
         
         /// <summary>
-        /// Creates default accounts for client by trading conditions id.
+        /// Creates default accounts for client by trading condition id.
         /// </summary>
         [Post("/api/accounts/{clientId}/default-accounts")]
         Task<List<AccountContract>> CreateDefaultAccounts(string clientId, 

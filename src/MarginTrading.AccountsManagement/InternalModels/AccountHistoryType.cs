@@ -1,6 +1,6 @@
-﻿namespace MarginTrading.AccountsManagement.Contracts.Messages
+﻿namespace MarginTrading.AccountsManagement.DomainModels
 {
-    public enum AccountHistoryTypeContract
+    public enum AccountHistoryType
     {
         Deposit = 1,
         Withdraw = 2,

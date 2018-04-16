@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -62,6 +63,9 @@ namespace MarginTrading.AccountsManagement
                 services.AddSwaggerGen(options =>
                 {
                     options.DefaultLykkeConfiguration("v1", ServiceName + " API");
+                    var contractsXmlPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, 
+                        "MarginTrading.AccountsManagement.Contracts.xml");
+                    options.IncludeXmlComments(contractsXmlPath);
                     options.OperationFilter<CustomOperationIdOperationFilter>();
                 });
 

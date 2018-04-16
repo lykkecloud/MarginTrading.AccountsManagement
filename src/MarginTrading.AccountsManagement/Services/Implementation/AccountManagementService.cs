@@ -70,7 +70,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return await CreateAccount(clientId, baseAssetId, tradingConditionId, legalEntity);
         }
 
-        public async Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionsId)
+        public async Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionId)
         {
             var existingAccounts = (await _accountsRepository.GetAllAsync(clientId)).ToList();
 
@@ -79,11 +79,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 return existingAccounts;
             }
 
-            if (string.IsNullOrEmpty(tradingConditionsId))
-                throw new ArgumentNullException(nameof(tradingConditionsId));
+            if (string.IsNullOrEmpty(tradingConditionId))
+                throw new ArgumentNullException(nameof(tradingConditionId));
 
-            var baseAssets = await _tradingConditionsService.GetBaseAccountAssets(tradingConditionsId);
-            var legalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionsId);
+            var baseAssets = await _tradingConditionsService.GetBaseAccountAssets(tradingConditionId);
+            var legalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionId);
 
             var newAccounts = new List<Account>();
 
@@ -91,13 +91,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 try
                 {
-                    var account = await CreateAccount(clientId, baseAsset, tradingConditionsId, legalEntity);
+                    var account = await CreateAccount(clientId, baseAsset, tradingConditionId, legalEntity);
                     newAccounts.Add(account);
                 }
                 catch (Exception e)
                 {
                     _log.WriteError(nameof(AccountManagementService),
-                        $"Create default accounts: clientId={clientId}, tradingConditionsId={tradingConditionsId}", e);
+                        $"Create default accounts: clientId={clientId}, tradingConditionId={tradingConditionId}", e);
                 }
             }
 
@@ -125,7 +125,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 catch (Exception e)
                 {
                     _log.WriteError(nameof(AccountManagementService),
-                        $"Create accounts by account group : clientId={group.Key}, tradingConditionsId={tradingConditionId}, baseAssetId={baseAssetId}",
+                        $"Create accounts by account group : clientId={group.Key}, tradingConditionId={tradingConditionId}, baseAssetId={baseAssetId}",
                         e);
                 }
             }

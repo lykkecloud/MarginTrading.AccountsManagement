@@ -12,9 +12,9 @@ namespace MarginTrading.AccountsManagement.Services
         Task<Account> CreateAsync(string clientId, string tradingConditionId, string baseAssetId);
         
         /// <summary>
-        /// Creates default accounts for client by trading conditions id.
+        /// Creates default accounts for client by trading condition id.
         /// </summary>
-        Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionsId);
+        Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionId);
         
         /// <summary>
         /// Create accounts with requested base asset for all users 

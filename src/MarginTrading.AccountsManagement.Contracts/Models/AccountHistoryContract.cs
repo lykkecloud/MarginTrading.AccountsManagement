@@ -1,6 +1,7 @@
 ﻿using System;
+using MarginTrading.AccountsManagement.Contracts.Messages;
 
-namespace MarginTrading.AccountsManagement.Contracts.Messages
+namespace MarginTrading.AccountsManagement.Contracts.Models
 {
     public class AccountHistoryContract
     {

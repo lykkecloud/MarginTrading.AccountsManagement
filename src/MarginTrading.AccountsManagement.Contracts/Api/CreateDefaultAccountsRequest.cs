@@ -2,6 +2,6 @@
 {
     public class CreateDefaultAccountsRequest
     {
-        public string TradingConditionsId { get; set; }
+        public string TradingConditionId { get; set; }
     }
 }

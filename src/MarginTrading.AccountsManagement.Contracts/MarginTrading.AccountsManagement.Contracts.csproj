@@ -4,6 +4,7 @@
     <Version>1.0.0</Version>
     <PackageId>Lykke.MarginTrading.AccountsManagement.Contracts</PackageId>
     <Company>Lykke</Company>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
