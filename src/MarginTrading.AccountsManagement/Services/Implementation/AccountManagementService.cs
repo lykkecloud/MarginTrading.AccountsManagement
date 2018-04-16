@@ -178,7 +178,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 throw new NotSupportedException(
                     $"Account for client [{clientId}] with id [{accountId}] has LegalEntity " +
-                    $"[{account.LegalEntity}], but trading condition wit id [{tradingConditionId}] has " +
+                    $"[{account.LegalEntity}], but trading condition wiht id [{tradingConditionId}] has " +
                     $"LegalEntity [{newLegalEntity}]"
                 );
             }
@@ -207,7 +207,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         
         public async Task<Account> ResetAccountAsync(string clientId, string accountId)
         {
-            if (_settings.Defaults?.BalanceResetIsEnabled != true)
+            if (_settings.Behavior?.BalanceResetIsEnabled != true)
             {
                 throw new NotSupportedException("Account reset is not supported");
             }
@@ -218,7 +218,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentOutOfRangeException(
                     $"Account for client [{clientId}] with id [{accountId}] does not exist");
 
-            return await UpdateBalanceAsync(clientId, accountId, _settings.Defaults.DefaultBalance - account.Balance,
+            return await UpdateBalanceAsync(clientId, accountId, _settings.Behavior.DefaultBalance - account.Balance,
                 AccountHistoryType.Reset, "Reset account");
         }
         
@@ -229,7 +229,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         
         private async Task<Account> CreateAccount(string clientId, string baseAssetId, string tradingConditionId, string legalEntityId)
         {
-            var id = $"{_settings.Defaults?.AccountIdPrefix}{Guid.NewGuid():N}";
+            var id = $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}";
 
             var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false);
             
@@ -237,9 +237,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             
             await _eventSender.SendAccountCreatedEvent(account);
 
-            if (_settings.Defaults?.DefaultBalance != null)
+            if (_settings.Behavior?.DefaultBalance != null)
             {
-                account = await UpdateBalanceAsync(account.ClientId, account.Id, _settings.Defaults.DefaultBalance,
+                account = await UpdateBalanceAsync(account.ClientId, account.Id, _settings.Behavior.DefaultBalance,
                     AccountHistoryType.Deposit, "Initial deposit");
             }
 

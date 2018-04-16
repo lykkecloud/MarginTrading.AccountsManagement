@@ -23,7 +23,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public Task<IEnumerable<string>> GetBaseAccountAssets(string tradingConditionId)
         {
-            return Task.FromResult(new[] {"USD"}.Cast<string>());
+            return Task.FromResult(new[] {"USD"}.AsEnumerable());
         }
     }
 }

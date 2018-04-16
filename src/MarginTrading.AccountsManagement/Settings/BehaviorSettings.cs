@@ -4,7 +4,7 @@ using Lykke.SettingsReader.Attributes;
 namespace MarginTrading.AccountsManagement.Settings
 {
     [UsedImplicitly]
-    public class AccountsDefaults
+    public class BehaviorSettings
     {
         [Optional]
         public string AccountIdPrefix { get; set; }

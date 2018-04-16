@@ -17,10 +17,10 @@ namespace MarginTrading.AccountsManagement.Settings
         public RabbitMqSettings RabbitMq { get; set; }
         
         /// <summary>
-        /// Default settings for accounts
+        /// Behavior settings for accounts
         /// </summary>
-        [Optional]
-        public AccountsDefaults Defaults { get; set; }
+        [Optional, CanBeNull]
+        public BehaviorSettings Behavior { get; set; }
         
     }
 }

@@ -1,8 +1,10 @@
-﻿namespace MarginTrading.AccountsManagement.Contracts.Api
+﻿using JetBrains.Annotations;
+
+namespace MarginTrading.AccountsManagement.Contracts.Api
 {
     public class ChangeAccountRequest
     {
-        public string TradingConditionId { get; set; }
+        [CanBeNull] public string TradingConditionId { get; set; }
         public bool? IsDisabled { get; set; }
     }
 }

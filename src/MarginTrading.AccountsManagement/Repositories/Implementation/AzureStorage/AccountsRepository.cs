@@ -54,15 +54,15 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return Convert(account);
         }
 
-        public async Task<Account> UpdateBalanceAsync(string clientId, string accountId, decimal amount, bool changeLimit)
+        public async Task<Account> UpdateBalanceAsync(string clientId, string accountId, decimal amountDelta, bool changeLimit)
         {
             var account = await _tableStorage.MergeAsync(AccountEntity.GeneratePartitionKey(clientId),
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
-                    a.Balance += amount;
+                    a.Balance += amountDelta;
 
                     if (changeLimit)
-                        a.WithdrawTransferLimit += amount;
+                        a.WithdrawTransferLimit += amountDelta;
 
                     return a;
                 });
