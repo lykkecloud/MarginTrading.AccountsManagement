@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.AzureStorage.Tables.Entity.Metamodel;
+using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
+using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.SettingsReader;
@@ -59,6 +63,9 @@ namespace MarginTrading.AccountsManagement
                 services.AddSwaggerGen(options =>
                 {
                     options.DefaultLykkeConfiguration("v1", ServiceName + " API");
+                    var contractsXmlPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, 
+                        "MarginTrading.AccountsManagement.Contracts.xml");
+                    options.IncludeXmlComments(contractsXmlPath);
                     options.OperationFilter<CustomOperationIdOperationFilter>();
                 });
 
@@ -93,8 +100,7 @@ namespace MarginTrading.AccountsManagement
 #if DEBUG
                 app.UseLykkeMiddleware(ServiceName, ex => ex.ToString());
 #else
-                app.UseLykkeMiddleware(ServiceName, ex => new ErrorResponse {ErrorMessage = "Technical problem", Details
- = ex.Message});
+                app.UseLykkeMiddleware(ServiceName, ex => new ErrorResponse {ErrorMessage = ex.Message});
 #endif
 
                 app.UseMvc();
@@ -104,6 +110,10 @@ namespace MarginTrading.AccountsManagement
                 appLifetime.ApplicationStarted.Register(() => StartApplication().Wait());
                 appLifetime.ApplicationStopping.Register(() => StopApplication().Wait());
                 appLifetime.ApplicationStopped.Register(() => CleanUp().Wait());
+                
+                var provider = new AnnotationsBasedMetamodelProvider();
+
+                EntityMetamodel.Configure(provider);
             }
             catch (Exception ex)
             {

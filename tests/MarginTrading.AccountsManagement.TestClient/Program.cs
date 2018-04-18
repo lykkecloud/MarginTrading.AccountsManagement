@@ -5,6 +5,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
+using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Client;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,10 +67,11 @@ namespace MarginTrading.AccountsManagement.TestClient
         {
             var client = clientGenerator.Generate<IAccountsApi>();
             await client.List().Dump();
-            await client.Insert(new AccountContract {Id = "smth"}).Dump();
-            await client.Get("smth").Dump();
-            await client.Update("smth", new AccountContract {Id = "smth", ClientId = "some client"}).Dump();
-            await client.Delete("smth").Dump();
+            var account = await client
+                .Create("client1", new CreateAccountRequest {TradingConditionId = "tc1", BaseAssetId = "ba1"}).Dump();
+            await client.GetByClientAndId("client1", account.Id).Dump();
+            await client.Change("client1", account.Id,
+                new ChangeAccountRequest() {IsDisabled = true, TradingConditionId = "tc2"}).Dump();
         }
 
         [CanBeNull]

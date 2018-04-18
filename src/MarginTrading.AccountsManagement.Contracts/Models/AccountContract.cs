@@ -9,5 +9,6 @@
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
         public string LegalEntity { get; set; }
+        public bool IsDisabled { get; set; }
     }
 }
