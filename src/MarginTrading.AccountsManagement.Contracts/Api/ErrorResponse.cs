@@ -2,13 +2,30 @@
 
 namespace MarginTrading.AccountsManagement.Contracts.Api
 {
-    [UsedImplicitly] // from startup.cs only in release configuration
+    /// <summary>
+    /// The response which is produced in case of an error
+    /// </summary>
+    [PublicAPI]
     public class ErrorResponse
     {
-        [UsedImplicitly]
+        /// <summary>
+        /// What happend in short user-friendly form
+        /// </summary>
         public string ErrorMessage { get; set; }
 
-        [UsedImplicitly]
-        public string Details { get; set; }
+        /// <summary>
+        /// Some more info mostly for the developers
+        /// </summary>
+        [CanBeNull] public string Details { get; set; }
+        
+        /// <summary>
+        /// Machine-readable error code
+        /// </summary>
+        [CanBeNull] public string ErrorCode { get; set; }
+        
+        /// <summary>
+        /// The name of a concrete request field the error is bound to, if any
+        /// </summary>
+        [CanBeNull] public string FieldName { get; set; }
     }
 }

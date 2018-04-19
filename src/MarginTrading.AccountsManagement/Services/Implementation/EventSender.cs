@@ -55,11 +55,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return SendAccountChangedEvent(account, AccountChangedEventType.Created);
         }
 
-        public Task SendAccountDisabledEvent(Account account)
-        {
-            return SendAccountChangedEvent(account, AccountChangedEventType.Disabled);
-        }
-
         public async Task SendAccountHistoryEvent(AccountHistoryContract model)
         {
             try

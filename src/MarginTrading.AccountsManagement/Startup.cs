@@ -75,6 +75,7 @@ namespace MarginTrading.AccountsManagement
 
                 builder.RegisterModule(new AccountsManagementModule(appSettings, Log));
                 builder.RegisterModule(new AccountsManagementExternalServicesModule(appSettings));
+                builder.RegisterModule(new CqrsModule(appSettings.CurrentValue.MarginTradingAccountManagement.Cqrs, Log));
 
                 builder.Populate(services);
 

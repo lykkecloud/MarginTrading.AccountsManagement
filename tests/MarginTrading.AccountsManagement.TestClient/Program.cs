@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AsyncFriendlyStackTrace;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using JetBrains.Annotations;
+using Lykke.HttpClientGenerator;
+using Lykke.HttpClientGenerator.Retries;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
-using MarginTrading.AccountsManagement.Contracts.Client;
-using MarginTrading.AccountsManagement.Contracts.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Refit;
 
@@ -55,7 +52,10 @@ namespace MarginTrading.AccountsManagement.TestClient
 
         private static async Task Run()
         {
-            var clientGenerator = new HttpClientGenerator("http://localhost:5007", "TestClient");
+            var clientGenerator = HttpClientGenerator.BuildForUrl("http://localhost:5007")
+                .WithApiKey("TestClient")
+                .WithRetriesStrategy(new LinearRetryStrategy(TimeSpan.FromSeconds(10), 12))
+                .Create();
             
             await CheckAccountsApiWorking(clientGenerator);
             // todo check other apis
@@ -63,7 +63,7 @@ namespace MarginTrading.AccountsManagement.TestClient
             Console.WriteLine("Successfuly finished");
         }
 
-        private static async Task CheckAccountsApiWorking(HttpClientGenerator clientGenerator)
+        private static async Task CheckAccountsApiWorking(IHttpClientGenerator clientGenerator)
         {
             var client = clientGenerator.Generate<IAccountsApi>();
             await client.List().Dump();

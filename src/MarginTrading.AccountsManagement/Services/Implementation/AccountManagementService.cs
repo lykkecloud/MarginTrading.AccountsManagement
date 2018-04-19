@@ -195,7 +195,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             var account = await _accountsRepository.ChangeIsDisabledAsync(clientId, accountId, isDisabled);
 
-            await _eventSender.SendAccountDisabledEvent(account);
+            await _eventSender.SendAccountUpdatedEvent(account);
 
             return account;
         }

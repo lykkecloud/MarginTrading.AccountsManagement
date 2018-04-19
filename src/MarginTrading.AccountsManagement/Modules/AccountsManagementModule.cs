@@ -1,6 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Autofac;
 using Common.Log;
+using Lykke.Cqrs;
+using Lykke.Cqrs.Configuration;
+using Lykke.Messaging;
+using Lykke.Messaging.RabbitMq;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
@@ -27,8 +33,8 @@ namespace MarginTrading.AccountsManagement.Modules
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterInstance(_settings.Nested(s => s.MarginTradingAccountManagement)).SingleInstance();
-            builder.RegisterInstance(_settings.Nested(s => s.MarginTradingAccountManagement).CurrentValue)
-                .SingleInstance();
+            builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement).SingleInstance();
+            builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement.Cqrs.ContextNames).SingleInstance();
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
             builder.RegisterInstance(_log).As<ILog>().SingleInstance();
 

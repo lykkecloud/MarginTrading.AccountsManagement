@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.InternalModels;
 
 namespace MarginTrading.AccountsManagement.Services
@@ -31,6 +32,7 @@ namespace MarginTrading.AccountsManagement.Services
         
         Task<List<Account>> GetByClientAsync(string clientId);
         
+        [ItemCanBeNull]
         Task<Account> GetByClientAndIdAsync(string clientId, string accountId);
         
         #endregion

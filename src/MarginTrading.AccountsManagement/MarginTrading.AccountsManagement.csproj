@@ -20,8 +20,10 @@
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Lykke.Common" Version="6.3.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.4.0" />
+    <PackageReference Include="Lykke.Cqrs" Version="4.4.3" />
     <PackageReference Include="Lykke.JobTriggers" Version="2.0.0" />
     <PackageReference Include="Lykke.Logs" Version="3.6.2" />
+    <PackageReference Include="Lykke.Messaging.RabbitMq" Version="2.0.0" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.2" />
@@ -38,9 +40,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.AccountsManagement.Contracts\MarginTrading.AccountsManagement.Contracts.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Repositories\AzureInfrastructure" />
   </ItemGroup>
   <ProjectExtensions>
     <VisualStudio>

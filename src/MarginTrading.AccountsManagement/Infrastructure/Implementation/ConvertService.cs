@@ -27,5 +27,10 @@ namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
         {
             return _mapper.Map<TSource, TResult>(source);
         }
+
+        public TResult Convert<TResult>(object source)
+        {
+            return _mapper.Map<TResult>(source);
+        }
     }
 }
