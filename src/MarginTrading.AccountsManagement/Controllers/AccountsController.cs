@@ -61,7 +61,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         [Route("{clientId}")]
         public Task<AccountContract> Create(string clientId, [FromBody] CreateAccountRequest request)
         {
-            return Convert(_accountManagementService.CreateAsync(clientId, request.TradingConditionId, request.BaseAssetId));
+            return Convert(
+                _accountManagementService.CreateAsync(clientId, request.AccountId, request.TradingConditionId, request.BaseAssetId));
         }
 
         /// <summary>

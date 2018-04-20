@@ -41,13 +41,19 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         
         #region Create 
         
-        public async Task<Account> CreateAsync(string clientId, string tradingConditionId, string baseAssetId)
+        public async Task<Account> CreateAsync(string clientId, string accountId, string tradingConditionId,
+            string baseAssetId)
         {
             
             #region Validations
-            
+
+            if (string.IsNullOrEmpty(tradingConditionId))
+            {
+                tradingConditionId = await _tradingConditionsService.GetDefaultTradingConditionAsync();
+            }
+
             var isAccountGroupExists =
-                _tradingConditionsService.IsAccountGroupExists(tradingConditionId, baseAssetId);
+                _tradingConditionsService.IsAccountGroupExistsAsync(tradingConditionId, baseAssetId);
 
             if (! await isAccountGroupExists)
             {
@@ -56,6 +62,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
 
             var clientAccounts = await GetByClientAsync(clientId);
+            
+            if (!string.IsNullOrEmpty(accountId) && clientAccounts.Any(a => a.Id == accountId))
+            {
+                throw new NotSupportedException(
+                    $"Client [{clientId}] already has account with ID [{accountId}]");
+            }
 
             if (clientAccounts.Any(a => a.BaseAssetId == baseAssetId && a.TradingConditionId == tradingConditionId))
             {
@@ -65,9 +77,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             
             #endregion
 
-            var legalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionId);
+            var legalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
             
-            return await CreateAccount(clientId, baseAssetId, tradingConditionId, legalEntity);
+            return await CreateAccount(clientId, baseAssetId, tradingConditionId, legalEntity, accountId);
         }
 
         public async Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionId)
@@ -82,8 +94,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             if (string.IsNullOrEmpty(tradingConditionId))
                 throw new ArgumentNullException(nameof(tradingConditionId));
 
-            var baseAssets = await _tradingConditionsService.GetBaseAccountAssets(tradingConditionId);
-            var legalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionId);
+            var baseAssets = await _tradingConditionsService.GetBaseAccountAssetsAsync(tradingConditionId);
+            var legalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
 
             var newAccounts = new List<Account>();
 
@@ -113,7 +125,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 .Where(g =>
                     g.Any(a => a.TradingConditionId == tradingConditionId)
                     && g.All(a => a.BaseAssetId != baseAssetId));
-            var legalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionId);
+            var legalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
 
             foreach (var group in clientAccountGroups)
             {
@@ -160,7 +172,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         
         public async Task<Account> SetTradingConditionAsync(string clientId, string accountId, string tradingConditionId)
         {
-            if (! await _tradingConditionsService.IsTradingConditionExists(tradingConditionId))
+            if (! await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
             {
                 throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
                     $"No trading condition {tradingConditionId} exists");
@@ -172,7 +184,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentOutOfRangeException($"Account for client [{clientId}] with id [{accountId}] does not exist");
             
             var currentLegalEntity = account.LegalEntity;
-            var newLegalEntity = await _tradingConditionsService.GetLegalEntity(tradingConditionId);
+            var newLegalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
 
             if (currentLegalEntity != newLegalEntity)
             {
@@ -227,9 +239,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         
         #region Helpers
         
-        private async Task<Account> CreateAccount(string clientId, string baseAssetId, string tradingConditionId, string legalEntityId)
+        private async Task<Account> CreateAccount(string clientId, string baseAssetId, string tradingConditionId, string legalEntityId, string accountId = null)
         {
-            var id = $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}";
+            var id = string.IsNullOrEmpty(accountId)
+                ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
+                : accountId;
 
             var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false);
             

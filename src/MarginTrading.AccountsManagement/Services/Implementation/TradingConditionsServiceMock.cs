@@ -6,24 +6,29 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 {
     public class TradingConditionsServiceMock : ITradingConditionsService
     {
-        public Task<bool> IsTradingConditionExists(string tradingConditionId)
+        public Task<bool> IsTradingConditionExistsAsync(string tradingConditionId)
         {
             return Task.FromResult(true);
         }
 
-        public Task<bool> IsAccountGroupExists(string tradingConditionId, string baseAssetId)
+        public Task<bool> IsAccountGroupExistsAsync(string tradingConditionId, string baseAssetId)
         {
             return Task.FromResult(true);
         }
 
-        public Task<string> GetLegalEntity(string tradingConditionId)
+        public Task<string> GetLegalEntityAsync(string tradingConditionId)
         {
             return Task.FromResult("Default");
         }
 
-        public Task<IEnumerable<string>> GetBaseAccountAssets(string tradingConditionId)
+        public Task<IEnumerable<string>> GetBaseAccountAssetsAsync(string tradingConditionId)
         {
             return Task.FromResult(new[] {"USD"}.AsEnumerable());
+        }
+
+        public Task<string> GetDefaultTradingConditionAsync()
+        {
+            return Task.FromResult("DefaultTradingConditionId");
         }
     }
 }
