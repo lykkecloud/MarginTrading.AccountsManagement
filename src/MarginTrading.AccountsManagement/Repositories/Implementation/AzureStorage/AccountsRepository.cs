@@ -31,8 +31,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             var entity =
                 _convertService.Convert<Account, AccountEntity>(account,
                     o => o.ConfigureMap(MemberList.Source));
-            entity.PartitionKey = AccountEntity.GeneratePartitionKey(account.ClientId);
-            entity.RowKey = AccountEntity.GenerateRowKey(account.Id);
 
             await _tableStorage.InsertAsync(entity);
         }

@@ -1,8 +1,8 @@
 ﻿using MarginTrading.AccountsManagement.Contracts.Commands;
 
-namespace MarginTrading.AccountsManagement.Workflow.Commands
+namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands
 {
-    public class CompleteWithdrawalInternalCommand : AccountOperationCommandBase
+    internal class CompleteWithdrawalInternalCommand : AccountBalanceOperationCommandBase
     {
         public CompleteWithdrawalInternalCommand(string clientId, string accountId, decimal amount, string operationId,
             string reason)

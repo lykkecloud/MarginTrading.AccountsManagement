@@ -7,6 +7,5 @@ namespace MarginTrading.AccountsManagement.Settings
     {
         public RabbitConnectionSettings AccountChangedExchange { get; set; }
         public RabbitConnectionSettings AccountHistoryExchange { get; set; }
-        public CqrsSettings Cqrs { get; set; }
     }
 }

@@ -1,61 +1,121 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AzureStorage;
-using MarginTrading.AccountsManagement.Infrastructure;
+using Common.Log;
+using JetBrains.Annotations;
+using Lykke.AzureStorage;
+using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.Repositories.AzureServices;
+using MarginTrading.AccountsManagement.Settings;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table.Protocol;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
     internal class OperationStatesRepository : IOperationStatesRepository
     {
-        private readonly IConvertService _convertService;
         private readonly INoSQLTableStorage<OperationStateEntity> _tableStorage;
+        private readonly ILog _log;
+        private readonly bool _enableOperationsLogs;
 
-        public OperationStatesRepository(IConvertService convertService, INoSQLTableStorage<OperationStateEntity> tableStorage)
+        public OperationStatesRepository(IReloadingManager<AccountManagementSettings> settings,
+            IAzureTableStorageFactoryService azureTableStorageFactoryService, ILog log)
         {
-            _convertService = convertService;
-            _tableStorage = tableStorage;
+            _enableOperationsLogs = settings.CurrentValue.EnableOperationsLogs;
+            _tableStorage = azureTableStorageFactoryService.Create<OperationStateEntity>(
+                settings.Nested(s => s.Db.ConnectionString), "OperationStates", log);
+            _log = log.CreateComponentScope(nameof(OperationStatesRepository));
         }
 
-        public Task<bool> InsertIfNotExistsAsync(OperationState operationState)
+        public async Task<bool> TryInsertOrModifyAsync(string operationName, string id,
+            Func<string, Task<string>> modify)
         {
-            return _tableStorage.TryInsertAsync(_convertService.Convert<OperationStateEntity>(operationState));
-        }
-
-        public async Task<OperationState> Get(string operationName, string id)
-        {
-            var entity = await _tableStorage.GetDataAsync(OperationStateEntity.GeneratePartitionKey(operationName),
-                OperationStateEntity.GenerateRowKey(id));
-            return entity == null ? null : _convertService.Convert<OperationState>(entity);
-        }
-
-        public async Task<bool> TryChangeState<TState>(string operationName, string id, TState oldState, Func<TState> newStateFunc)
-        {
-            var success = false;
-            await _tableStorage.MergeAsync(OperationStateEntity.GeneratePartitionKey(operationName),
-                OperationStateEntity.GenerateRowKey(id), a =>
+            while (true)
+            {
+                try
                 {
-                    success = false;
-                    if (a.State == oldState.ToString())
+                    var existingEntity = await GetDataAsync(operationName, id);
+                    var oldState = existingEntity?.State;
+                    var newState = await modify(oldState);
+                    if (newState == null)
                     {
-                        a.State = newStateFunc().ToString();
-                        success = true;
+                        Log(nameof(TryInsertOrModifyAsync), existingEntity,
+                            "Did not insert or replace state from " + oldState);
+                        return false;
                     }
-                    
-                    return a;
-                });
-            
-            return success;
+
+                    if (existingEntity != null)
+                    {
+                        existingEntity.State = newState;
+                        await _tableStorage.ReplaceAsync(existingEntity);
+                        Log(nameof(TryInsertOrModifyAsync), existingEntity,
+                            "Replaced state from " + oldState);
+                    }
+                    else
+                    {
+                        var newEntity =
+                            new OperationStateEntity {Id = id, OperationName = operationName, State = newState};
+                        await _tableStorage.InsertAsync(newEntity);
+                        Log(nameof(TryInsertOrModifyAsync), newEntity, "Inserted");
+                    }
+
+                    return true;
+                }
+                catch (OptimisticConcurrencyException)
+                {
+                }
+                catch (StorageException e) when (
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode ==
+                    TableErrorCodeStrings.UpdateConditionNotSatisfied ||
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode ==
+                    TableErrorCodeStrings.EntityAlreadyExists ||
+                    e.RequestInformation.ExtendedErrorInformation.ErrorCode == TableErrorCodeStrings.EntityNotFound)
+                {
+                }
+            }
         }
 
-        public Task ChangeState<TState>(string operationName, string id, TState newState)
+        public async Task<bool> TryInsertAsync(string operationName, string id, string state)
         {
-            return _tableStorage.MergeAsync(OperationStateEntity.GeneratePartitionKey(operationName),
-                OperationStateEntity.GenerateRowKey(id), a =>
-                {
-                    a.State = newState.ToString();
-                    return a;
-                });
+            var operationStateEntity = new OperationStateEntity
+            {
+                Id = id,
+                OperationName = operationName,
+                State = state
+            };
+            var result = await _tableStorage.TryInsertAsync(operationStateEntity);
+            Log(nameof(TryInsertAsync), operationStateEntity,
+                result ? "Inserted" : "Tried to insert, but already existed");
+            return result;
+        }
+
+        public async Task SetStateAsync(string operationName, string id, string state)
+        {
+            var operationStateEntity = new OperationStateEntity
+            {
+                Id = id,
+                OperationName = operationName,
+                State = state,
+            };
+            await _tableStorage.InsertOrMergeAsync(operationStateEntity);
+            Log(nameof(SetStateAsync), operationStateEntity, "Inserted or merged");
+        }
+
+        [ItemCanBeNull]
+        private Task<OperationStateEntity> GetDataAsync(string operationName, string id)
+        {
+            return _tableStorage.GetDataAsync(OperationStateEntity.GeneratePartitionKey(operationName),
+                OperationStateEntity.GenerateRowKey(id));
+        }
+
+        private void Log(string process, OperationStateEntity context, string info)
+        {
+            if (_enableOperationsLogs)
+            {
+                _log.WriteInfo(process, context,
+                    info + " (op descr: " + context.OperationName + " #" + context.Id + " => " + context.State + ")");
+            }
         }
     }
 }

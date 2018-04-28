@@ -45,19 +45,31 @@ namespace MarginTrading.AccountsManagement.Contracts
         Task<AccountContract> Change(string clientId, string accountId, [Body] ChangeAccountRequest request);
 
         /// <summary>
-        /// Manually charge client's account. Amount is absolute, i.e. negative value goes for charging.
+        /// Starts the operation of manually charging the client's account.
+        /// Amount is absolute, i.e. negative value goes for charging.
         /// </summary>
         [Post("/api/accounts/{clientId}/{accountId}/balance")]
-        Task<AccountContract> ChargeManually(string clientId, string accountId,
-            [Body] AccountChargeManuallyRequest request);
-        
+        Task BeginChargeManually(string clientId, string accountId, [Body] AccountChargeManuallyRequest request);
+
+        /// <summary>
+        /// Starts the operation of depositing funds to the client's account. Amount should be positive.
+        /// </summary>
+        [Post("/api/accounts/{clientId}/{accountId}/balance/deposit")]
+        Task BeginDeposit(string clientId, string accountId, [Body] AccountChargeManuallyRequest request);
+
+        /// <summary>
+        /// Starts the operation of withdrawing funds to the client's account. Amount should be positive.
+        /// </summary>
+        [Post("/api/accounts/{clientId}/{accountId}/balance/withdraw")]
+        Task BeginWithdraw(string clientId, string accountId, [Body] AccountChargeManuallyRequest request);
+
         /// <summary>
         /// Creates default accounts for client by trading condition id.
         /// </summary>
         [Post("/api/accounts/{clientId}/default-accounts")]
         Task<List<AccountContract>> CreateDefaultAccounts(string clientId, 
             [Body] CreateDefaultAccountsRequest request);
-        
+
         /// <summary>
         /// Create accounts with requested base asset for all users 
         /// that already have accounts with requested trading condition

@@ -10,12 +10,12 @@ namespace MarginTrading.AccountsManagement.TradingEngineMock
     /// <summary>
     /// This is a mock of whats going to exist in the backend
     /// </summary>
-    public class FreezeAmountForWithdrawalCommandHandler
+    public class FreezeAmountForWithdrawalCommandsHandler
     {
         private readonly IAccountManagementService _accountManagementService;
         private readonly IConvertService _convertService;
 
-        public FreezeAmountForWithdrawalCommandHandler(IAccountManagementService accountManagementService,
+        public FreezeAmountForWithdrawalCommandsHandler(IAccountManagementService accountManagementService,
             IConvertService convertService)
         {
             _accountManagementService = accountManagementService;
@@ -26,7 +26,7 @@ namespace MarginTrading.AccountsManagement.TradingEngineMock
         /// Freeze the the amount in the margin.
         /// </summary>
         [UsedImplicitly]
-        private async Task Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
+        private async Task<CommandHandlingResult> Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
         {
             var account = await _accountManagementService.GetByClientAndIdAsync(command.ClientId, command.AccountId);
             if (account != null && account.Balance > command.Amount)
@@ -38,6 +38,8 @@ namespace MarginTrading.AccountsManagement.TradingEngineMock
                 publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.ClientId, command.AccountId,
                     command.Amount, command.OperationId, account != null ? "Not enough free margin" : "Account not found"));
             }
+            
+            return CommandHandlingResult.Ok();
         }
     }
 }

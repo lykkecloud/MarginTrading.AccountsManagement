@@ -7,11 +7,9 @@ namespace MarginTrading.AccountsManagement.Repositories
 {
     internal interface IOperationStatesRepository
     {
-        [ItemCanBeNull]
-        Task<OperationState> Get(string operationName, string id);
+        Task SetStateAsync(string operationName, string id, string state);
 
-        Task<bool> InsertIfNotExistsAsync(OperationState operationState);
-        Task<bool> TryChangeState<TState>(string operationName, string id, TState oldState, Func<TState> newStateFunc);
-        Task ChangeState<TState>(string operationName, string id, TState newState);
+        Task<bool> TryInsertOrModifyAsync(string operationName, string id, Func<string, Task<string>> modify);
+        Task<bool> TryInsertAsync(string operationName, string id, string state);
     }
 }
