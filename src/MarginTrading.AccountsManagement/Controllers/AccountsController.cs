@@ -105,7 +105,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpPost]
         [Route("{clientId}/{accountId}/balance")]
-        public Task BeginChargeManually(string clientId, string accountId, 
+        public Task<string> BeginChargeManually(string clientId, string accountId,
             [FromBody] AccountChargeManuallyRequest request)
         {
             return _sendBalanceCommandsService.ChargeManuallyAsync(clientId, accountId, request.AmountDelta,
@@ -117,7 +117,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpPost]
         [Route("{clientId}/{accountId}/balance/deposit")]
-        public Task BeginDeposit(string clientId, string accountId, [FromBody] AccountChargeManuallyRequest request)
+        public Task<string> BeginDeposit(string clientId, string accountId,
+            [FromBody] AccountChargeManuallyRequest request)
         {
             return _sendBalanceCommandsService.DepositAsync(clientId, accountId, request.AmountDelta,
                 request.OperationId, request.Reason);
@@ -128,7 +129,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpPost]
         [Route("{clientId}/{accountId}/balance/withdraw")]
-        public Task BeginWithdraw(string clientId, string accountId, [FromBody] AccountChargeManuallyRequest request)
+        public Task<string> BeginWithdraw(string clientId, string accountId,
+            [FromBody] AccountChargeManuallyRequest request)
         {
             return _sendBalanceCommandsService.WithdrawAsync(clientId, accountId, request.AmountDelta,
                 request.OperationId, request.Reason);
