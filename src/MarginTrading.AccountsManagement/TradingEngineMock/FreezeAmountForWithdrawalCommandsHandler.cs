@@ -29,7 +29,7 @@ namespace MarginTrading.AccountsManagement.TradingEngineMock
         private async Task<CommandHandlingResult> Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
         {
             var account = await _accountManagementService.GetByClientAndIdAsync(command.ClientId, command.AccountId);
-            if (account != null && account.Balance > command.Amount)
+            if (account != null && account.Balance >= command.Amount)
             {
                 publisher.PublishEvent(_convertService.Convert<AmountForWithdrawalFrozenEvent>(command));
             }
