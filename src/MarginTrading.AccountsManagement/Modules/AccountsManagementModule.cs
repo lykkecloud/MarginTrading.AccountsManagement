@@ -37,10 +37,7 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement.Cqrs.ContextNames).SingleInstance();
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
             builder.RegisterInstance(_log).As<ILog>().SingleInstance();
-
-            //TODO: implement service, that will call MT settings service
-            builder.RegisterType<TradingConditionsServiceMock>().As<ITradingConditionsService>().SingleInstance();
-
+            builder.RegisterType<TradingConditionsService>().As<ITradingConditionsService>().SingleInstance();
             builder.RegisterType<EventSender>().As<IEventSender>().SingleInstance();
             builder.RegisterType<AzureTableStorageFactoryService>().As<IAzureTableStorageFactoryService>()
                 .SingleInstance();
