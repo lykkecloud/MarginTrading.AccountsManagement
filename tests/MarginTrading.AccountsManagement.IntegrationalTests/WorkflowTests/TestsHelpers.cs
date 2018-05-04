@@ -11,20 +11,6 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.WorkflowTests
         public const string ClientId = "IntergationalTestsClient";
         public const string AccountId = "IntergationalTestsAccount-1";
 
-        static TestsHelpers()
-        {
-            var sett = SettingsUtil.Settings.MarginTradingAccountManagement.Cqrs;
-            var connectionString = sett.ConnectionString;
-            var eventsExchange = $"{sett.EnvironmentName}.{sett.ContextNames.AccountsManagement}.events.exchange";
-            
-            RabbitUtil.ListenCqrsMessages<AccountBalanceChangedEvent>(connectionString, eventsExchange);
-            RabbitUtil.ListenCqrsMessages<DepositCompletedEvent>(connectionString, eventsExchange);
-            RabbitUtil.ListenCqrsMessages<WithdrawalCompletedEvent>(connectionString, eventsExchange);
-            RabbitUtil.ListenCqrsMessages<WithdrawalFailedEvent>(connectionString, eventsExchange);
-
-            // todo: register other messages
-        }
-
         public static async Task<AccountContract> EnsureAccountState(decimal needBalance = 0)
         {
             var account = await ClientUtil.AccountsApi.GetByClientAndId(ClientId, AccountId);
