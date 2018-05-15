@@ -275,7 +275,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = accountId,
                 ClientId = clientId,
-                Type = Enum.Parse<AccountHistoryTypeContract>(historyType.ToString()),
+                Type = Enum.Parse<AccountBalanceHistoryTypeContract>(historyType.ToString()),
                 Amount = amountDelta,
                 Balance = account.Balance,
                 WithdrawTransferLimit = account.WithdrawTransferLimit,

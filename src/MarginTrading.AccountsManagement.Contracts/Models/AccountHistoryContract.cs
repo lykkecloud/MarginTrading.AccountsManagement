@@ -16,7 +16,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         public decimal WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
-        public AccountHistoryTypeContract Type { get; set; }
+        public AccountBalanceHistoryTypeContract Type { get; set; }
         public string OrderId { get; set; }
         public string LegalEntity { get; set; }
         public string AuditLog { get; set; }
