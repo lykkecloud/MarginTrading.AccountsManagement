@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace MarginTrading.AccountsManagement.Services
 {
@@ -7,12 +8,12 @@ namespace MarginTrading.AccountsManagement.Services
     {
         Task<bool> IsTradingConditionExistsAsync(string tradingConditionId);
         
-        Task<bool> IsAccountGroupExistsAsync(string tradingConditionId, string baseAssetId);
+        Task<bool> IsBaseAssetExistsAsync(string tradingConditionId, string baseAssetId);
 
-        Task<string> GetLegalEntityAsync(string tradingConditionId);
+        [ItemCanBeNull] Task<string> GetLegalEntityAsync(string tradingConditionId);
 
         Task<IEnumerable<string>> GetBaseAccountAssetsAsync(string tradingConditionId);
         
-        Task<string> GetDefaultTradingConditionAsync();
+        [ItemCanBeNull] Task<string> GetDefaultTradingConditionIdAsync();
     }
 }

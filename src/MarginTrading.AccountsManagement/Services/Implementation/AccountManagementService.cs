@@ -6,6 +6,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Messages;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
@@ -49,16 +50,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             if (string.IsNullOrEmpty(tradingConditionId))
             {
-                tradingConditionId = await _tradingConditionsService.GetDefaultTradingConditionAsync();
+                tradingConditionId = await _tradingConditionsService.GetDefaultTradingConditionIdAsync()
+                    .RequiredNotNull("default trading condition");
             }
 
-            var isAccountGroupExists =
-                _tradingConditionsService.IsAccountGroupExistsAsync(tradingConditionId, baseAssetId);
+            var baseAssetExists = _tradingConditionsService.IsBaseAssetExistsAsync(tradingConditionId, baseAssetId);
 
-            if (! await isAccountGroupExists)
+            if (! await baseAssetExists)
             {
                 throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
-                    $"Account group with base asset [{baseAssetId}] and trading condition [{tradingConditionId}] is not found");
+                    $"Base asset [{baseAssetId}] is not configured for trading condition [{tradingConditionId}]");
             }
 
             var clientAccounts = await GetByClientAsync(clientId);
