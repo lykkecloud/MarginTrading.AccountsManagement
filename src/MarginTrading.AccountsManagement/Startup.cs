@@ -34,7 +34,7 @@ namespace MarginTrading.AccountsManagement
                 .SetBasePath(env.ContentRootPath)
                 .AddInMemoryCollection(new Dictionary<string, string>
                 {
-                    {"SettingsUrl", Path.Combine(env.ContentRootPath, $"appsettings.dev.json")}
+                    {"SettingsUrl", Path.Combine(env.ContentRootPath, "appsettings.dev.json")}
                 })
                 .AddEnvironmentVariables();
             Configuration = builder.Build();

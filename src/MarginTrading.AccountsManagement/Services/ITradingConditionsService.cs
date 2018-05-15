@@ -5,12 +5,14 @@ namespace MarginTrading.AccountsManagement.Services
 {
     public interface ITradingConditionsService
     {
-        Task<bool> IsTradingConditionExists(string tradingConditionId);
+        Task<bool> IsTradingConditionExistsAsync(string tradingConditionId);
         
-        Task<bool> IsAccountGroupExists(string tradingConditionId, string baseAssetId);
+        Task<bool> IsAccountGroupExistsAsync(string tradingConditionId, string baseAssetId);
 
-        Task<string> GetLegalEntity(string tradingConditionId);
+        Task<string> GetLegalEntityAsync(string tradingConditionId);
 
-        Task<IEnumerable<string>> GetBaseAccountAssets(string tradingConditionId);
+        Task<IEnumerable<string>> GetBaseAccountAssetsAsync(string tradingConditionId);
+        
+        Task<string> GetDefaultTradingConditionAsync();
     }
 }
