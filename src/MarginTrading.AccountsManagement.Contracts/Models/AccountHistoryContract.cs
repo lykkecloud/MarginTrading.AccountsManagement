@@ -1,5 +1,7 @@
 ﻿using System;
 using MarginTrading.AccountsManagement.Contracts.Messages;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.AccountsManagement.Contracts.Models
 {
@@ -13,6 +15,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
         public AccountHistoryTypeContract Type { get; set; }
         public string OrderId { get; set; }
         public string LegalEntity { get; set; }

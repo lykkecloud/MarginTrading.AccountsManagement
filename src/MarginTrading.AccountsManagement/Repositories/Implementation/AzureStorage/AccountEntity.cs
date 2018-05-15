@@ -11,9 +11,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         private decimal _balance;
         private bool _isDisabled;
 
-        public string Id { get; set; }
+        public string Id 
+        {
+            get => RowKey;
+            set => RowKey = value;
+        }
         
-        public string ClientId { get; set; }
+        public string ClientId
+        {
+            get => PartitionKey;
+            set => PartitionKey = value;
+        }
         
         public string TradingConditionId { get; set; }
         

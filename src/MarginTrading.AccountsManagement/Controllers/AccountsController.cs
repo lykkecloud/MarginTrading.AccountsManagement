@@ -17,11 +17,14 @@ namespace MarginTrading.AccountsManagement.Controllers
     {
         private readonly IAccountManagementService _accountManagementService;
         private readonly IConvertService _convertService;
+        private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
 
-        public AccountsController(IAccountManagementService accountManagementService, IConvertService convertService)
+        public AccountsController(IAccountManagementService accountManagementService, IConvertService convertService,
+            ISendBalanceCommandsService sendBalanceCommandsService)
         {
             _accountManagementService = accountManagementService;
             _convertService = convertService;
+            _sendBalanceCommandsService = sendBalanceCommandsService;
         }
 
         /// <summary>
@@ -61,7 +64,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         [Route("{clientId}")]
         public Task<AccountContract> Create(string clientId, [FromBody] CreateAccountRequest request)
         {
-            return Convert(_accountManagementService.CreateAsync(clientId, request.TradingConditionId, request.BaseAssetId));
+            return Convert(
+                _accountManagementService.CreateAsync(clientId, request.TradingConditionId, request.BaseAssetId));
         }
 
         /// <summary>
@@ -70,7 +74,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpPatch]
         [Route("{clientId}/{accountId}")]
-        public async Task<AccountContract> Change(string clientId, string accountId, [FromBody] ChangeAccountRequest request)
+        public async Task<AccountContract> Change(string clientId, string accountId,
+            [FromBody] ChangeAccountRequest request)
         {
             Account result = null;
 
@@ -81,28 +86,56 @@ namespace MarginTrading.AccountsManagement.Controllers
 
             if (request.IsDisabled.HasValue)
             {
-                result = await _accountManagementService.SetDisabledAsync(clientId, accountId, request.IsDisabled.Value);
+                result = await _accountManagementService.SetDisabledAsync(clientId, accountId,
+                    request.IsDisabled.Value);
             }
-            
+
             if (!string.IsNullOrEmpty(request.TradingConditionId))
             {
-                result = await _accountManagementService.SetTradingConditionAsync(clientId, accountId, request.TradingConditionId);
+                result = await _accountManagementService.SetTradingConditionAsync(clientId, accountId,
+                    request.TradingConditionId);
             }
-            
+
             return Convert(result);
         }
 
         /// <summary>
-        /// Manually charge client's account. Amount is absolute, i.e. negative value goes for charging.
+        /// Starts the operation of manually charging the client's account.
+        /// Amount is absolute, i.e. negative value goes for charging.
         /// </summary>
         [HttpPost]
         [Route("{clientId}/{accountId}/balance")]
-        public Task<AccountContract> ChargeManually(string clientId, string accountId,
+        public Task<string> BeginChargeManually(string clientId, string accountId,
             [FromBody] AccountChargeManuallyRequest request)
         {
-            return Convert(_accountManagementService.ChargeManuallyAsync(clientId, accountId, request.AmountDelta, request.Reason));
+            return _sendBalanceCommandsService.ChargeManuallyAsync(clientId, accountId, request.AmountDelta,
+                request.OperationId, request.Reason, "Api");
         }
-        
+
+        /// <summary>
+        /// Starts the operation of depositing funds to the client's account. Amount should be positive.
+        /// </summary>
+        [HttpPost]
+        [Route("{clientId}/{accountId}/balance/deposit")]
+        public Task<string> BeginDeposit(string clientId, string accountId,
+            [FromBody] AccountChargeManuallyRequest request)
+        {
+            return _sendBalanceCommandsService.DepositAsync(clientId, accountId, request.AmountDelta,
+                request.OperationId, request.Reason);
+        }
+
+        /// <summary>
+        /// Starts the operation of withdrawing funds to the client's account. Amount should be positive.
+        /// </summary>
+        [HttpPost]
+        [Route("{clientId}/{accountId}/balance/withdraw")]
+        public Task<string> BeginWithdraw(string clientId, string accountId,
+            [FromBody] AccountChargeManuallyRequest request)
+        {
+            return _sendBalanceCommandsService.WithdrawAsync(clientId, accountId, request.AmountDelta,
+                request.OperationId, request.Reason);
+        }
+
         /// <summary>
         /// Reset account balance to default value (from settings)
         /// </summary>

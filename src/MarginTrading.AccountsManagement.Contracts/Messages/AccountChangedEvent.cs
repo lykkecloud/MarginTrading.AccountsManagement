@@ -13,7 +13,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Messages
         public DateTime Date { get; set; }
         
         /// <summary>
-        /// Account snapshot at the moment of event
+        /// Account snapshot at the moment immediately after the event happened
         /// </summary>
         public AccountContract Account { get; set; }
         

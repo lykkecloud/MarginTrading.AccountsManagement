@@ -9,7 +9,6 @@ namespace MarginTrading.AccountsManagement.Services
     {
         Task SendAccountUpdatedEvent(Account account);
         Task SendAccountCreatedEvent(Account account);
-        Task SendAccountDisabledEvent(Account account);
         Task SendAccountHistoryEvent(AccountHistoryContract model);
     }
 }

@@ -22,5 +22,9 @@ namespace MarginTrading.AccountsManagement.Settings
         [Optional, CanBeNull]
         public BehaviorSettings Behavior { get; set; }
         
+        public CqrsSettings Cqrs { get; set; }
+        
+        [Optional]
+        public bool EnableOperationsLogs { get; set; }
     }
 }
