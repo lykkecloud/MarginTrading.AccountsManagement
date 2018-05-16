@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.IntegrationalTests.Infrastructure;
 using NUnit.Framework;
