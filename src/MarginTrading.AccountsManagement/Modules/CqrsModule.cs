@@ -213,6 +213,7 @@ namespace MarginTrading.AccountsManagement.Modules
             contextRegistration
                 .ListeningCommands(
                     typeof(BeginBalanceUpdateInternalCommand),
+                    typeof(BeginClosePositionBalanceUpdateCommand),
                     typeof(UpdateBalanceInternalCommand))
                 .On(DefaultRoute)
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
