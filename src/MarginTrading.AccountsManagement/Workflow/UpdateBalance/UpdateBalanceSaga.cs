@@ -4,7 +4,6 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.AccountsManagement.TradingEngineMock.Contracts;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 
 namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance

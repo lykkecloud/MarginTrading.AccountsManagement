@@ -1,6 +1,6 @@
 ﻿namespace MarginTrading.AccountsManagement.InternalModels
 {
-    public enum AccountHistoryType
+    public enum AccountBalanceChangeType
     {
         Deposit = 1,
         Withdraw = 2,

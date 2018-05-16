@@ -25,6 +25,5 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public decimal WithdrawTransferLimit { get; }
         public string LegalEntity { get; }
         public bool IsDisabled { get; }
-
     }
 }
