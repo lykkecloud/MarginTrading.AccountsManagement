@@ -66,7 +66,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
             IEventPublisher publisher)
         {
-            await _operationStatesRepository.TryInsertOrModifyAsync(OperationName, command.OperationId,
+                await _operationStatesRepository.TryInsertOrModifyAsync(OperationName, command.OperationId,
                 async oldState =>
                 {
                     if (oldState != States.Received.ToString())
