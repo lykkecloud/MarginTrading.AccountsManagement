@@ -4,10 +4,10 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.AccountsManagement.TradingEngineMock.Contracts;
-using MarginTrading.AccountsManagement.Workflow.UpdateBalance;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
+using MarginTrading.Backend.Contracts.Commands;
+using MarginTrading.Backend.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 {

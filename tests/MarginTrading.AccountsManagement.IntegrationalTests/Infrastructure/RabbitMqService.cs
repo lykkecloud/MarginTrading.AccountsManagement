@@ -12,6 +12,7 @@ using MarginTrading.AccountsManagement.IntegrationalTests.Settings;
 using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using RabbitMQ.Client;
 
 namespace MarginTrading.AccountsManagement.IntegrationalTests.Infrastructure
 {
@@ -59,7 +60,7 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.Infrastructure
             return new MessagePackMessageDeserializer<TMessage>();
         }
 
-        public IMessageProducer<TMessage> GetProducer<TMessage>(RabbitConnectionSettings settings,
+        public RabbitMqPublisher<TMessage> GetProducer<TMessage>(RabbitConnectionSettings settings,
             bool isDurable, IRabbitMqSerializer<TMessage> serializer)
         {
             var subscriptionSettings = new RabbitMqSubscriptionSettings
@@ -69,16 +70,32 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.Infrastructure
                 IsDurable = isDurable,
             };
 
-            return (IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
+            return (RabbitMqPublisher<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
 
             Lazy<IStopable> CreateProducer(RabbitMqSubscriptionSettings s)
             {
                 // Lazy ensures RabbitMqPublisher will be created and started only once
                 // https://andrewlock.net/making-getoradd-on-concurrentdictionary-thread-safe-using-lazy/
-                return new Lazy<IStopable>(() => new RabbitMqPublisher<TMessage>(s).DisableInMemoryQueuePersistence()
+                return new Lazy<IStopable>(() => new RabbitMqPublisher<TMessage>(s)
+                    .DisableInMemoryQueuePersistence()
                     .SetSerializer(serializer)
+                    .SetPublishStrategy(new TopicPublishStrategy())
                     .SetLogger(_logger)
+                    .PublishSynchronously()
                     .Start());
+            }
+        }
+
+        private class TopicPublishStrategy : IRabbitMqPublishStrategy
+        {
+            public void Configure(RabbitMqSubscriptionSettings settings, IModel channel)
+            {
+                channel.ExchangeDeclare(settings.ExchangeName, "topic", true);
+            }
+
+            public void Publish(RabbitMqSubscriptionSettings settings, IModel channel, RawMessage message)
+            {
+                channel.BasicPublish(settings.ExchangeName, message.RoutingKey, null, message.Body);
             }
         }
 

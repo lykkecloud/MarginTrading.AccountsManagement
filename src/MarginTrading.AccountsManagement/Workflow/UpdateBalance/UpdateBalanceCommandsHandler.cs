@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Repositories;
@@ -29,24 +30,43 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         /// Handles the command to begin changing the balance
         /// </summary>
         [UsedImplicitly]
-        private async Task<CommandHandlingResult> Handle(BeginBalanceUpdateInternalCommand command, IEventPublisher publisher)
+        private async Task<CommandHandlingResult> Handle(BeginBalanceUpdateInternalCommand command,
+            IEventPublisher publisher)
         {
             if (await _operationStatesRepository.TryInsertAsync(OperationName, command.OperationId,
                 States.Received.ToString()))
             {
                 publisher.PublishEvent(_convertService.Convert<AccountBalanceUpdateStartedEvent>(command));
             }
-            return CommandHandlingResult.Ok();
 
+            return CommandHandlingResult.Ok();
+        }
+
+        /// <summary>
+        /// Handles the command to begin changing the balance because of a closed position
+        /// </summary>
+        [UsedImplicitly]
+        private async Task<CommandHandlingResult> Handle(BeginClosePositionBalanceUpdateCommand command,
+            IEventPublisher publisher)
+        {
+            if (await _operationStatesRepository.TryInsertAsync(OperationName, command.OperationId,
+                States.Received.ToString()))
+            {
+                publisher.PublishEvent(new AccountBalanceUpdateStartedEvent(command.ClientId, command.AccountId,
+                    command.Amount, command.OperationId, command.Reason, "ClosePosition")); // todo add command.EventSourceId
+            }
+
+            return CommandHandlingResult.Ok();
         }
 
         /// <summary>
         /// Handles the command to change the balance
         /// </summary>
         [UsedImplicitly]
-        private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command, IEventPublisher publisher)
+        private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
+            IEventPublisher publisher)
         {
-            await _operationStatesRepository.TryInsertOrModifyAsync(OperationName, command.OperationId,
+                await _operationStatesRepository.TryInsertOrModifyAsync(OperationName, command.OperationId,
                 async oldState =>
                 {
                     if (oldState != States.Received.ToString())
@@ -59,7 +79,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                     publisher.PublishEvent(_convertService.Convert<AccountBalanceChangedEvent>(command));
                     return States.Finished.ToString();
                 });
-            
+
             return CommandHandlingResult.Ok();
         }
 

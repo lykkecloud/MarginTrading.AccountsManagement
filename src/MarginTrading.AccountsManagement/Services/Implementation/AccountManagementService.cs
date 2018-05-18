@@ -215,7 +215,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public Task<Account> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta, string reason)
         {
-            return UpdateBalanceAsync(clientId, accountId, amountDelta, AccountHistoryType.Manual, reason);
+            return UpdateBalanceAsync(clientId, accountId, amountDelta, AccountBalanceChangeType.Manual, reason);
         }
         
         public async Task<Account> ResetAccountAsync(string clientId, string accountId)
@@ -232,7 +232,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     $"Account for client [{clientId}] with id [{accountId}] does not exist");
 
             return await UpdateBalanceAsync(clientId, accountId, _settings.Behavior.DefaultBalance - account.Balance,
-                AccountHistoryType.Reset, "Reset account");
+                AccountBalanceChangeType.Reset, "Reset account");
         }
         
         #endregion
@@ -255,14 +255,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             if (_settings.Behavior?.DefaultBalance != null)
             {
                 account = await UpdateBalanceAsync(account.ClientId, account.Id, _settings.Behavior.DefaultBalance,
-                    AccountHistoryType.Deposit, "Initial deposit");
+                    AccountBalanceChangeType.Deposit, "Initial deposit");
             }
 
             return account;
         }
 
         private async Task<Account> UpdateBalanceAsync(string clientId, string accountId, decimal amountDelta,
-            AccountHistoryType historyType, string comment, string eventSourceId = null,
+            AccountBalanceChangeType balanceChangeType, string comment, string eventSourceId = null,
             bool changeTransferLimit = false, string auditLog = null)
         {
             var account =
@@ -275,13 +275,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = accountId,
                 ClientId = clientId,
-                Type = Enum.Parse<AccountHistoryTypeContract>(historyType.ToString()),
+                Type = Enum.Parse<AccountBalanceHistoryTypeContract>(balanceChangeType.ToString()),
                 Amount = amountDelta,
                 Balance = account.Balance,
                 WithdrawTransferLimit = account.WithdrawTransferLimit,
                 Date = _systemClock.UtcNow.UtcDateTime,
                 Comment = comment,
-                OrderId = historyType == AccountHistoryType.OrderClosed ? eventSourceId : null,
+                OrderId = balanceChangeType == AccountBalanceChangeType.OrderClosed ? eventSourceId : null,
                 AuditLog = auditLog,
                 LegalEntity = account.LegalEntity
             };

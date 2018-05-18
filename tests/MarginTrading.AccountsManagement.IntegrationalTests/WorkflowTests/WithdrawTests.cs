@@ -52,10 +52,11 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.WorkflowTests
                     Reason = "intergational tests: withdraw",
                 });
             
-            var messagesReceivedTask = Task.WhenAll(
+            var eventTask = await Task.WhenAny(
+                RabbitUtil.WaitForCqrsMessage<WithdrawalCompletedEvent>(m => m.OperationId == operationId),
                 RabbitUtil.WaitForCqrsMessage<WithdrawalFailedEvent>(m => m.OperationId == operationId));
 
-            await messagesReceivedTask;
+            eventTask.Should().BeOfType<Task<WithdrawalFailedEvent>>();
 
             // assert
             (await TestsHelpers.GetAccount()).Balance.Should().Be(123);

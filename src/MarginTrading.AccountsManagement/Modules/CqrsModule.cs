@@ -12,14 +12,14 @@ using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.AccountsManagement.TradingEngineMock;
-using MarginTrading.AccountsManagement.TradingEngineMock.Contracts;
 using MarginTrading.AccountsManagement.Workflow.Deposit;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
+using MarginTrading.Backend.Contracts.Commands;
+using MarginTrading.Backend.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.Modules
 {
@@ -86,8 +86,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 RegisterWithdrawalSaga(),
                 RegisterUpdateBalanceSaga(),
                 RegisterDepositSaga(),
-                RegisterContext(),
-                RegisterMockTradingEngineContext());
+                RegisterContext());
         }
 
         private IRegistration RegisterContext()
@@ -213,26 +212,13 @@ namespace MarginTrading.AccountsManagement.Modules
             contextRegistration
                 .ListeningCommands(
                     typeof(BeginBalanceUpdateInternalCommand),
+                    typeof(BeginClosePositionBalanceUpdateCommand),
                     typeof(UpdateBalanceInternalCommand))
                 .On(DefaultRoute)
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
                 .PublishingEvents(
                     typeof(AccountBalanceUpdateStartedEvent), 
                     typeof(AccountBalanceChangedEvent))
-                .With(DefaultPipeline);
-        }
-
-        private IRegistration RegisterMockTradingEngineContext()
-        {
-            return Register.BoundedContext(_settings.ContextNames.TradingEngine)
-                .FailedCommandRetryDelay(_defaultRetryDelayMs)
-                .ProcessingOptions(DefaultRoute).MultiThreaded(8).QueueCapacity(1024)
-                .ListeningCommands(typeof(FreezeAmountForWithdrawalCommand))
-                .On(DefaultRoute)
-                .WithCommandsHandler<FreezeAmountForWithdrawalCommandsHandler>()
-                .PublishingEvents(
-                    typeof(AmountForWithdrawalFrozenEvent),
-                    typeof(AmountForWithdrawalFreezeFailedEvent))
                 .With(DefaultPipeline);
         }
 
