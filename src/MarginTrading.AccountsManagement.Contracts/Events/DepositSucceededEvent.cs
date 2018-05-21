@@ -3,15 +3,15 @@
 namespace MarginTrading.AccountsManagement.Contracts.Events
 {
     /// <summary>
-    /// Withdrawal operation failed
+    /// The deposit operation has succeeded
     /// </summary>
     [MessagePackObject]
-    public class WithdrawalFailedEvent
+    public class DepositSucceededEvent
     {
         [Key(0)]
         public string OperationId { get; }
         
-        public WithdrawalFailedEvent(string operationId)
+        public DepositSucceededEvent(string operationId)
         {
             OperationId = operationId;
         }

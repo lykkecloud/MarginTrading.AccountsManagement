@@ -1,11 +1,12 @@
-﻿using MarginTrading.AccountsManagement.Infrastructure.Implementation;
+﻿using System;
+using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 
 namespace MarginTrading.AccountsManagement.InternalModels
 {
     public class Account
     {
-        public Account(string id, string clientId, string tradingConditionId,
-            string baseAssetId, decimal balance, decimal withdrawTransferLimit, string legalEntity, bool isDisabled)
+        public Account(string id, string clientId, string tradingConditionId, string baseAssetId, decimal balance,
+            decimal withdrawTransferLimit, string legalEntity, bool isDisabled, DateTimeOffset modificationTimestamp)
         {
             Id = id.RequiredNotNullOrWhiteSpace(nameof(id));
             ClientId = clientId.RequiredNotNullOrWhiteSpace(nameof(clientId));
@@ -15,6 +16,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
             WithdrawTransferLimit = withdrawTransferLimit;
             LegalEntity = legalEntity.RequiredNotNullOrWhiteSpace(nameof(legalEntity));
             IsDisabled = isDisabled;
+            ModificationTimestamp = modificationTimestamp;
         }
 
         public string Id { get; }
@@ -25,5 +27,6 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public decimal WithdrawTransferLimit { get; }
         public string LegalEntity { get; }
         public bool IsDisabled { get; }
+        public DateTimeOffset ModificationTimestamp { get; }
     }
 }

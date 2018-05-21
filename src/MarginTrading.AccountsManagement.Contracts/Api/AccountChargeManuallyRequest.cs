@@ -2,6 +2,9 @@
 
 namespace MarginTrading.AccountsManagement.Contracts.Api
 {
+    /// <summary>
+    /// Request to change account's balance
+    /// </summary>
     public class AccountChargeManuallyRequest
     {
         /// <summary>

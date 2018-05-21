@@ -44,7 +44,7 @@ namespace MarginTrading.AccountsManagement.Services
         
         Task<Account> SetDisabledAsync(string clientId, string accountId, bool isDisabled);
         
-        Task<Account> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta, string reason);
+        Task<Account> ChargeManuallyAsync(string operationId, string clientId, string accountId, decimal amountDelta, string reason);
         
         Task<Account> ResetAccountAsync(string clientId, string accountId);
         

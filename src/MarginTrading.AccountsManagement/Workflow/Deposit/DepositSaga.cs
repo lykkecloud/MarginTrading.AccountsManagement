@@ -40,7 +40,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private Task Handle(AmountForDepositFrozenEvent evt, ICommandSender sender)
         {
-            sender.SendCommand(new BeginBalanceUpdateInternalCommand(evt.ClientId, evt.AccountId, evt.Amount,
+            sender.SendCommand(new BeginUpdateBalanceInternalCommand(evt.ClientId, evt.AccountId, evt.Amount,
                 evt.OperationId, evt.Reason, UpdateBalanceSource), _contextNames.AccountsManagement);
             return Task.CompletedTask;
         }

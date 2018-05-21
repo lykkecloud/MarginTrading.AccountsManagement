@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Autofac;
 using Common.Log;
-using Lykke.Cqrs;
-using Lykke.Cqrs.Configuration;
-using Lykke.Messaging;
-using Lykke.Messaging.RabbitMq;
+using Lykke.Common.Chaos;
 using Lykke.SettingsReader;
-using MarginTrading.AccountsManagement.Infrastructure;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Repositories.AzureServices.Implementations;
 using MarginTrading.AccountsManagement.Services;
@@ -41,6 +34,7 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterType<EventSender>().As<IEventSender>().SingleInstance();
             builder.RegisterType<AzureTableStorageFactoryService>().As<IAzureTableStorageFactoryService>()
                 .SingleInstance();
+            builder.RegisterChaosKitty(_settings.CurrentValue.MarginTradingAccountManagement.ChaosKitty);
             
             RegisterDefaultImplementations(builder);
         }

@@ -109,7 +109,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             [FromBody] AccountChargeManuallyRequest request)
         {
             return _sendBalanceCommandsService.ChargeManuallyAsync(clientId, accountId, request.AmountDelta,
-                request.OperationId, request.Reason, "Api");
+                request.OperationId, request.Reason, "Api", );
         }
 
         /// <summary>

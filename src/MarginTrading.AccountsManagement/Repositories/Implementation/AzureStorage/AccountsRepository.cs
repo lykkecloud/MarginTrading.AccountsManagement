@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -52,17 +53,20 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return Convert(account);
         }
 
-        public async Task<Account> UpdateBalanceAsync(string clientId, string accountId, decimal amountDelta, bool changeLimit)
+        public async Task<Account> UpdateBalanceAsync(string operationId, string clientId, string accountId,
+            decimal amountDelta, bool changeLimit)
         {
-            var account = await _tableStorage.MergeAsync(AccountEntity.GeneratePartitionKey(clientId),
-                AccountEntity.GenerateRowKey(accountId), a =>
+            var account = await _tableStorage.InsertOrModifyAsync(AccountEntity.GeneratePartitionKey(clientId),
+                AccountEntity.GenerateRowKey(accountId), 
+                () => throw new InvalidOperationException($"Account {accountId} not exists"),
+                a =>
                 {
                     a.Balance += amountDelta;
 
                     if (changeLimit)
                         a.WithdrawTransferLimit += amountDelta;
 
-                    return a;
+                    return true;
                 });
             
             return Convert(account);
@@ -74,7 +78,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
                     a.TradingConditionId = tradingConditionId;
-
                     return a;
                 });
             
@@ -87,7 +90,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
                     a.IsDisabled = isDisabled;
-
                     return a;
                 });
             
@@ -96,7 +98,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
         private Account Convert(AccountEntity entity)
         {
-            return _convertService.Convert<AccountEntity, Account>(entity);
+            return _convertService.Convert<AccountEntity, Account>(
+                entity,
+                o => o.ConfigureMap(MemberList.Destination).ForMember(
+                    a => a.ModificationTimestamp,
+                    m => m.MapFrom(e => e.Timestamp)));
         }
     }
 }

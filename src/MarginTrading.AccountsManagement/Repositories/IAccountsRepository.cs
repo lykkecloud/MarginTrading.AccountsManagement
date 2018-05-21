@@ -14,7 +14,13 @@ namespace MarginTrading.AccountsManagement.Repositories
         [ItemCanBeNull]
         Task<Account> GetAsync(string clientId, string accountId);
 
-        Task<Account> UpdateBalanceAsync(string clientId, string accountId, decimal amountDelta,
+        /// <summary>
+        /// Updates the account if the operation has not yet been executed. 
+        /// </summary>
+        /// <returns>
+        /// Account after update
+        /// </returns>
+        Task<Account> UpdateBalanceAsync(string operationId, string clientId, string accountId, decimal amountDelta,
             bool changeLimit);
 
         Task<Account> UpdateTradingConditionIdAsync(string clientId, string accountId,

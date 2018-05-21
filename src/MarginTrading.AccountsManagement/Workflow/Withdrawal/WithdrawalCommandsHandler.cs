@@ -9,6 +9,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
+using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
 
 namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 {
@@ -31,7 +32,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         /// Handles the command to begin the withdrawal
         /// </summary>
         [UsedImplicitly]
-        private async Task<CommandHandlingResult> Handle(BeginWithdrawalCommand command, IEventPublisher publisher)
+        private async Task<CommandHandlingResult> Handle(WithdrawCommand command, IEventPublisher publisher)
         {
             await _operationStatesRepository.TryInsertOrModifyAsync(OperationName, command.OperationId, async old =>
             {
@@ -50,7 +51,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 }
                 else
                 {
-                    publisher.PublishEvent(_convertService.Convert<WithdrawalStartedEvent>(command));
+                    publisher.PublishEvent(_convertService.Convert<WithdrawalStartedInternalEvent>(command));
                     return States.Received.ToString();
                 }
             });
@@ -89,7 +90,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         {
             await _operationStatesRepository.SetStateAsync(OperationName, command.OperationId,
                 States.Finished.ToString());
-            publisher.PublishEvent(new WithdrawalCompletedEvent(command.ClientId, command.AccountId,
+            publisher.PublishEvent(new WithdrawalSucceededEvent(command.ClientId, command.AccountId,
                 command.Amount, command.OperationId, command.Reason));
             return CommandHandlingResult.Ok();
         }

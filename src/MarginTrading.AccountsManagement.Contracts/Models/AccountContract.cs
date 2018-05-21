@@ -1,14 +1,51 @@
-﻿namespace MarginTrading.AccountsManagement.Contracts.Models
+﻿using System;
+using MessagePack;
+
+namespace MarginTrading.AccountsManagement.Contracts.Models
 {
+    [MessagePackObject]
     public class AccountContract
     {
-        public string Id { get; set; }
-        public string ClientId { get; set; }
-        public string TradingConditionId { get; set; }
-        public string BaseAssetId { get; set; }
-        public decimal Balance { get; set; }
-        public decimal WithdrawTransferLimit { get; set; }
-        public string LegalEntity { get; set; }
-        public bool IsDisabled { get; set; }
+        [Key(0)]
+        public string Id { get; }
+
+        [Key(1)]
+        public string ClientId { get; }
+
+        [Key(2)]
+        public string TradingConditionId { get; }
+
+        [Key(3)]
+        public string BaseAssetId { get; }
+
+        [Key(4)]
+        public decimal Balance { get; }
+
+        [Key(5)]
+        public decimal WithdrawTransferLimit { get; }
+
+        [Key(6)]
+        public string LegalEntity { get; }
+
+        [Key(7)]
+        public bool IsDisabled { get; }
+
+        [Key(8)]
+        public DateTimeOffset ModificationTimestamp { get; }
+
+        public AccountContract(string id, string clientId, string tradingConditionId, string baseAssetId,
+            decimal balance, decimal withdrawTransferLimit, string legalEntity, bool isDisabled,
+            DateTimeOffset modificationTimestamp)
+        {
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            TradingConditionId = tradingConditionId ?? throw new ArgumentNullException(nameof(tradingConditionId));
+            BaseAssetId = baseAssetId ?? throw new ArgumentNullException(nameof(baseAssetId));
+            Balance = balance;
+            WithdrawTransferLimit = withdrawTransferLimit;
+            LegalEntity = legalEntity ?? throw new ArgumentNullException(nameof(legalEntity));
+            IsDisabled = isDisabled;
+            ModificationTimestamp = modificationTimestamp;
+        }
     }
 }

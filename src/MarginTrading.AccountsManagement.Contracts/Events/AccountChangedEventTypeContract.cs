@@ -1,9 +1,9 @@
-﻿namespace MarginTrading.AccountsManagement.Contracts.Messages
+﻿namespace MarginTrading.AccountsManagement.Contracts.Events
 {
     /// <summary>
     /// What happend to the account
     /// </summary>
-    public enum AccountChangedEventType
+    public enum AccountChangedEventTypeContract
     {
         /// <summary>
         /// Well, the account was created

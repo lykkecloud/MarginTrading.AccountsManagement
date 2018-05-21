@@ -1,27 +1,33 @@
 ﻿using System;
-using MarginTrading.AccountsManagement.Contracts.Messages;
+using AzureStorage;
+using Lykke.AzureStorage.Tables;
+using MarginTrading.AccountsManagement.InternalModels;
 
-namespace MarginTrading.AccountsManagement.Contracts.Api
+namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
-    /// <summary>
-    /// Descibes account balance change 
-    /// </summary>
-    public class AccountBalanceHistoryContract
+    public class AccountBalanceChangeEntity : AzureTableEntity
     {
+        /// <summary>
+        /// Account id
+        /// </summary>
+        public string AccountId
+        {
+            get => PartitionKey;
+            set => PartitionKey = value;
+        }
+        
+        /// <summary>
+        /// Change timestamp
+        /// </summary>
+        public DateTime ChangeTimestamp
+        {
+            get => DateTime.ParseExact(RowKey, RowKeyDateTimeFormat.Iso.ToDateTimeMask(), null); 
+            set => RowKey = value.ToString(RowKeyDateTimeFormat.Iso.ToDateTimeMask());
+        }
         /// <summary>
         /// Change Id 
         /// </summary>
         public string Id { get; set; }
-
-        /// <summary>
-        /// Change timestamp
-        /// </summary>
-        public DateTime Timestamp { get; set; }
-
-        /// <summary>
-        /// Account id
-        /// </summary>
-        public string AccountId { get; set; }
 
         /// <summary>
         /// Client id
@@ -51,7 +57,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         /// <summary>
         /// Why the chhange happend 
         /// </summary>
-        public AccountBalanceHistoryTypeContract Type { get; set; }
+        public AccountBalanceChangeReasonType Type { get; set; }
 
         /// <summary>
         /// Id of object which caused the change (ex. order id)
@@ -67,5 +73,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         /// Log data
         /// </summary>
         public string AuditLog { get; set; }
+
+        public static string GeneratePartitionKey(string accountId)
+        {
+            return accountId;
+        }
     }
 }

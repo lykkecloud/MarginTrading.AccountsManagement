@@ -21,13 +21,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         }
 
         public Task<string> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason, string source)
+            [CanBeNull] string operationId, string reason, string source, string auditLog)
         {
             source.RequiredNotNullOrWhiteSpace(nameof(source));
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
-                new BeginBalanceUpdateInternalCommand(clientId, accountId, amountDelta,
-                    operationId, reason, source),
+                new BeginUpdateBalanceInternalCommand(clientId, accountId, amountDelta,
+                    operationId, reason, string.Empty, source),
                 _cqrsContextNamesSettings.AccountsManagement, _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
         }
@@ -37,7 +37,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
-                new BeginWithdrawalCommand(clientId, accountId, amountDelta, operationId,
+                new WithdrawCommand(clientId, accountId, amountDelta, operationId,
                     reason),
                 _cqrsContextNamesSettings.AccountsManagement, _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
@@ -48,7 +48,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
-                new BeginDepositCommand(clientId, accountId, amountDelta, operationId,
+                new DepositCommand(clientId, accountId, amountDelta, operationId,
                     reason),
                 _cqrsContextNamesSettings.AccountsManagement, _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);

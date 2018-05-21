@@ -1,17 +1,17 @@
 ﻿using MessagePack;
 
-namespace MarginTrading.AccountsManagement.Contracts.Events
+namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Events
 {
     /// <summary>
-    /// Withdrawal operation failed
+    /// Withdrawal started
     /// </summary>
     [MessagePackObject]
-    public class WithdrawalFailedEvent
+    public class WithdrawalStartedInternalEvent
     {
         [Key(0)]
         public string OperationId { get; }
         
-        public WithdrawalFailedEvent(string operationId)
+        public WithdrawalStartedInternalEvent(string operationId)
         {
             OperationId = operationId;
         }

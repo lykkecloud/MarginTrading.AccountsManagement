@@ -28,7 +28,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         /// Handles the command to begin deposit
         /// </summary>
         [UsedImplicitly]
-        private async Task<CommandHandlingResult> Handle(BeginDepositCommand command, IEventPublisher publisher)
+        private async Task<CommandHandlingResult> Handle(DepositCommand command, IEventPublisher publisher)
         {
             if (await _operationStatesRepository.TryInsertAsync(OperationName, command.OperationId,
                 States.Received.ToString()))
@@ -81,7 +81,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         {
             await _operationStatesRepository.SetStateAsync(OperationName, command.OperationId,
                 States.Finished.ToString());
-            publisher.PublishEvent(_convertService.Convert<DepositCompletedEvent>(command));
+            publisher.PublishEvent(_convertService.Convert<DepositSucceededEvent>(command));
             return CommandHandlingResult.Ok();
         }
 

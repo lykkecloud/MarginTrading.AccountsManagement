@@ -6,6 +6,7 @@ using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
+using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
 using MarginTrading.Backend.Contracts.Commands;
 using MarginTrading.Backend.Contracts.Events;
 
@@ -27,7 +28,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         /// The withdrawal has started => ask the backend to freeze the amount in the margin.
         /// </summary>
         [UsedImplicitly]
-        private Task Handle(WithdrawalStartedEvent evt, ICommandSender sender)
+        private Task Handle(WithdrawalStartedInternalEvent evt, ICommandSender sender)
         {
             sender.SendCommand(_convertService.Convert<FreezeAmountForWithdrawalCommand>(evt),
                 _contextNames.TradingEngine);
@@ -40,7 +41,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private Task Handle(AmountForWithdrawalFrozenEvent evt, ICommandSender sender)
         {
-            sender.SendCommand(new BeginBalanceUpdateInternalCommand(evt.ClientId, evt.AccountId, -evt.Amount,
+            sender.SendCommand(new BeginUpdateBalanceInternalCommand(evt.ClientId, evt.AccountId, -evt.Amount,
                     evt.OperationId, evt.Reason, UpdateBalanceSource),
                 _contextNames.AccountsManagement);
             return Task.CompletedTask;
