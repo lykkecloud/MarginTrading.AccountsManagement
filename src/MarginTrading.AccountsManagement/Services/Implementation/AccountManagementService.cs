@@ -14,7 +14,7 @@ using MarginTrading.AccountsManagement.Settings;
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
     [UsedImplicitly]
-    public class AccountManagementService : IAccountManagementService
+    internal class AccountManagementService : IAccountManagementService
     {
         private readonly IAccountsRepository _accountsRepository;
         private readonly ITradingConditionsService _tradingConditionsService;
@@ -200,12 +200,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return account;
         }
 
-        public Task<Account> ChargeManuallyAsync(string operationId, string clientId, string accountId,
-            decimal amountDelta, string reason)
-        {
-            return UpdateBalanceAsync(operationId, clientId, accountId, amountDelta);
-        }
-
         public async Task<Account> ResetAccountAsync(string clientId, string accountId)
         {
             if (_settings.Behavior?.BalanceResetIsEnabled != true)
@@ -219,7 +213,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentOutOfRangeException(
                     $"Account for client [{clientId}] with id [{accountId}] does not exist");
 
-            return await UpdateBalanceAsync(TODO, clientId, accountId, _settings.Behavior.DefaultBalance - account.Balance);
+            return await UpdateBalanceAsync(Guid.NewGuid().ToString(), clientId, accountId, _settings.Behavior.DefaultBalance - account.Balance);
         }
 
         #endregion
@@ -234,7 +228,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
                 : accountId;
 
-            var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false);
+            var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, default);
 
             await _accountsRepository.AddAsync(account);
 
@@ -251,6 +245,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private async Task<Account> UpdateBalanceAsync(string operationId, string clientId, string accountId, decimal amountDelta,
             bool changeTransferLimit = false)
         {
+            // todo: move to workflow command handler
             var account = await _accountsRepository.UpdateBalanceAsync(operationId, clientId, accountId, amountDelta, changeTransferLimit);
             _eventSender.SendAccountChangedEvent(account, AccountChangedEventTypeContract.BalanceUpdated);
             return account;

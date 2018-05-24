@@ -3,7 +3,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 
 namespace MarginTrading.AccountsManagement.Services
 {
-    public interface IEventSender
+    internal interface IEventSender
     {
         void SendAccountChangedEvent(Account account, AccountChangedEventTypeContract eventType);
     }

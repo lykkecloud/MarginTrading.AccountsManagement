@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
@@ -57,7 +56,6 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 auditLog: command.AuditLog);
 
             publisher.PublishEvent(new AccountBalanceChangedEvent(command.OperationId, command.Source, change, Convert(account)));
-
             return CommandHandlingResult.Ok();
         }
 

@@ -13,10 +13,11 @@ using MarginTrading.AccountsManagement.Settings;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
-    public class AccountsRepository : IAccountsRepository
+    internal class AccountsRepository : IAccountsRepository
     {
         private readonly IConvertService _convertService;
         private readonly INoSQLTableStorage<AccountEntity> _tableStorage;
+        private const int MaxOperationsCount = 200;
 
         public AccountsRepository(IReloadingManager<AccountManagementSettings> settings, ILog log,
             IConvertService convertService, IAzureTableStorageFactoryService azureTableStorageFactoryService)
@@ -56,11 +57,18 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         public async Task<Account> UpdateBalanceAsync(string operationId, string clientId, string accountId,
             decimal amountDelta, bool changeLimit)
         {
-            var account = await _tableStorage.InsertOrModifyAsync(AccountEntity.GeneratePartitionKey(clientId),
+            AccountEntity account = null;
+            await _tableStorage.InsertOrModifyAsync(AccountEntity.GeneratePartitionKey(clientId),
                 AccountEntity.GenerateRowKey(accountId), 
                 () => throw new InvalidOperationException($"Account {accountId} not exists"),
                 a =>
                 {
+                    account = a;
+                    if (!TryUpdateOperationsList(operationId, a))
+                    {
+                        return false;
+                    }
+
                     a.Balance += amountDelta;
 
                     if (changeLimit)
@@ -68,8 +76,20 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
                     return true;
                 });
-            
+
             return Convert(account);
+        }
+
+        private static bool TryUpdateOperationsList(string operationId, AccountEntity a)
+        {
+            if (!a.LastExecutedOperations.Contains(operationId))
+                return false;
+            
+            a.LastExecutedOperations.Add(operationId);
+            if(a.LastExecutedOperations.Count > MaxOperationsCount)
+                a.LastExecutedOperations.RemoveAt(0);
+            
+            return true;
         }
 
         public async Task<Account> UpdateTradingConditionIdAsync(string clientId, string accountId, string tradingConditionId)
@@ -100,8 +120,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         {
             return _convertService.Convert<AccountEntity, Account>(
                 entity,
-                o => o.ConfigureMap(MemberList.Destination).ForMember(
-                    a => a.ModificationTimestamp,
+                o => o.ConfigureMap(MemberList.Destination).ForCtorParam(
+                    "modificationTimestamp",
                     m => m.MapFrom(e => e.Timestamp)));
         }
     }

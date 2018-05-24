@@ -5,7 +5,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
-    public class AccountBalanceChangeEntity : AzureTableEntity
+    internal class AccountBalanceChangeEntity : AzureTableEntity
     {
         /// <summary>
         /// Account id
@@ -57,6 +57,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         /// <summary>
         /// Why the chhange happend 
         /// </summary>
+        //todo: separate enum from internal domain one
         public AccountBalanceChangeReasonType Type { get; set; }
 
         /// <summary>

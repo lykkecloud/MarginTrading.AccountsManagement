@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Autofac;
-using Castle.MicroKernel.Resolvers;
 using Common.Log;
 using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
-using Lykke.Cqrs.Configuration.BoundedContext;
-using Lykke.Cqrs.Configuration.Routing;
 using Lykke.Messaging;
 using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;

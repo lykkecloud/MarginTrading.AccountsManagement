@@ -15,6 +15,7 @@ using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow;
 using MarginTrading.AccountsManagement.Workflow.Deposit;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
+using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
@@ -67,6 +68,8 @@ namespace MarginTrading.AccountsManagement.Modules
                 .Where(t => t.Name.EndsWith("Saga") || t.Name.EndsWith("CommandsHandler"))
                 .AsSelf();
 
+            builder.RegisterType<AccountChangesProcess>().AsSelf().SingleInstance();
+
             builder.Register(ctx => CreateEngine(ctx, messagingEngine))
                 .As<ICqrsEngine>()
                 .SingleInstance()
@@ -88,7 +91,6 @@ namespace MarginTrading.AccountsManagement.Modules
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
                 RegisterDefaultRouting(),
                 RegisterWithdrawalSaga(),
-                RegisterUpdateBalanceSaga(),
                 RegisterDepositSaga(),
                 RegisterContext());
         }
@@ -107,19 +109,24 @@ namespace MarginTrading.AccountsManagement.Modules
 
         private void RegisterAccountChangesProcess(ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
         {
-            contextRegistration.ListeningEvents(typeof(AccountBalanceChangedEvent))
-                .From(_contextNames.AccountsManagement).On(DefaultRoute).WithProcess<AccountChangesProcess>()
-                .PublishingEvents(typeof(AccountChangedEvent));
+            contextRegistration
+                .ListeningEvents(typeof(AccountBalanceChangedEvent))
+                .From(_contextNames.AccountsManagement)
+                .On(DefaultPipeline)
+                .WithProcess<AccountChangesProcess>()
+                .PublishingEvents(typeof(AccountChangedEvent))
+                .With(DefaultPipeline);
         }
 
         private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
         {
             return Register.DefaultRouting
                 .PublishingCommands(
-                    typeof(BeginUpdateBalanceInternalCommand), 
+                    typeof(UpdateBalanceInternalCommand), 
                     typeof(WithdrawCommand),
                     typeof(DepositCommand))
-                .To(_contextNames.AccountsManagement).With(DefaultPipeline);
+                .To(_contextNames.AccountsManagement)
+                .With(DefaultPipeline);
         }
 
         private IRegistration RegisterWithdrawalSaga()
@@ -138,7 +145,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 .ListeningEvents(typeof(AmountForWithdrawalFrozenEvent), typeof(AmountForWithdrawalFreezeFailedEvent))
                 .From(_contextNames.TradingEngine)
                 .On(DefaultRoute)
-                .PublishingCommands(typeof(BeginUpdateBalanceInternalCommand), typeof(FailWithdrawalInternalCommand))
+                .PublishingCommands(typeof(UpdateBalanceInternalCommand), typeof(FailWithdrawalInternalCommand))
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
             
@@ -173,15 +180,15 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             return RegisterSaga<DepositSaga>()
                 .ListeningEvents(
-                    typeof(DepositStartedEvent),
+                    typeof(DepositStartedInternalEvent),
                     typeof(AccountBalanceChangedEvent),
-                    typeof(AmountForDepositFrozenEvent),
-                    typeof(AmountForDepositFreezeFailedEvent))
+                    typeof(AmountForDepositFrozenInternalEvent),
+                    typeof(AmountForDepositFreezeFailedInternalEvent))
                 .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
                 .PublishingCommands(
                     typeof(FreezeAmountForDepositInternalCommand),
-                    typeof(BeginUpdateBalanceInternalCommand),
+                    typeof(UpdateBalanceInternalCommand),
                     typeof(FailDepositInternalCommand),
                     typeof(CompleteDepositInternalCommand))
                 .To(_contextNames.AccountsManagement)
@@ -201,20 +208,9 @@ namespace MarginTrading.AccountsManagement.Modules
                 .WithCommandsHandler<DepositCommandsHandler>()
                 .PublishingEvents(
                     typeof(DepositFailedEvent),
-                    typeof(AmountForDepositFrozenEvent),
-                    typeof(DepositStartedEvent),
+                    typeof(AmountForDepositFrozenInternalEvent),
+                    typeof(DepositStartedInternalEvent),
                     typeof(DepositSucceededEvent))
-                .With(DefaultPipeline);
-        }
-
-        private IRegistration RegisterUpdateBalanceSaga()
-        {
-            return RegisterSaga<UpdateBalanceSaga>()
-                .ListeningEvents(typeof(AccountBalanceUpdateStartedEvent))
-                .From(_contextNames.AccountsManagement)
-                .On(DefaultRoute)
-                .PublishingCommands(typeof(UpdateBalanceInternalCommand))
-                .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
         }
 
@@ -223,13 +219,11 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             contextRegistration
                 .ListeningCommands(
-                    typeof(BeginUpdateBalanceInternalCommand),
-                    typeof(BeginClosePositionUpdateBalanceCommand),
+                    typeof(UpdateBalanceCommandsHandler),
                     typeof(UpdateBalanceInternalCommand))
                 .On(DefaultRoute)
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
                 .PublishingEvents(
-                    typeof(AccountBalanceUpdateStartedEvent), 
                     typeof(AccountBalanceChangedEvent))
                 .With(DefaultPipeline);
         }

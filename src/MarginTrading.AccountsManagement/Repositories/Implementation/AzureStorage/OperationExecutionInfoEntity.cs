@@ -1,8 +1,9 @@
 ﻿using Lykke.AzureStorage.Tables;
+using Lykke.AzureStorage.Tables.Entity.Annotation;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
-    public class OperationStateEntity : AzureTableEntity
+    public class OperationExecutionInfoEntity : AzureTableEntity
     {
         public string OperationName
         {
@@ -16,7 +17,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             set => RowKey = value;
         }
         
-        public string State { get; set; }
+        [JsonValueSerializer]
+        public object Data { get; set; }
 
         public static string GeneratePartitionKey(string operationName)
         {

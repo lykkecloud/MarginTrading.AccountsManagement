@@ -10,7 +10,7 @@ using Microsoft.Extensions.Internal;
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
     [UsedImplicitly]
-    public class EventSender : IEventSender
+    internal class EventSender : IEventSender
     {
         private readonly IConvertService _convertService;
         private readonly ISystemClock _systemClock;
@@ -30,12 +30,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public void SendAccountChangedEvent(Account account, AccountChangedEventTypeContract eventType)
         {
-            _cqrsEngine.PublishEvent(new AccountChangedEvent
-            {
-                ChangeTimestamp = _systemClock.UtcNow.UtcDateTime,
-                Account = _convertService.Convert<Account, AccountContract>(account),
-                EventType = eventType,
-            }, _contextNames.AccountsManagement);
+            _cqrsEngine.PublishEvent(
+                new AccountChangedEvent(
+                    account.ModificationTimestamp.DateTime,
+                    _convertService.Convert<Account, AccountContract>(account),
+                    eventType),
+                _contextNames.AccountsManagement);
         }
     }
 }

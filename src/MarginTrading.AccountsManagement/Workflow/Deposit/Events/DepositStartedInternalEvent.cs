@@ -2,13 +2,10 @@
 using JetBrains.Annotations;
 using MessagePack;
 
-namespace MarginTrading.AccountsManagement.Contracts.Commands
+namespace MarginTrading.AccountsManagement.Workflow.Deposit.Events
 {
-    /// <summary>
-    /// Starts deposit operation
-    /// </summary>
     [MessagePackObject]
-    public class DepositCommand
+    internal class DepositStartedInternalEvent
     {
         [Key(0)]
         public string OperationId { get; }
@@ -28,17 +25,17 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [Key(5)]
         public string AuditLog { get; }
 
-        public DepositCommand(string operationId, string clientId, string accountId, decimal amount, [NotNull] string comment, string auditLog)
+        public DepositStartedInternalEvent(string operationId, string clientId, string accountId, decimal amount, [NotNull] string comment, string auditLog)
         {
-            OperationId = operationId;
-            ClientId = clientId;
-            AccountId = accountId;
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "");
 
+            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
             Comment = comment ?? throw new ArgumentNullException(nameof(comment));
-            AuditLog = auditLog;
+            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
         }
     }
 }

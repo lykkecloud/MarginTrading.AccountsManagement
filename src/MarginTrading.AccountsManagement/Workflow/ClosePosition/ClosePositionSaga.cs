@@ -1,7 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.InternalModels;
-using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.Backend.Contracts.Events;
@@ -11,12 +10,10 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
     internal class ClosePositionSaga
     {
         private readonly CqrsContextNamesSettings _contextNames;
-        private readonly IOperationStatesRepository _operationStatesRepository;
 
-        public ClosePositionSaga(CqrsContextNamesSettings contextNames, IOperationStatesRepository operationStatesRepository)
+        public ClosePositionSaga(CqrsContextNamesSettings contextNames)
         {
             _contextNames = contextNames;
-            _operationStatesRepository = operationStatesRepository;
         }
 
         /// <summary>
@@ -37,7 +34,5 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
                     changeReasonType: AccountBalanceChangeReasonType.PositionClosed),
                 _contextNames.AccountsManagement);
         }
-        
-        
     }
 }

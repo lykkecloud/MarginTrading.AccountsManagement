@@ -1,4 +1,6 @@
-﻿using MessagePack;
+﻿using System;
+using JetBrains.Annotations;
+using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Contracts.Events
 {
@@ -11,9 +13,22 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         [Key(0)]
         public string OperationId { get; }
         
-        public WithdrawalSucceededEvent(string operationId)
+        [Key(1)]
+        public string ClientId { get; }
+
+        [Key(2)]
+        public string AccountId { get; }
+
+        [Key(3)]
+        public decimal Amount { get; }
+
+        public WithdrawalSucceededEvent([NotNull] string operationId, [NotNull] string clientId,
+            [NotNull] string accountId, decimal amount)
         {
-            OperationId = operationId;
+            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
+            Amount = amount;
         }
     }
 }

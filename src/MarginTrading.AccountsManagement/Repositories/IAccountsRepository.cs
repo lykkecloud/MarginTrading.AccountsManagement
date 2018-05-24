@@ -5,7 +5,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 
 namespace MarginTrading.AccountsManagement.Repositories
 {
-    public interface IAccountsRepository
+    internal interface IAccountsRepository
     {
         Task AddAsync(Account account);
         
