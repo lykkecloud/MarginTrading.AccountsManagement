@@ -8,6 +8,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// <summary>
     /// Account balance changed
     /// </summary>
+    [MessagePackObject]
     public class AccountBalanceChangedEvent
     {
         /// <inheritdoc />

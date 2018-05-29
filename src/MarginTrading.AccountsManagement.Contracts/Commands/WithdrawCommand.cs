@@ -7,6 +7,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
     /// <summary>
     /// Starts money withdrawal
     /// </summary>
+    [MessagePackObject]
     public class WithdrawCommand
     {
         [Key(0)]
