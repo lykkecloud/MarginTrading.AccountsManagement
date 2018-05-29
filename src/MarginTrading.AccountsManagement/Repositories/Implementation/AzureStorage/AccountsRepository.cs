@@ -78,7 +78,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
         private static bool TryUpdateOperationsList(string operationId, AccountEntity a)
         {
-            if (!a.LastExecutedOperations.Contains(operationId))
+            if (a.LastExecutedOperations.Contains(operationId))
                 return false;
             
             a.LastExecutedOperations.Add(operationId);
