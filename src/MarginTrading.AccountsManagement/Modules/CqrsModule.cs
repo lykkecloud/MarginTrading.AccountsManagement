@@ -13,6 +13,7 @@ using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow;
+using MarginTrading.AccountsManagement.Workflow.ClosePosition;
 using MarginTrading.AccountsManagement.Workflow.Deposit;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
@@ -92,6 +93,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 RegisterDefaultRouting(),
                 RegisterWithdrawalSaga(),
                 RegisterDepositSaga(),
+                RegisterClosePositionSaga(),
                 RegisterContext());
         }
 
@@ -225,6 +227,19 @@ namespace MarginTrading.AccountsManagement.Modules
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
                 .PublishingEvents(
                     typeof(AccountBalanceChangedEvent))
+                .With(DefaultPipeline);
+        }
+
+        private IRegistration RegisterClosePositionSaga()
+        {
+            return RegisterSaga<ClosePositionSaga>()
+                .ListeningEvents(
+                    typeof(PositionClosedEvent))
+                .From(_contextNames.TradingEngine)
+                .On(DefaultRoute)
+                .PublishingCommands(
+                    typeof(UpdateBalanceInternalCommand))
+                .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
         }
 
