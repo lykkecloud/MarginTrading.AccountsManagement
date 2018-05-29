@@ -30,11 +30,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
         public async Task AddAsync(Account account)
         {
-            var entity =
-                _convertService.Convert<Account, AccountEntity>(account,
-                    o => o.ConfigureMap(MemberList.Source));
-
-            await _tableStorage.InsertAsync(entity);
+            await _tableStorage.InsertAsync(Convert(account));
         }
 
         public async Task<List<Account>> GetAllAsync(string clientId = null)
@@ -123,6 +119,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 o => o.ConfigureMap(MemberList.Destination).ForCtorParam(
                     "modificationTimestamp",
                     m => m.MapFrom(e => e.Timestamp)));
+        }
+
+        private AccountEntity Convert(Account account)
+        {
+            return _convertService.Convert<Account, AccountEntity>(account,
+                o => o.ConfigureMap(MemberList.Source).ForSourceMember(a => a.ModificationTimestamp, c => c.Ignore()));
         }
     }
 }

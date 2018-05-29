@@ -231,6 +231,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, default);
 
             await _accountsRepository.AddAsync(account);
+            account = await _accountsRepository.GetAsync(account.ClientId, accountId);
 
             _eventSender.SendAccountChangedEvent(account, AccountChangedEventTypeContract.Created);
 
