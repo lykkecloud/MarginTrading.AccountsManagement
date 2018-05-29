@@ -212,7 +212,8 @@ namespace MarginTrading.AccountsManagement.Modules
                 .On(DefaultRoute)
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
                 .PublishingEvents(
-                    typeof(AccountBalanceChangedEvent))
+                    typeof(AccountBalanceChangedEvent),
+                    typeof(AccountChangedEvent))
                 .With(DefaultPipeline);
         }
 
