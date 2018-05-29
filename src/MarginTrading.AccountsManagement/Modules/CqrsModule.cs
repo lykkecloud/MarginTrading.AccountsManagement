@@ -69,8 +69,6 @@ namespace MarginTrading.AccountsManagement.Modules
                 .Where(t => t.Name.EndsWith("Saga") || t.Name.EndsWith("CommandsHandler"))
                 .AsSelf();
 
-            builder.RegisterType<AccountChangesProcess>().AsSelf().SingleInstance();
-
             builder.Register(ctx => CreateEngine(ctx, messagingEngine))
                 .As<ICqrsEngine>()
                 .SingleInstance()
@@ -105,19 +103,7 @@ namespace MarginTrading.AccountsManagement.Modules
             RegisterWithdrawalCommandHandler(contextRegistration);
             RegisterDepositCommandHandler(contextRegistration);
             RegisterUpdateBalanceCommandHandler(contextRegistration);
-            RegisterAccountChangesProcess(contextRegistration);
             return contextRegistration;
-        }
-
-        private void RegisterAccountChangesProcess(ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
-        {
-            contextRegistration
-                .ListeningEvents(typeof(AccountBalanceChangedEvent))
-                .From(_contextNames.AccountsManagement)
-                .On(DefaultPipeline)
-                .WithProcess<AccountChangesProcess>()
-                .PublishingEvents(typeof(AccountChangedEvent))
-                .With(DefaultPipeline);
         }
 
         private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()

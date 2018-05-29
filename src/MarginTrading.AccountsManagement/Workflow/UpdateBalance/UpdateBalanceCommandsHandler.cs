@@ -55,7 +55,15 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 legalEntity: account.LegalEntity,
                 auditLog: command.AuditLog);
 
-            publisher.PublishEvent(new AccountBalanceChangedEvent(command.OperationId, command.Source, change, Convert(account)));
+            var convertedAccount = Convert(account);
+            
+            publisher.PublishEvent(new AccountBalanceChangedEvent(command.OperationId, command.Source, change, convertedAccount));
+            
+            _chaosKitty.Meow(command.OperationId);
+
+            publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, convertedAccount,
+                AccountChangedEventTypeContract.BalanceUpdated));
+            
             return CommandHandlingResult.Ok();
         }
 
