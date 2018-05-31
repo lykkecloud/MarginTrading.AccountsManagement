@@ -7,6 +7,7 @@ using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
@@ -36,6 +37,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 partitionKey: OperationExecutionInfoEntity.GeneratePartitionKey(operationName),
                 rowKey: OperationExecutionInfoEntity.GeneratePartitionKey(operationId),
                 createNew: () => Convert(factory()));
+                
             return Convert<TData>(entity);
         }
 
@@ -43,11 +45,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         public async Task<OperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id)
             where TData : class
         {
-            return Convert<TData>(
-                await _tableStorage.GetDataAsync(
-                    OperationExecutionInfoEntity.GeneratePartitionKey(operationName),
-                    OperationExecutionInfoEntity.GenerateRowKey(id)) ?? throw new InvalidOperationException(
-                    $"Operation execution info for {operationName} #{id} not yet exists"));
+            var obj = await _tableStorage.GetDataAsync(
+                          OperationExecutionInfoEntity.GeneratePartitionKey(operationName),
+                          OperationExecutionInfoEntity.GenerateRowKey(id)) ?? throw new InvalidOperationException(
+                          $"Operation execution info for {operationName} #{id} not yet exists");
+            
+            return Convert<TData>(obj);
         }
 
         public async Task Save<TData>(OperationExecutionInfo<TData> executionInfo) where TData : class
@@ -62,7 +65,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 version: entity.ETag,
                 operationName: entity.OperationName,
                 id: entity.Id,
-                data: ((JToken) entity.Data).ToObject<TData>());
+                data: entity.Data is TData data
+                    ? data
+                    : ((JToken) entity.Data).ToObject<TData>());
         }
 
         private static OperationExecutionInfoEntity Convert<TData>(OperationExecutionInfo<TData> model)
