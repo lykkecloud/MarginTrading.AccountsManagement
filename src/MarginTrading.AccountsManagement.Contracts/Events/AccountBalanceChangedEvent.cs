@@ -12,8 +12,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     public class AccountBalanceChangedEvent
     {
         /// <inheritdoc />
-        public AccountBalanceChangedEvent(string operationId, string source, AccountBalanceChangeContract change,
-            AccountContract account)
+        public AccountBalanceChangedEvent([NotNull] string operationId, [NotNull] string source, 
+            [NotNull] AccountBalanceChangeContract change, [NotNull] AccountContract account)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             Source = source ?? throw new ArgumentNullException(nameof(source));

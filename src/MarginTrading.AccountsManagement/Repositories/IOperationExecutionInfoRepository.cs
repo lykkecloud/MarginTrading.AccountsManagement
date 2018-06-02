@@ -10,7 +10,7 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task<OperationExecutionInfo<TData>> GetOrAddAsync<TData>(string operationName, string operationId,
             Func<OperationExecutionInfo<TData>> factory) where TData : class;
 
-        [ItemNotNull]
+        [ItemCanBeNull]
         Task<OperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class;
         Task Save<TData>(OperationExecutionInfo<TData> executionInfo) where TData : class;
     }

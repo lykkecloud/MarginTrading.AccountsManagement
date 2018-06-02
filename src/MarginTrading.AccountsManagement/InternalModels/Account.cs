@@ -1,12 +1,14 @@
 ﻿using System;
+using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 
 namespace MarginTrading.AccountsManagement.InternalModels
 {
     public class Account
     {
-        public Account(string id, string clientId, string tradingConditionId, string baseAssetId, decimal balance,
-            decimal withdrawTransferLimit, string legalEntity, bool isDisabled, DateTimeOffset modificationTimestamp)
+        public Account([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
+            [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
+            bool isDisabled, DateTimeOffset modificationTimestamp)
         {
             Id = id.RequiredNotNullOrWhiteSpace(nameof(id));
             ClientId = clientId.RequiredNotNullOrWhiteSpace(nameof(clientId));

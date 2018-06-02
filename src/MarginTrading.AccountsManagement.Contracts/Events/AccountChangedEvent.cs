@@ -14,7 +14,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     [MessagePackObject]
     public class AccountChangedEvent
     {
-        public AccountChangedEvent(DateTime changeTimestamp, AccountContract account,
+        public AccountChangedEvent(DateTime changeTimestamp, [NotNull] AccountContract account,
             AccountChangedEventTypeContract eventType)
         {
             if (!Enum.IsDefined(typeof(AccountChangedEventTypeContract), eventType))

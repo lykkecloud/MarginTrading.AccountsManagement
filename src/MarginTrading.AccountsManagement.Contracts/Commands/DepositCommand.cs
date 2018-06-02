@@ -28,17 +28,18 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [Key(5)]
         public string AuditLog { get; }
 
-        public DepositCommand(string operationId, string clientId, string accountId, decimal amount, [NotNull] string comment, string auditLog)
+        public DepositCommand([NotNull] string operationId, [NotNull] string clientId, [NotNull] string accountId, 
+            decimal amount, [NotNull] string comment, [NotNull] string auditLog)
         {
-            OperationId = operationId;
-            ClientId = clientId;
-            AccountId = accountId;
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "");
-
+            
+            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
             Comment = comment ?? throw new ArgumentNullException(nameof(comment));
-            AuditLog = auditLog;
+            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
         }
     }
 }

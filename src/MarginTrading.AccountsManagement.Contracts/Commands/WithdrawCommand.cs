@@ -28,7 +28,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [Key(5)]
         public string AuditLog { get; }
 
-        public WithdrawCommand(string operationId, string clientId, string accountId, decimal amount, [NotNull] string comment, string auditLog)
+        public WithdrawCommand([NotNull] string operationId, [NotNull] string clientId, [NotNull] string accountId, 
+            decimal amount, [NotNull] string comment, [NotNull] string auditLog)
         {
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "");

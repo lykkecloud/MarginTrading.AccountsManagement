@@ -12,7 +12,8 @@ namespace MarginTrading.AccountsManagement.InternalModels
 
         public T Data { get; }
 
-        public OperationExecutionInfo([CanBeNull] string version, string operationName, string id, [NotNull] T data)
+        public OperationExecutionInfo([CanBeNull] string version, [NotNull] string operationName, [NotNull] string id, 
+            [NotNull] T data)
         {
             Version = version;
             OperationName = operationName ?? throw new ArgumentNullException(nameof(operationName));

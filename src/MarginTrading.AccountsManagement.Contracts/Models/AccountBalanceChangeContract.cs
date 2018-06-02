@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Contracts.Models
@@ -10,9 +11,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
     public class AccountBalanceChangeContract
     {
         /// <inheritdoc />
-        public AccountBalanceChangeContract(string id, DateTime changeTimestamp, string accountId, string clientId,
-            decimal changeAmount, decimal balance, decimal withdrawTransferLimit, string comment,
-            AccountBalanceChangeReasonTypeContract reasonType, string eventSourceId, string legalEntity, string auditLog)
+        public AccountBalanceChangeContract([NotNull] string id, DateTime changeTimestamp, [NotNull] string accountId, 
+            [NotNull] string clientId, decimal changeAmount, decimal balance, decimal withdrawTransferLimit, 
+            [NotNull] string comment, AccountBalanceChangeReasonTypeContract reasonType, [NotNull] string eventSourceId, 
+            [NotNull] string legalEntity, [NotNull] string auditLog)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             ChangeTimestamp = changeTimestamp;
