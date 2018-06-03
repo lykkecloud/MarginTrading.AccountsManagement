@@ -2,14 +2,17 @@
 using JetBrains.Annotations;
 using MessagePack;
 
-namespace MarginTrading.AccountsManagement.Workflow.Deposit.Commands
+namespace MarginTrading.AccountsManagement.Contracts.Events
 {
+    /// <summary>
+    /// The deposit operation has succeeded
+    /// </summary>
     [MessagePackObject]
-    internal class CompleteDepositInternalCommand
+    public class DepositSucceededEvent
     {
         [Key(0)]
         public string OperationId { get; }
-
+        
         [Key(1)]
         public string ClientId { get; }
 
@@ -18,8 +21,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit.Commands
 
         [Key(3)]
         public decimal Amount { get; }
-       
-        public CompleteDepositInternalCommand([NotNull] string operationId, [NotNull] string clientId,
+        
+        public DepositSucceededEvent([NotNull] string operationId, [NotNull] string clientId,
             [NotNull] string accountId, decimal amount)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));

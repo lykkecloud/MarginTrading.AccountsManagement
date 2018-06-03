@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.AccountsManagement.Settings
@@ -26,5 +27,8 @@ namespace MarginTrading.AccountsManagement.Settings
         
         [Optional]
         public bool EnableOperationsLogs { get; set; }
+
+        [Optional, CanBeNull]
+        public ChaosSettings ChaosKitty { get; set; }
     }
 }

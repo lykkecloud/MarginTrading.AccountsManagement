@@ -12,38 +12,38 @@ using MarginTrading.AccountsManagement.Settings;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
-    internal class AccountBalanceHistoryRepository : IAccountBalanceHistoryRepository
+    internal class AccountBalanceChangesRepository : IAccountBalanceChangesRepository
     {
         private readonly IConvertService _convertService;
-        private readonly INoSQLTableStorage<AccountBalanceHistoryEntity> _tableStorage;
+        private readonly INoSQLTableStorage<AccountBalanceChangeEntity> _tableStorage;
 
-        public AccountBalanceHistoryRepository(IReloadingManager<AccountManagementSettings> settings, ILog log,
+        public AccountBalanceChangesRepository(IReloadingManager<AccountManagementSettings> settings, ILog log,
             IConvertService convertService, IAzureTableStorageFactoryService azureTableStorageFactoryService)
         {
             _convertService = convertService;
             _tableStorage =
-                azureTableStorageFactoryService.Create<AccountBalanceHistoryEntity>(
-                    settings.Nested(s => s.Db.ConnectionString), "AccountBalanceHistory", log);
+                azureTableStorageFactoryService.Create<AccountBalanceChangeEntity>(
+                    settings.Nested(s => s.Db.ConnectionString), "AccountBalanceChanges", log);
         }
 
-        public async Task<List<AccountBalanceHistory>> GetAsync(string[] accountIds, DateTime? from, DateTime? to)
+        public async Task<List<AccountBalanceChange>> GetAsync(string[] accountIds, DateTime? from, DateTime? to)
         {
             return (await _tableStorage.WhereAsync(accountIds, from ?? DateTime.MinValue,
                     to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo)).Select(Convert)
                 .OrderByDescending(item => item.ChangeTimestamp).ToList();
         }
 
-        public async Task AddAsync(AccountBalanceHistory history)
+        public async Task AddAsync(AccountBalanceChange change)
         {
-            var entity = _convertService.Convert<AccountBalanceHistoryEntity>(history);
+            var entity = _convertService.Convert<AccountBalanceChangeEntity>(change);
             // ReSharper disable once RedundantArgumentDefaultValue
             await _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.ChangeTimestamp,
                 RowKeyDateTimeFormat.Iso);
         }
 
-        private AccountBalanceHistory Convert(AccountBalanceHistoryEntity arg)
+        private AccountBalanceChange Convert(AccountBalanceChangeEntity arg)
         {
-            return _convertService.Convert<AccountBalanceHistory>(arg);
+            return _convertService.Convert<AccountBalanceChange>(arg);
         }
     }
 }

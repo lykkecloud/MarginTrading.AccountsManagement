@@ -1,62 +1,28 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
-using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
+using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure;
+using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
-using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 
 namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
 {
     internal class UpdateBalanceCommandsHandler
     {
-        private const string OperationName = "UpdateBalance";
-        private readonly IAccountManagementService _accountManagementService;
-        private readonly IOperationStatesRepository _operationStatesRepository;
+        private readonly IAccountsRepository _accountsRepository;
+        private readonly IChaosKitty _chaosKitty;
         private readonly IConvertService _convertService;
 
-        public UpdateBalanceCommandsHandler(IAccountManagementService accountManagementService,
-            IOperationStatesRepository operationStatesRepository, IConvertService convertService)
+        public UpdateBalanceCommandsHandler(IAccountsRepository accountsRepository,
+            IChaosKitty chaosKitty, IConvertService convertService)
         {
-            _accountManagementService = accountManagementService;
-            _operationStatesRepository = operationStatesRepository;
+            _accountsRepository = accountsRepository;
+            _chaosKitty = chaosKitty;
             _convertService = convertService;
-        }
-
-        /// <summary>
-        /// Handles the command to begin changing the balance
-        /// </summary>
-        [UsedImplicitly]
-        private async Task<CommandHandlingResult> Handle(BeginBalanceUpdateInternalCommand command,
-            IEventPublisher publisher)
-        {
-            if (await _operationStatesRepository.TryInsertAsync(OperationName, command.OperationId,
-                States.Received.ToString()))
-            {
-                publisher.PublishEvent(_convertService.Convert<AccountBalanceUpdateStartedEvent>(command));
-            }
-
-            return CommandHandlingResult.Ok();
-        }
-
-        /// <summary>
-        /// Handles the command to begin changing the balance because of a closed position
-        /// </summary>
-        [UsedImplicitly]
-        private async Task<CommandHandlingResult> Handle(BeginClosePositionBalanceUpdateCommand command,
-            IEventPublisher publisher)
-        {
-            if (await _operationStatesRepository.TryInsertAsync(OperationName, command.OperationId,
-                States.Received.ToString()))
-            {
-                publisher.PublishEvent(new AccountBalanceUpdateStartedEvent(command.ClientId, command.AccountId,
-                    command.Amount, command.OperationId, command.Reason, "ClosePosition")); // todo add command.EventSourceId
-            }
-
-            return CommandHandlingResult.Ok();
         }
 
         /// <summary>
@@ -66,27 +32,49 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
             IEventPublisher publisher)
         {
-                await _operationStatesRepository.TryInsertOrModifyAsync(OperationName, command.OperationId,
-                async oldState =>
-                {
-                    if (oldState != States.Received.ToString())
-                    {
-                        return null;
-                    }
+            var account = await _accountsRepository.UpdateBalanceAsync(
+                operationId: command.OperationId,
+                clientId: command.ClientId,
+                accountId: command.AccountId,
+                amountDelta: command.AmountDelta,
+                changeLimit: false);
 
-                    await _accountManagementService.ChargeManuallyAsync(command.ClientId, command.AccountId,
-                        command.Amount, command.Reason);
-                    publisher.PublishEvent(_convertService.Convert<AccountBalanceChangedEvent>(command));
-                    return States.Finished.ToString();
-                });
+            _chaosKitty.Meow(command.OperationId);
 
+            var change = new AccountBalanceChangeContract(
+                id: command.OperationId,
+                changeTimestamp: account.ModificationTimestamp.UtcDateTime,
+                accountId: account.Id,
+                clientId: account.ClientId,
+                changeAmount: command.AmountDelta,
+                balance: account.Balance,
+                withdrawTransferLimit: account.WithdrawTransferLimit,
+                comment: command.Comment,
+                reasonType: Convert(command.ChangeReasonType),
+                eventSourceId: command.AuditLog,
+                legalEntity: account.LegalEntity,
+                auditLog: command.AuditLog);
+
+            var convertedAccount = Convert(account);
+            
+            publisher.PublishEvent(new AccountBalanceChangedEvent(command.OperationId, command.Source, change, convertedAccount));
+            
+            _chaosKitty.Meow(command.OperationId);
+
+            publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, convertedAccount,
+                AccountChangedEventTypeContract.BalanceUpdated));
+            
             return CommandHandlingResult.Ok();
         }
 
-        private enum States
+        private AccountContract Convert(Account account)
         {
-            Received = 1,
-            Finished = 2,
+            return _convertService.Convert<AccountContract>(account);
+        }
+
+        private AccountBalanceChangeReasonTypeContract Convert(AccountBalanceChangeReasonType reasonType)
+        {
+            return _convertService.Convert<AccountBalanceChangeReasonTypeContract>(reasonType);
         }
     }
 }

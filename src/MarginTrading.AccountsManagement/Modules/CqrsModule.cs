@@ -12,12 +12,16 @@ using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.AccountsManagement.Workflow;
+using MarginTrading.AccountsManagement.Workflow.ClosePosition;
 using MarginTrading.AccountsManagement.Workflow.Deposit;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
+using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
+using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
 using MarginTrading.Backend.Contracts.Commands;
 using MarginTrading.Backend.Contracts.Events;
 
@@ -30,12 +34,14 @@ namespace MarginTrading.AccountsManagement.Modules
         private readonly CqrsSettings _settings;
         private readonly ILog _log;
         private readonly long _defaultRetryDelayMs;
+        private readonly CqrsContextNamesSettings _contextNames;
 
         public CqrsModule(CqrsSettings settings, ILog log)
         {
             _settings = settings;
             _log = log;
             _defaultRetryDelayMs = (long) _settings.RetryDelay.TotalMilliseconds;
+            _contextNames = _settings.ContextNames;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -84,14 +90,14 @@ namespace MarginTrading.AccountsManagement.Modules
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
                 RegisterDefaultRouting(),
                 RegisterWithdrawalSaga(),
-                RegisterUpdateBalanceSaga(),
                 RegisterDepositSaga(),
+                RegisterClosePositionSaga(),
                 RegisterContext());
         }
 
         private IRegistration RegisterContext()
         {
-            var contextRegistration = Register.BoundedContext(_settings.ContextNames.AccountsManagement)
+            var contextRegistration = Register.BoundedContext(_contextNames.AccountsManagement)
                 .FailedCommandRetryDelay(_defaultRetryDelayMs)
                 .ProcessingOptions(DefaultRoute).MultiThreaded(8).QueueCapacity(1024);
             RegisterWithdrawalCommandHandler(contextRegistration);
@@ -104,10 +110,11 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             return Register.DefaultRouting
                 .PublishingCommands(
-                    typeof(BeginBalanceUpdateInternalCommand), 
-                    typeof(BeginWithdrawalCommand),
-                    typeof(BeginDepositCommand))
-                .To(_settings.ContextNames.AccountsManagement).With(DefaultPipeline);
+                    typeof(UpdateBalanceInternalCommand), 
+                    typeof(WithdrawCommand),
+                    typeof(DepositCommand))
+                .To(_contextNames.AccountsManagement)
+                .With(DefaultPipeline);
         }
 
         private IRegistration RegisterWithdrawalSaga()
@@ -115,27 +122,27 @@ namespace MarginTrading.AccountsManagement.Modules
             var sagaRegistration = RegisterSaga<WithdrawalSaga>();
 
             sagaRegistration
-                .ListeningEvents(typeof(WithdrawalStartedEvent))
-                .From(_settings.ContextNames.AccountsManagement)
+                .ListeningEvents(typeof(WithdrawalStartedInternalEvent))
+                .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
                 .PublishingCommands(typeof(FreezeAmountForWithdrawalCommand))
-                .To(_settings.ContextNames.TradingEngine)
+                .To(_contextNames.TradingEngine)
                 .With(DefaultPipeline);
 
             sagaRegistration
                 .ListeningEvents(typeof(AmountForWithdrawalFrozenEvent), typeof(AmountForWithdrawalFreezeFailedEvent))
-                .From(_settings.ContextNames.TradingEngine)
+                .From(_contextNames.TradingEngine)
                 .On(DefaultRoute)
-                .PublishingCommands(typeof(BeginBalanceUpdateInternalCommand), typeof(FailWithdrawalInternalCommand))
-                .To(_settings.ContextNames.AccountsManagement)
+                .PublishingCommands(typeof(UpdateBalanceInternalCommand), typeof(FailWithdrawalInternalCommand))
+                .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
             
             sagaRegistration
                 .ListeningEvents(typeof(AccountBalanceChangedEvent))
-                .From(_settings.ContextNames.AccountsManagement)
+                .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
                 .PublishingCommands(typeof(CompleteWithdrawalInternalCommand))
-                .To(_settings.ContextNames.AccountsManagement)
+                .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
 
             return sagaRegistration;
@@ -145,15 +152,15 @@ namespace MarginTrading.AccountsManagement.Modules
             ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
         {
             contextRegistration.ListeningCommands(
-                    typeof(BeginWithdrawalCommand),
+                    typeof(WithdrawCommand),
                     typeof(FailWithdrawalInternalCommand),
                     typeof(CompleteWithdrawalInternalCommand))
                 .On(DefaultRoute)
                 .WithCommandsHandler<WithdrawalCommandsHandler>()
                 .PublishingEvents(
                     typeof(WithdrawalFailedEvent),
-                    typeof(WithdrawalStartedEvent),
-                    typeof(WithdrawalCompletedEvent))
+                    typeof(WithdrawalStartedInternalEvent),
+                    typeof(WithdrawalSucceededEvent))
                 .With(DefaultPipeline);
         }
 
@@ -161,18 +168,18 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             return RegisterSaga<DepositSaga>()
                 .ListeningEvents(
-                    typeof(DepositStartedEvent),
+                    typeof(DepositStartedInternalEvent),
                     typeof(AccountBalanceChangedEvent),
-                    typeof(AmountForDepositFrozenEvent),
-                    typeof(AmountForDepositFreezeFailedEvent))
-                .From(_settings.ContextNames.AccountsManagement)
+                    typeof(AmountForDepositFrozenInternalEvent),
+                    typeof(AmountForDepositFreezeFailedInternalEvent))
+                .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
                 .PublishingCommands(
                     typeof(FreezeAmountForDepositInternalCommand),
-                    typeof(BeginBalanceUpdateInternalCommand),
+                    typeof(UpdateBalanceInternalCommand),
                     typeof(FailDepositInternalCommand),
                     typeof(CompleteDepositInternalCommand))
-                .To(_settings.ContextNames.AccountsManagement)
+                .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
         }
 
@@ -181,7 +188,7 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             contextRegistration
                 .ListeningCommands(
-                    typeof(BeginDepositCommand),
+                    typeof(DepositCommand),
                     typeof(FreezeAmountForDepositInternalCommand),
                     typeof(FailDepositInternalCommand),
                     typeof(CompleteDepositInternalCommand))
@@ -189,20 +196,9 @@ namespace MarginTrading.AccountsManagement.Modules
                 .WithCommandsHandler<DepositCommandsHandler>()
                 .PublishingEvents(
                     typeof(DepositFailedEvent),
-                    typeof(AmountForDepositFrozenEvent),
-                    typeof(DepositStartedEvent),
-                    typeof(DepositCompletedEvent))
-                .With(DefaultPipeline);
-        }
-
-        private IRegistration RegisterUpdateBalanceSaga()
-        {
-            return RegisterSaga<UpdateBalanceSaga>()
-                .ListeningEvents(typeof(AccountBalanceUpdateStartedEvent))
-                .From(_settings.ContextNames.AccountsManagement)
-                .On(DefaultRoute)
-                .PublishingCommands(typeof(UpdateBalanceInternalCommand))
-                .To(_settings.ContextNames.AccountsManagement)
+                    typeof(AmountForDepositFrozenInternalEvent),
+                    typeof(DepositStartedInternalEvent),
+                    typeof(DepositSucceededEvent))
                 .With(DefaultPipeline);
         }
 
@@ -211,20 +207,32 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             contextRegistration
                 .ListeningCommands(
-                    typeof(BeginBalanceUpdateInternalCommand),
-                    typeof(BeginClosePositionBalanceUpdateCommand),
+                    typeof(UpdateBalanceCommandsHandler),
                     typeof(UpdateBalanceInternalCommand))
                 .On(DefaultRoute)
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
                 .PublishingEvents(
-                    typeof(AccountBalanceUpdateStartedEvent), 
-                    typeof(AccountBalanceChangedEvent))
+                    typeof(AccountBalanceChangedEvent),
+                    typeof(AccountChangedEvent))
+                .With(DefaultPipeline);
+        }
+
+        private IRegistration RegisterClosePositionSaga()
+        {
+            return RegisterSaga<ClosePositionSaga>()
+                .ListeningEvents(
+                    typeof(PositionClosedEvent))
+                .From(_contextNames.TradingEngine)
+                .On(DefaultRoute)
+                .PublishingCommands(
+                    typeof(UpdateBalanceInternalCommand))
+                .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
         }
 
         private ISagaRegistration RegisterSaga<TSaga>()
         {
-            return Register.Saga<TSaga>($"{_settings.ContextNames.AccountsManagement}.{typeof(TSaga).Name}");
+            return Register.Saga<TSaga>($"{_contextNames.AccountsManagement}.{typeof(TSaga).Name}");
         }
     }
 }

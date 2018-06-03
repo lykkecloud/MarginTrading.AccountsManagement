@@ -15,29 +15,29 @@ namespace MarginTrading.AccountsManagement.Controllers
     [Route("api/balance-history")]
     public class AccountBalanceHistoryController : Controller, IAccountBalanceHistoryApi
     {
-        private readonly IAccountBalanceHistoryRepository _accountBalanceHistoryRepository;
+        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly IConvertService _convertService;
 
-        public AccountBalanceHistoryController(IAccountBalanceHistoryRepository accountBalanceHistoryRepository,
+        public AccountBalanceHistoryController(IAccountBalanceChangesRepository accountBalanceChangesRepository,
             IConvertService convertService)
         {
-            _accountBalanceHistoryRepository = accountBalanceHistoryRepository;
+            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _convertService = convertService;
         }
 
         [Route("")]
         [HttpGet]
-        public async Task<Dictionary<string, AccountHistoryContract[]>> ByAccounts(string[] accountIds,
+        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccounts(string[] accountIds,
             DateTime? from = null, DateTime? to = null)
         {
-            return (await _accountBalanceHistoryRepository.GetAsync(accountIds, from?.ToUniversalTime(),
+            return (await _accountBalanceChangesRepository.GetAsync(accountIds, from?.ToUniversalTime(),
                     to?.ToUniversalTime())).GroupBy(i => i.AccountId)
                 .ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }
 
-        private AccountHistoryContract Convert(AccountBalanceHistory arg)
+        private AccountBalanceChangeContract Convert(AccountBalanceChange arg)
         {
-            return _convertService.Convert<AccountHistoryContract>(arg);
+            return _convertService.Convert<AccountBalanceChangeContract>(arg);
         }
     }
 }

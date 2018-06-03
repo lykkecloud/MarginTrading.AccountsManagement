@@ -25,8 +25,9 @@
     <PackageReference Include="Lykke.HttpClientGenerator" Version="1.0.0" />
     <PackageReference Include="Lykke.JobTriggers" Version="2.0.0" />
     <PackageReference Include="Lykke.Logs" Version="3.6.2" />
-    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.0.0-beta05" />
-    <PackageReference Include="Lykke.MarginTrading.BackendSnow.Contracts" Version="1.0.0-beta30" />
+    <PackageReference Include="Lykke.MarginTrading.BackendSnow.Contracts" Version="1.0.0-beta38" />
+    <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.0.0-beta14" />
+    <PackageReference Include="Lykke.Messaging" Version="5.0.0" />
     <PackageReference Include="Lykke.Messaging.RabbitMq" Version="2.0.0" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.3.1" />

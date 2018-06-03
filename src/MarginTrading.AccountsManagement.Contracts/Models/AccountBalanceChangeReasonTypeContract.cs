@@ -1,9 +1,9 @@
-﻿namespace MarginTrading.AccountsManagement.InternalModels
+﻿namespace MarginTrading.AccountsManagement.Contracts.Models
 {
     /// <summary>
     /// Why the account balance changed
     /// </summary>
-    public enum AccountBalanceHistoryType
+    public enum AccountBalanceChangeReasonTypeContract
     {
         /// <summary>
         /// Funds were deposited
@@ -16,9 +16,9 @@
         Withdraw = 2,
 
         /// <summary>
-        /// Order was closed and the pnl was fixed in the balance
+        /// Position was closed and the pnl was fixed in the balance
         /// </summary>
-        OrderClosed = 3,
+        PositionClosed = 3,
 
         /// <summary>
         /// An account balance was reset (used for demo accounts)

@@ -1,4 +1,5 @@
-﻿using Lykke.AzureStorage.Tables;
+﻿using System.Collections.Generic;
+using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 
@@ -58,6 +59,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 MarkValueTypePropertyAsDirty(nameof(IsDisabled));
             }
         }
+        
+        [JsonValueSerializer]
+        public List<string> LastExecutedOperations { get; set; } = new List<string>();
 
         public static string GeneratePartitionKey(string clientId)
         {

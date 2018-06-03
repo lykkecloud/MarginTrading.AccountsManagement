@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
+using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 
@@ -21,14 +22,21 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         }
 
         public Task<string> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason, string source)
+            [CanBeNull] string operationId, string reason, string source, string auditLog)
         {
-            source.RequiredNotNullOrWhiteSpace(nameof(source));
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
-                new BeginBalanceUpdateInternalCommand(clientId, accountId, amountDelta,
-                    operationId, reason, source),
-                _cqrsContextNamesSettings.AccountsManagement, _cqrsContextNamesSettings.AccountsManagement);
+                new UpdateBalanceInternalCommand(
+                    operationId: operationId,
+                    clientId: clientId,
+                    accountId: accountId,
+                    amountDelta: amountDelta,
+                    comment: reason,
+                    auditLog: auditLog,
+                    source: source,
+                    changeReasonType: AccountBalanceChangeReasonType.Manual),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
         }
 
@@ -37,9 +45,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
-                new BeginWithdrawalCommand(clientId, accountId, amountDelta, operationId,
-                    reason),
-                _cqrsContextNamesSettings.AccountsManagement, _cqrsContextNamesSettings.AccountsManagement);
+                new WithdrawCommand(
+                    operationId: operationId,
+                    clientId: clientId,
+                    accountId: accountId,
+                    amount: amountDelta,
+                    comment: reason,
+                    auditLog: reason),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
         }
 
@@ -48,9 +62,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
-                new BeginDepositCommand(clientId, accountId, amountDelta, operationId,
-                    reason),
-                _cqrsContextNamesSettings.AccountsManagement, _cqrsContextNamesSettings.AccountsManagement);
+                new DepositCommand(
+                    operationId: operationId,
+                    clientId: clientId,
+                    accountId: accountId,
+                    amount: amountDelta,
+                    comment: reason,
+                    auditLog: reason),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
         }
     }

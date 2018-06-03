@@ -1,12 +1,8 @@
 ﻿using System;
-using MarginTrading.AccountsManagement.Contracts.Messages;
 
-namespace MarginTrading.AccountsManagement.Contracts.Api
+namespace MarginTrading.AccountsManagement.InternalModels
 {
-    /// <summary>
-    /// Descibes account balance change 
-    /// </summary>
-    public class AccountBalanceHistoryContract
+    public class AccountBalanceChange
     {
         /// <summary>
         /// Change Id 
@@ -16,7 +12,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         /// <summary>
         /// Change timestamp
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime ChangeTimestamp { get; set; }
 
         /// <summary>
         /// Account id
@@ -51,7 +47,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         /// <summary>
         /// Why the chhange happend 
         /// </summary>
-        public AccountBalanceHistoryTypeContract Type { get; set; }
+        public AccountBalanceChangeReasonType Type { get; set; }
 
         /// <summary>
         /// Id of object which caused the change (ex. order id)

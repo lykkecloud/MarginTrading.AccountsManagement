@@ -1,10 +1,19 @@
-﻿namespace MarginTrading.AccountsManagement.Contracts.Events
+﻿using MessagePack;
+
+namespace MarginTrading.AccountsManagement.Contracts.Events
 {
-    public class DepositFailedEvent : AccountBalanceOperationEventBase
+    /// <summary>
+    /// Deposit operation failed
+    /// </summary>
+    [MessagePackObject]
+    public class DepositFailedEvent
     {
-        public DepositFailedEvent(string clientId, string accountId, decimal amount, string operationId, string reason)
-            : base(clientId, accountId, amount, operationId, reason)
+        [Key(0)]
+        public string OperationId { get; }
+        
+        public DepositFailedEvent(string operationId)
         {
+            OperationId = operationId;
         }
     }
 }

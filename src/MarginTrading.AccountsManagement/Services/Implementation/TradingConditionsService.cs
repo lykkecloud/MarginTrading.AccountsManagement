@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.SettingsService.Contracts;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -35,7 +37,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public async Task<string> GetDefaultTradingConditionIdAsync()
         {
-            return (await _tradingConditionsApi.GetDefault())?.Id;
+            return (await _tradingConditionsApi.List(true)).FirstOrDefault()
+                .RequiredNotNull("Default trading condition").Id;
         }
     }
 }
