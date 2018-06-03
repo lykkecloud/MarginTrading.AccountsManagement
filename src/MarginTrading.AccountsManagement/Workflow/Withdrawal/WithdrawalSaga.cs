@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
@@ -86,7 +87,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         source: OperationName,
                         changeReasonType: AccountBalanceChangeReasonType.Withdraw),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -110,7 +113,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         }
 
         /// <summary>
-        /// The balance has changed => finish the operation
+        /// The balance has changed => notify TradingCode that withdrawal has failed to unfreeze the margin
         /// </summary>
         [UsedImplicitly]
         private async Task Handle(AccountBalanceChangedEvent e, ICommandSender sender)
@@ -119,7 +122,50 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 return;
 
             var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
-            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Succeeded))
+            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.UnfreezingAmount))
+            {
+                sender.SendCommand(
+                    new UnfreezeMarginWithdrawalCommand(
+                        operationId: e.OperationId,
+                        clientId: executionInfo.Data.ClientId,
+                        accountId: executionInfo.Data.AccountId,
+                        amount: executionInfo.Data.Amount),
+                    _contextNames.TradingEngine);
+                _chaosKitty.Meow(e.OperationId);
+                await _executionInfoRepository.Save(executionInfo);
+            }
+        }
+
+        /// <summary>
+        /// Notify TradingCode that withdrawal has failed to unfreeze the margin
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(WithdrawalFailedEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
+            {
+                executionInfo.Data.FailReason = e.Reason;
+                sender.SendCommand(
+                    new UnfreezeMarginWithdrawalCommand(
+                        operationId: e.OperationId,
+                        clientId: executionInfo.Data.ClientId,
+                        accountId: executionInfo.Data.AccountId,
+                        amount: executionInfo.Data.Amount),
+                    _contextNames.TradingEngine);
+                _chaosKitty.Meow(e.OperationId);
+                await _executionInfoRepository.Save(executionInfo);
+            }
+        }
+
+        /// <summary>
+        /// Notify TradingCode that withdrawal has succeded to unfreeze the margin
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(UnfreezeMarginSucceededWithdrawalEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, State.UnfreezingAmount, State.Succeeded))
             {
                 sender.SendCommand(
                     new CompleteWithdrawalInternalCommand(
@@ -130,7 +176,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
-            }
+            } 
         }
 
         private static bool SwitchState(DepositData data, State expectedState, State nextState)
@@ -170,8 +216,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         {
             FreezingAmount = 1,
             UpdatingBalance = 2,
-            Succeeded = 3,
-            Failed = 4,
+            UnfreezingAmount = 3,
+            Succeeded = 4,
+            Failed = 5,
         }
     }
 }
