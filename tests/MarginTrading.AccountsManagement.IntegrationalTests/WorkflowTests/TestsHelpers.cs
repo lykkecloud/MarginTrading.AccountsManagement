@@ -26,7 +26,9 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.WorkflowTests
             if (account.Balance != needBalance)
             {
                 await ChargeManually(needBalance - account.Balance);
-                account.Balance = needBalance;
+                account = new AccountContract(account.Id, account.ClientId, account.TradingConditionId, 
+                    account.BaseAssetId, needBalance, account.WithdrawTransferLimit, account.LegalEntity, 
+                    account.IsDisabled, account.ModificationTimestamp);
             }
 
             if (account.IsDisabled)

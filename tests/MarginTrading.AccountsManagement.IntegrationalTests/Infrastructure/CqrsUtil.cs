@@ -42,9 +42,11 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.Infrastructure
         private static IRegistration RegistrerBoundedContext(CqrsSettings sett)
         {
             return Register.BoundedContext(sett.ContextNames.TradingEngine)
-                .PublishingCommands(typeof(BeginClosePositionBalanceUpdateCommand))
-                .To(sett.ContextNames.AccountsManagement)
-                .With("Default");
+                //todo place specific command here
+                //.PublishingCommands(typeof(BeginClosePositionBalanceUpdateCommand))
+                //.To(sett.ContextNames.AccountsManagement)
+                //.With("Default")
+                ;
         }
 
         public static void SendCommandToAccountManagement<T>(T command)
