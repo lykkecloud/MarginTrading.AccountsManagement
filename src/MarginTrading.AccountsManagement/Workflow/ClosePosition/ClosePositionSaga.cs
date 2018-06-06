@@ -3,7 +3,7 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
-using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.BackendSnow.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
 {
