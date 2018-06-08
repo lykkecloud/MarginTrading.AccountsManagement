@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
@@ -32,12 +33,20 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
             IEventPublisher publisher)
         {
-            var account = await _accountsRepository.UpdateBalanceAsync(
-                operationId: command.OperationId,
-                clientId: command.ClientId,
-                accountId: command.AccountId,
-                amountDelta: command.AmountDelta,
-                changeLimit: false);
+            Account account = null;
+            try
+            {
+                account = await _accountsRepository.UpdateBalanceAsync(
+                    operationId: command.OperationId,
+                    clientId: command.ClientId,
+                    accountId: command.AccountId,
+                    amountDelta: command.AmountDelta,
+                    changeLimit: false);
+            }
+            catch (Exception ex)
+            {
+                publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId, ex.Message));
+            }
 
             _chaosKitty.Meow(command.OperationId);
 

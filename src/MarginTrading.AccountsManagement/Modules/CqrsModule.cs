@@ -138,18 +138,18 @@ namespace MarginTrading.AccountsManagement.Modules
                 .With(DefaultPipeline);
             
             sagaRegistration
-                .ListeningEvents(typeof(AccountBalanceChangedEvent), typeof(WithdrawalFailedEvent))
+                .ListeningEvents(typeof(AccountBalanceChangedEvent), typeof(AccountBalanceChangeFailedEvent))
                 .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
-                .PublishingCommands(typeof(UnfreezeMarginWithdrawalCommand))
+                .PublishingCommands(typeof(UnfreezeMarginWithdrawalCommand), typeof(UnfreezeMarginOnFailWithdrawalCommand))
                 .To(_contextNames.TradingEngine)
                 .With(DefaultPipeline);
             
             sagaRegistration
-                .ListeningEvents(typeof(UnfreezeMarginSucceededWithdrawalEvent))
+                .ListeningEvents(typeof(UnfreezeMarginSucceededWithdrawalEvent), typeof(UnfreezeMarginOnFailSucceededWithdrawalEvent))
                 .From(_contextNames.TradingEngine)
                 .On(DefaultRoute)
-                .PublishingCommands(typeof(CompleteWithdrawalInternalCommand))
+                .PublishingCommands(typeof(CompleteWithdrawalInternalCommand), typeof(FailWithdrawalInternalCommand))
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
 

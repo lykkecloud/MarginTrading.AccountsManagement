@@ -147,12 +147,29 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
-                    new UnfreezeMarginWithdrawalCommand(
+                    new UnfreezeMarginOnFailWithdrawalCommand(
                         operationId: e.OperationId,
                         clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
                         amount: executionInfo.Data.Amount),
                     _contextNames.TradingEngine);
+                _chaosKitty.Meow(e.OperationId);
+                await _executionInfoRepository.Save(executionInfo);
+            }
+        }
+
+        /// <summary>
+        /// The backend failed to freeze the amount in the margin => fail the withdrawal
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(UnfreezeMarginOnFailSucceededWithdrawalEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
+            {
+                sender.SendCommand(
+                    new FailWithdrawalInternalCommand(e.OperationId, "Failed to freeze amount for deposit"), 
+                    _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
             }
