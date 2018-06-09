@@ -15,6 +15,8 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.Modules;
+using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Repositories.Implementation.SQL;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -183,12 +185,14 @@ namespace MarginTrading.AccountsManagement
 
         private static ILog CreateLog(IServiceCollection services, IReloadingManager<AppSettings> settings)
         {
-            var consoleLogger = new LogToConsole();
             var aggregateLogger = new AggregateLogger();
-
-            aggregateLogger.AddLog(consoleLogger);
             
-            // todo: add some more loggers, ex db?
+            aggregateLogger.AddLog(new LogToConsole());
+            
+            var sqlLogger = new LogToSql(new LogRepository("AccountManagementLog", 
+                settings.CurrentValue.MarginTradingAccountManagement.Db.SqlConnectionString));
+            
+            aggregateLogger.AddLog(sqlLogger);
 
             return aggregateLogger;
         }
