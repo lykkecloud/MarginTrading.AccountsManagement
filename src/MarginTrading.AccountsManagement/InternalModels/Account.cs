@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using AutoMapper;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
+using Newtonsoft.Json;
 
 namespace MarginTrading.AccountsManagement.InternalModels
 {
-    public class Account
+    public class Account : IAccount
     {
         public Account([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
             [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
@@ -30,5 +34,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public string LegalEntity { get; }
         public bool IsDisabled { get; }
         public DateTimeOffset ModificationTimestamp { get; }
+
+        public List<string> LastExecutedOperations { get; set; } = new List<string>();
     }
 }

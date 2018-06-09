@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AzureStorage;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.SettingsReader;
@@ -28,8 +29,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 log);
             _log = log.CreateComponentScope(nameof(OperationExecutionInfoRepository));
         }
-
-
+        
         public async Task<OperationExecutionInfo<TData>> GetOrAddAsync<TData>(string operationName, string operationId,
             Func<OperationExecutionInfo<TData>> factory) where TData : class
         {
@@ -41,7 +41,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return Convert<TData>(entity);
         }
 
-        [ItemCanBeNull]
         public async Task<OperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id)
             where TData : class
         {
@@ -65,8 +64,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 version: entity.ETag,
                 operationName: entity.OperationName,
                 id: entity.Id,
-                data: entity.Data is TData data
-                    ? data
+                data: entity.Data is string dataStr
+                    ? JsonConvert.DeserializeObject<TData>(dataStr)
                     : ((JToken) entity.Data).ToObject<TData>());
         }
 
@@ -78,7 +77,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 Id = model.Id,
                 OperationName = model.OperationName,
                 ETag = model.Version,
-                Data = model.Data,
+                Data = model.Data.ToJson(),
             };
         }
     }

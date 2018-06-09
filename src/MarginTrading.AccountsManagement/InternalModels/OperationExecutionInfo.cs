@@ -1,9 +1,11 @@
 ﻿using System;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.InternalModels
 {
-    internal class OperationExecutionInfo<T> where T: class
+    internal class OperationExecutionInfo<T> : IOperationExecutionInfo<T> 
+        where T: class
     {
         [CanBeNull]
         public string Version { get; }

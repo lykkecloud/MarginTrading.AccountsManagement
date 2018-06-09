@@ -1,8 +1,9 @@
 ﻿using System;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.InternalModels
 {
-    public class AccountBalanceChange
+    public class AccountBalanceChange : IAccountBalanceChange
     {
         /// <summary>
         /// Change Id 

@@ -228,7 +228,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
                 : accountId;
 
-            var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, default);
+            var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, 
+                DateTimeOffset.UtcNow);
 
             await _accountsRepository.AddAsync(account);
             account = await _accountsRepository.GetAsync(account.ClientId, accountId);

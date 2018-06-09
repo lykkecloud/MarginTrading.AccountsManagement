@@ -53,11 +53,14 @@ namespace MarginTrading.AccountsManagement.Modules
         /// Types like SmthRepository are also supported.
         /// Also registers startup for implementations of <see cref="IStartable"/>.
         /// </summary>
+        //TODO get rid of reflective registrations
         private void RegisterDefaultImplementations(ContainerBuilder builder)
         {
             var assembly = GetType().Assembly;
             var implementations = assembly.GetTypes()
-                .Where(t => !t.IsInterface && !t.IsGenericType && (t.Name.EndsWith("Service") || t.Name.EndsWith("Repository")))
+                .Where(t => !t.IsInterface && !t.IsGenericType 
+                                           && (t.Name.EndsWith("Service") || t.Name.EndsWith("Repository")
+                                               && !t.Namespace.Contains("Azure"))) // remove registration of azure repositories
                 .SelectMany(t =>
                     t.GetInterfaces()
                         .Where(i => i.Name.StartsWith('I') && i.Assembly == assembly)

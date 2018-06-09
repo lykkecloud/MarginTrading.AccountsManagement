@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
     [ValueTypeMergingStrategy(ValueTypeMergingStrategy.UpdateIfDirty)]
-    public class AccountEntity : AzureTableEntity
+    public class AccountEntity : AzureTableEntity, IAccount
     {
         private decimal _withdrawTransferLimit;
         private decimal _balance;
@@ -59,7 +61,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 MarkValueTypePropertyAsDirty(nameof(IsDisabled));
             }
         }
-        
+
+        public DateTimeOffset ModificationTimestamp { get; set; }
+
         [JsonValueSerializer]
         public List<string> LastExecutedOperations { get; set; } = new List<string>();
 
