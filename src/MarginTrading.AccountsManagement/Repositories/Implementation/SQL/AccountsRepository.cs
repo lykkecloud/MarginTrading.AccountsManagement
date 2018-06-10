@@ -154,7 +154,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                 try
                 {
-                    var account = await conn.QueryFirstAsync<AccountEntity>(
+                    var account = await conn.QueryFirstOrDefaultAsync<AccountEntity>(
                         $"SELECT * FROM {TableName} WHERE Id = @accountId", new {accountId}, transaction);
 
                     if (account == null)

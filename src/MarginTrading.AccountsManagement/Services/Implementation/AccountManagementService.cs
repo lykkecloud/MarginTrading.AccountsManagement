@@ -72,7 +72,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var legalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
 
-            return await CreateAccount(clientId, baseAssetId, tradingConditionId, legalEntity, accountId);
+            var account = await CreateAccount(clientId, baseAssetId, tradingConditionId, legalEntity, accountId);
+
+            _log.WriteInfo(nameof(AccountManagementService), nameof(CreateAsync),
+                $"{baseAssetId} account {accountId} created for client {clientId} on trading condition {tradingConditionId}");
+            
+            return account;
         }
 
         public async Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionId)
@@ -106,6 +111,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 }
             }
 
+            _log.WriteInfo(nameof(AccountManagementService), "CreateDefaultAccountsAsync",
+                $"{string.Join(", ", newAccounts.Select(x => x.BaseAssetId))} accounts created for client {clientId}");
+
             return newAccounts;
         }
 
@@ -132,6 +140,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                         e);
                 }
             }
+
+            _log.WriteInfo(nameof(AccountManagementService), nameof(CreateAccountsForNewBaseAssetAsync),
+                $"{result.Count} accounts created for the new base asset {baseAssetId} in trading condition {tradingConditionId}");
 
             return result;
         }
