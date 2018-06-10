@@ -25,11 +25,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[ChangeAmount] [float] NOT NULL, " +
                                                  "[Balance] [float] NOT NULL, " +
                                                  "[WithdrawTransferLimit] [float] NOT NULL, " +
-                                                 "[Comment] [nvarchar] (MAX) NOT NULL, " +
-                                                 "[Type] [nvarchar] (64) NOT NULL, " +
-                                                 "[EventSourceId] [nvarchar] (64) NOT NULL, " +
-                                                 "[LegalEntity] [nvarchar] (64) NOT NULL, " +
-                                                 "[AuditLog] [nvarchar] (MAX) NOT NULL " +
+                                                 "[Comment] [nvarchar] (MAX) NULL, " +
+                                                 "[Type] [nvarchar] (64) NULL, " +
+                                                 "[EventSourceId] [nvarchar] (64) NULL, " +
+                                                 "[LegalEntity] [nvarchar] (64) NULL, " +
+                                                 "[AuditLog] [nvarchar] (MAX) NULL " +
                                                  ");";
         
         private static Type DataType => typeof(IAccountBalanceChange);

@@ -17,6 +17,7 @@ namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
             {
                 // todo: add some global configurations here?
                 cfg.CreateMap<List<string>, string>().ConvertUsing(JsonConvert.SerializeObject);
+                cfg.CreateMap<string, List<string>>().ConvertUsing(JsonConvert.DeserializeObject<List<string>>);
             }).CreateMapper();
         }
 

@@ -23,8 +23,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         private const string TableName = "OperationExecutionInfo";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  "[Id] [nvarchar] (64) NOT NULL PRIMARY KEY," +
-                                                 "[OperationName] [nvarchar] (64) NOT NULL, " +
-                                                 "[Version] [nvarchar] (64) NOT NULL, " +
+                                                 "[OperationName] [nvarchar] (64) NULL, " +
+                                                 "[Version] [nvarchar] (64) NULL, " +
                                                  "[Data] [nvarchar] (MAX) NOT NULL " +
                                                  ");";
         
@@ -57,18 +57,30 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         
         public async Task<OperationExecutionInfo<TData>> GetOrAddAsync<TData>(string operationName, string operationId, Func<OperationExecutionInfo<TData>> factory) where TData : class
         {
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            try
             {
-                var operationInfo = await conn.QueryAsync<OperationExecutionInfoEntity>(
-                    $"SELECT * FROM {TableName} WHERE Id = @operationId", new { operationId });
-
-                if (operationId == null)
+                using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
                 {
-                    await conn.ExecuteAsync(
-                        $"insert into {TableName} ({GetColumns}) values ({GetFields})", Convert(factory()));
+                    var operationInfo = await conn.QueryAsync<OperationExecutionInfoEntity>(
+                        $"SELECT * FROM {TableName} WHERE Id = @operationId", new {operationId});
+
+                    if (operationInfo == null || !operationInfo.Any())
+                    {
+                        var entity = Convert(factory());
+
+                        await conn.ExecuteAsync(
+                            $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
+
+                        return Convert<TData>(entity);
+                    }
+
+                    return operationInfo.Select(Convert<TData>).FirstOrDefault();
                 }
-                
-                return operationInfo.Select(Convert<TData>).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                await _log.WriteErrorAsync(nameof(OperationExecutionInfoRepository), nameof(GetOrAddAsync), ex);
+                throw;
             }
         }
 

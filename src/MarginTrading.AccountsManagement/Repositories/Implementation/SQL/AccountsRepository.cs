@@ -115,14 +115,20 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             });
         }
 
-        private static bool TryUpdateOperationsList(string operationId, IAccount a)
+        private bool TryUpdateOperationsList(string operationId, AccountEntity a)
         {
-            if (a.LastExecutedOperations.Contains(operationId))
+            var lastExecutedOperations = _convertService.Convert<List<string>>(a.LastExecutedOperations);
+            
+            if (lastExecutedOperations.Contains(operationId))
                 return false;
             
-            a.LastExecutedOperations.Add(operationId);
-            if(a.LastExecutedOperations.Count > MaxOperationsCount)
-                a.LastExecutedOperations.RemoveAt(0);
+            lastExecutedOperations.Add(operationId);
+            if (lastExecutedOperations.Count > MaxOperationsCount)
+            {
+                lastExecutedOperations.RemoveAt(0);
+            }
+
+            a.LastExecutedOperations = _convertService.Convert<string>(lastExecutedOperations);
             
             return true;
         }
