@@ -22,9 +22,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[ChangeTimestamp] [datetime] NOT NULL," +
                                                  "[Id] [nvarchar] (64) NOT NULL, " +
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
-                                                 "[ChangeAmount] [decimal] NOT NULL, " +
-                                                 "[Balance] [decimal] NOT NULL, " +
-                                                 "[WithdrawTransferLimit] [decimal] NOT NULL, " +
+                                                 "[ChangeAmount] decimal (24, 12) NOT NULL, " +
+                                                 "[Balance] decimal (24, 12) NOT NULL, " +
+                                                 "[WithdrawTransferLimit] decimal (24, 12) NOT NULL, " +
                                                  "[Comment] [nvarchar] (MAX) NULL, " +
                                                  "[Type] [nvarchar] (64) NULL, " +
                                                  "[EventSourceId] [nvarchar] (64) NULL, " +

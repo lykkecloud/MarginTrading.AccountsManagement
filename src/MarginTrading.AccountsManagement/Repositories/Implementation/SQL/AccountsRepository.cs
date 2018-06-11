@@ -26,8 +26,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
                                                  "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
                                                  "[BaseAssetId] [nvarchar] (64) NOT NULL, " +
-                                                 "[Balance] [decimal] NOT NULL, " +
-                                                 "[WithdrawTransferLimit] [decimal] NOT NULL, " +
+                                                 "[Balance] decimal (24, 12) NOT NULL, " +
+                                                 "[WithdrawTransferLimit] decimal (24, 12) NOT NULL, " +
                                                  "[LegalEntity] [nvarchar] (64) NOT NULL, " +
                                                  "[IsDisabled] [bit] NOT NULL, " +
                                                  "[ModificationTimestamp] [DateTime] NOT NULL," +
