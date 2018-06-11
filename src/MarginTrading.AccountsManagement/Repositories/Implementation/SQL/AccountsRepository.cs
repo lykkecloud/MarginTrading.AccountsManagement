@@ -172,9 +172,10 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                     return account;
                 }
-                finally
+                catch
                 {
                     transaction.Rollback();
+                    throw;
                 }
             }
         }
