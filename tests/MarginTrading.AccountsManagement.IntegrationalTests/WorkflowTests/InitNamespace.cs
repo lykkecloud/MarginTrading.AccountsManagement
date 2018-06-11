@@ -17,8 +17,8 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.WorkflowTests
             var eventsExchange = $"{sett.EnvironmentName}.{sett.ContextNames.AccountsManagement}.events.exchange";
             
             RabbitUtil.ListenCqrsMessages<AccountBalanceChangedEvent>(connectionString, eventsExchange);
-            RabbitUtil.ListenCqrsMessages<DepositCompletedEvent>(connectionString, eventsExchange);
-            RabbitUtil.ListenCqrsMessages<WithdrawalCompletedEvent>(connectionString, eventsExchange);
+            RabbitUtil.ListenCqrsMessages<DepositSucceededEvent>(connectionString, eventsExchange);
+            RabbitUtil.ListenCqrsMessages<WithdrawalSucceededEvent>(connectionString, eventsExchange);
             RabbitUtil.ListenCqrsMessages<WithdrawalFailedEvent>(connectionString, eventsExchange);
 
             // todo: register other messages
