@@ -62,7 +62,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             }
         }
 
-        public DateTimeOffset ModificationTimestamp { get; set; }
+        public DateTime ModificationTimestamp { get; set; }
 
         [JsonValueSerializer]
         public List<string> LastExecutedOperations { get; set; } = new List<string>();

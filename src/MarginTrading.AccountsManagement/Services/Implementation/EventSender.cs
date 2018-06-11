@@ -4,6 +4,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.Extensions.Internal;
 
@@ -28,12 +29,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _contextNames = contextNames;
         }
 
-        public void SendAccountChangedEvent(Account account, AccountChangedEventTypeContract eventType)
+        public void SendAccountChangedEvent(IAccount account, AccountChangedEventTypeContract eventType)
         {
             _cqrsEngine.PublishEvent(
                 new AccountChangedEvent(
-                    account.ModificationTimestamp.DateTime,
-                    _convertService.Convert<Account, AccountContract>(account),
+                    account.ModificationTimestamp,
+                    _convertService.Convert<IAccount, AccountContract>(account),
                     eventType),
                 _contextNames.AccountsManagement);
         }

@@ -18,17 +18,15 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         
         public string BaseAssetId { get; set; }
 
-        decimal IAccount.Balance => (decimal) Balance;
-        public double Balance { get; set; }
+        public decimal Balance { get; set; }
 
-        decimal IAccount.WithdrawTransferLimit => (decimal) WithdrawTransferLimit;
         public decimal WithdrawTransferLimit { get; set; }
         
         public string LegalEntity { get; set; }
 
         public bool IsDisabled { get; set; }
         
-        public DateTimeOffset ModificationTimestamp { get; set; }
+        public DateTime ModificationTimestamp { get; set; }
 
         List<string> IAccount.LastExecutedOperations => JsonConvert.DeserializeObject<List<string>>(LastExecutedOperations);
         public string LastExecutedOperations { get; set; } = "[]";

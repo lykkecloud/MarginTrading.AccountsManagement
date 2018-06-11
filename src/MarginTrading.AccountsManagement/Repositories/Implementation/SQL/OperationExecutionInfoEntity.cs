@@ -7,8 +7,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 {
     public class OperationExecutionInfoEntity : IOperationExecutionInfo<object>
     {
-        public string Version { get; set; }
-        
         public string OperationName { get; set; }
         
         public string Id { get; set; }

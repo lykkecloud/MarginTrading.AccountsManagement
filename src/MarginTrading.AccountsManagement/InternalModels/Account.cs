@@ -12,7 +12,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
     {
         public Account([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
             [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
-            bool isDisabled, DateTimeOffset modificationTimestamp)
+            bool isDisabled, DateTime modificationTimestamp)
         {
             Id = id.RequiredNotNullOrWhiteSpace(nameof(id));
             ClientId = clientId.RequiredNotNullOrWhiteSpace(nameof(clientId));
@@ -33,7 +33,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public decimal WithdrawTransferLimit { get; }
         public string LegalEntity { get; }
         public bool IsDisabled { get; }
-        public DateTimeOffset ModificationTimestamp { get; }
+        public DateTime ModificationTimestamp { get; }
 
         public List<string> LastExecutedOperations { get; set; } = new List<string>();
     }

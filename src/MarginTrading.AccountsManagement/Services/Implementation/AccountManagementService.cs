@@ -8,6 +8,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
 
@@ -36,7 +37,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Create 
 
-        public async Task<Account> CreateAsync(string clientId, string accountId, string tradingConditionId,
+        public async Task<IAccount> CreateAsync(string clientId, string accountId, string tradingConditionId,
             string baseAssetId)
         {
             #region Validations
@@ -80,7 +81,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return account;
         }
 
-        public async Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionId)
+        public async Task<IReadOnlyList<IAccount>> CreateDefaultAccountsAsync(string clientId,
+            string tradingConditionId)
         {
             var existingAccounts = (await _accountsRepository.GetAllAsync(clientId)).ToList();
 
@@ -95,7 +97,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var baseAssets = await _tradingConditionsService.GetBaseAccountAssetsAsync(tradingConditionId);
             var legalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
 
-            var newAccounts = new List<Account>();
+            var newAccounts = new List<IAccount>();
 
             foreach (var baseAsset in baseAssets)
             {
@@ -117,10 +119,10 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return newAccounts;
         }
 
-        public async Task<List<Account>> CreateAccountsForNewBaseAssetAsync(string tradingConditionId,
+        public async Task<IReadOnlyList<IAccount>> CreateAccountsForNewBaseAssetAsync(string tradingConditionId,
             string baseAssetId)
         {
-            var result = new List<Account>();
+            var result = new List<IAccount>();
 
             var clientAccountGroups = (await _accountsRepository.GetAllAsync()).GroupBy(a => a.ClientId).Where(g =>
                 g.Any(a => a.TradingConditionId == tradingConditionId) && g.All(a => a.BaseAssetId != baseAssetId));
@@ -130,7 +132,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 try
                 {
-                    var account = await CreateAccount(group.Key, baseAssetId, tradingConditionId, legalEntity);
+                    var account = await CreateAccount(@group.Key, baseAssetId, tradingConditionId, legalEntity);
                     result.Add(account);
                 }
                 catch (Exception e)
@@ -152,17 +154,17 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Get
 
-        public Task<List<Account>> ListAsync()
+        public Task<IReadOnlyList<IAccount>> ListAsync()
         {
             return _accountsRepository.GetAllAsync();
         }
 
-        public Task<List<Account>> GetByClientAsync(string clientId)
+        public Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId)
         {
             return _accountsRepository.GetAllAsync(clientId);
         }
 
-        public Task<Account> GetByClientAndIdAsync(string clientId, string accountId)
+        public Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId)
         {
             return _accountsRepository.GetAsync(clientId, accountId);
         }
@@ -172,7 +174,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Modify
 
-        public async Task<Account> SetTradingConditionAsync(string clientId, string accountId,
+        public async Task<IAccount> SetTradingConditionAsync(string clientId, string accountId,
             string tradingConditionId)
         {
             if (!await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
@@ -204,14 +206,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
-        public async Task<Account> SetDisabledAsync(string clientId, string accountId, bool isDisabled)
+        public async Task<IAccount> SetDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
             var account = await _accountsRepository.ChangeIsDisabledAsync(clientId, accountId, isDisabled);
             _eventSender.SendAccountChangedEvent(account, AccountChangedEventTypeContract.Updated);
             return account;
         }
 
-        public async Task<Account> ResetAccountAsync(string clientId, string accountId)
+        public async Task<IAccount> ResetAccountAsync(string clientId, string accountId)
         {
             if (_settings.Behavior?.BalanceResetIsEnabled != true)
             {
@@ -232,15 +234,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Helpers
 
-        private async Task<Account> CreateAccount(string clientId, string baseAssetId, string tradingConditionId,
+        private async Task<IAccount> CreateAccount(string clientId, string baseAssetId, string tradingConditionId,
             string legalEntityId, string accountId = null)
         {
             var id = string.IsNullOrEmpty(accountId)
                 ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
                 : accountId;
 
-            var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, 
-                DateTimeOffset.UtcNow);
+            IAccount account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, 
+                DateTime.UtcNow);
 
             await _accountsRepository.AddAsync(account);
             account = await _accountsRepository.GetAsync(account.ClientId, accountId);
@@ -255,8 +257,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return account;
         }
 
-        private async Task<Account> UpdateBalanceAsync(string operationId, string clientId, string accountId, decimal amountDelta,
-            bool changeTransferLimit = false)
+        private async Task<IAccount> UpdateBalanceAsync(string operationId, string clientId, string accountId,
+            decimal amountDelta, bool changeTransferLimit = false)
         {
             // todo: move to workflow command handler
             var account = await _accountsRepository.UpdateBalanceAsync(operationId, clientId, accountId, amountDelta, changeTransferLimit);

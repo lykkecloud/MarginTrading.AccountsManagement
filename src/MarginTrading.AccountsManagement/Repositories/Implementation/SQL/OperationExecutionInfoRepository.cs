@@ -55,16 +55,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
         
-        public async Task<OperationExecutionInfo<TData>> GetOrAddAsync<TData>(string operationName, string operationId, Func<OperationExecutionInfo<TData>> factory) where TData : class
+        public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(string operationName, string operationId,
+            Func<IOperationExecutionInfo<TData>> factory) where TData : class
         {
             try
             {
                 using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
                 {
-                    var operationInfo = await conn.QueryAsync<OperationExecutionInfoEntity>(
+                    var operationInfo = await conn.QueryFirstOrDefaultAsync<OperationExecutionInfoEntity>(
                         $"SELECT * FROM {TableName} WHERE Id = @operationId", new {operationId});
 
-                    if (operationInfo == null || !operationInfo.Any())
+                    if (operationInfo == null)
                     {
                         var entity = Convert(factory());
 
@@ -74,7 +75,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                         return Convert<TData>(entity);
                     }
 
-                    return operationInfo.Select(Convert<TData>).FirstOrDefault();
+                    return Convert<TData>(operationInfo);
                 }
             }
             catch (Exception ex)
@@ -84,18 +85,18 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<OperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
+        public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
         {
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
-                var operationInfo = await conn.QueryAsync<OperationExecutionInfoEntity>(
+                var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
                     $"SELECT * FROM {TableName} WHERE Id = @id", new { id });
 
-                return operationInfo == null || !operationInfo.Any() ? null : Convert<TData>(operationInfo.First());
+                return operationInfo == null ? null : Convert<TData>(operationInfo);
             }
         }
 
-        public async Task Save<TData>(OperationExecutionInfo<TData> executionInfo) where TData : class
+        public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             var entity = Convert(executionInfo);
             
@@ -118,7 +119,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             where TData : class
         {
             return new OperationExecutionInfo<TData>(
-                version: entity.Version,
                 operationName: entity.OperationName,
                 id: entity.Id,
                 data: entity.Data is string dataStr
@@ -126,14 +126,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     : ((JToken) entity.Data).ToObject<TData>());
         }
 
-        private static OperationExecutionInfoEntity Convert<TData>(OperationExecutionInfo<TData> model)
+        private static OperationExecutionInfoEntity Convert<TData>(IOperationExecutionInfo<TData> model)
             where TData : class
         {
             return new OperationExecutionInfoEntity
             {
                 Id = model.Id,
                 OperationName = model.OperationName,
-                Version = model.Version,
                 Data = model.Data.ToJson(),
             };
         }

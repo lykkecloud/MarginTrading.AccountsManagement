@@ -7,8 +7,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 {
     public class OperationExecutionInfoEntity : AzureTableEntity, IOperationExecutionInfo<object>
     {
-        public string Version { get; set; }
-
         public string OperationName
         {
             get => PartitionKey;

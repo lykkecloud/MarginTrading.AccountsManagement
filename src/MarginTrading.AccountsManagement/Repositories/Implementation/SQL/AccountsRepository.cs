@@ -26,11 +26,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
                                                  "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
                                                  "[BaseAssetId] [nvarchar] (64) NOT NULL, " +
-                                                 "[Balance] [float] NOT NULL, " +
-                                                 "[WithdrawTransferLimit] [float] NOT NULL, " +
+                                                 "[Balance] [decimal] NOT NULL, " +
+                                                 "[WithdrawTransferLimit] [decimal] NOT NULL, " +
                                                  "[LegalEntity] [nvarchar] (64) NOT NULL, " +
                                                  "[IsDisabled] [bit] NOT NULL, " +
-                                                 "[ModificationTimestamp] [DateTimeOffset] NOT NULL," +
+                                                 "[ModificationTimestamp] [DateTime] NOT NULL," +
                                                  "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL" +
                                                  ");";
         
@@ -62,7 +62,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task AddAsync(Account account)
+        public async Task AddAsync(IAccount account)
         {
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
@@ -71,7 +71,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<List<Account>> GetAllAsync(string clientId = null)
+        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null)
         {
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
@@ -80,34 +80,33 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     $"SELECT * FROM {TableName} {whereClause}", 
                     new { clientId });
                 
-                return accounts.Select(Convert).ToList();
+                return accounts.ToList();
             }
         }
 
-        public async Task<Account> GetAsync(string clientId, string accountId)
+        public async Task<IAccount> GetAsync(string clientId, string accountId)
         {
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
-                var whereClause = (string.IsNullOrWhiteSpace(clientId) && string.IsNullOrWhiteSpace(accountId) 
-                    ? ""
-                    : "WHERE 1=1 ")
+                var whereClause = "WHERE 1=1 "
                     + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND Id = @accountId")
                     + (string.IsNullOrWhiteSpace(clientId) ? "" : " AND ClientId = @clientId");
                 var accounts = await conn.QueryAsync<AccountEntity>(
                     $"SELECT * FROM {TableName} {whereClause}", 
                     new { clientId, accountId });
                 
-                return accounts.Select(Convert).FirstOrDefault();
+                return accounts.FirstOrDefault();
             }
         }
 
-        public async Task<Account> UpdateBalanceAsync(string operationId, string clientId, string accountId, decimal amountDelta, bool changeLimit)
+        public async Task<IAccount> UpdateBalanceAsync(string operationId, string clientId, string accountId,
+            decimal amountDelta, bool changeLimit)
         {
             return await GetAccountAndUpdate(accountId, account =>
             {
                 if (TryUpdateOperationsList(operationId, account))
                 {
-                    account.Balance += (double) amountDelta;
+                    account.Balance += amountDelta;
 
                     if (changeLimit)
                         account.WithdrawTransferLimit += amountDelta;
@@ -133,28 +132,30 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             return true;
         }
 
-        public async Task<Account> UpdateTradingConditionIdAsync(string clientId, string accountId, string tradingConditionId)
+        public async Task<IAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
+            string tradingConditionId)
         {
             return await GetAccountAndUpdate(accountId, account => { account.TradingConditionId = tradingConditionId; });
         }
 
-        public async Task<Account> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled)
+        public async Task<IAccount> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
             return await GetAccountAndUpdate(accountId, account => { account.IsDisabled = isDisabled; });
         }
 
-        private async Task<Account> GetAccountAndUpdate(string accountId, Action<AccountEntity> handler)
+        private async Task<IAccount> GetAccountAndUpdate(string accountId, Action<AccountEntity> handler)
         {
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
                 if (conn.State == ConnectionState.Closed)
                     await conn.OpenAsync();
 
-                var transaction = conn.BeginTransaction();
+                //Balance changing operation needs maximum level of isolation
+                var transaction = conn.BeginTransaction(System.Data.IsolationLevel.Serializable);
 
                 try
                 {
-                    var account = await conn.QueryFirstOrDefaultAsync<AccountEntity>(
+                    var account = await conn.QuerySingleOrDefaultAsync<AccountEntity>(
                         $"SELECT * FROM {TableName} WHERE Id = @accountId", new {accountId}, transaction);
 
                     if (account == null)
@@ -168,12 +169,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                         $"update {TableName} set {GetUpdateClause} where Id=@Id", account, transaction);
 
                     transaction.Commit();
-                    return Convert(account);
+
+                    return account;
                 }
-                catch
+                finally
                 {
                     transaction.Rollback();
-                    throw;
                 }
             }
         }
@@ -187,10 +188,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     m => m.MapFrom(e => e.ModificationTimestamp)));
         }
 
-        private AccountEntity Convert(Account account)
+        private AccountEntity Convert(IAccount account)
         {
-            return _convertService.Convert<Account, AccountEntity>(account);
-            //,o => o.ConfigureMap(MemberList.Source).ForSourceMember(a => a.ModificationTimestamp, c => c.Ignore()));
+            return _convertService.Convert<IAccount, AccountEntity>(account);
         }
     }
 }

@@ -22,9 +22,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[ChangeTimestamp] [datetime] NOT NULL," +
                                                  "[Id] [nvarchar] (64) NOT NULL, " +
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
-                                                 "[ChangeAmount] [float] NOT NULL, " +
-                                                 "[Balance] [float] NOT NULL, " +
-                                                 "[WithdrawTransferLimit] [float] NOT NULL, " +
+                                                 "[ChangeAmount] [decimal] NOT NULL, " +
+                                                 "[Balance] [decimal] NOT NULL, " +
+                                                 "[WithdrawTransferLimit] [decimal] NOT NULL, " +
                                                  "[Comment] [nvarchar] (MAX) NULL, " +
                                                  "[Type] [nvarchar] (64) NULL, " +
                                                  "[EventSourceId] [nvarchar] (64) NULL, " +
@@ -59,9 +59,10 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
         
-        public async Task<List<AccountBalanceChange>> GetAsync(string[] accountIds, DateTime? @from, DateTime? to)
+        public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string[] accountIds, DateTime? @from,
+            DateTime? to)
         {
-            var whereClause = "WHERE " + (accountIds.Any() ? $"AccountId IN ('{string.Join("','", accountIds)}')" : "")
+            var whereClause = "WHERE 1=1 " + (accountIds.Any() ? $" AND AccountId IN ('{string.Join("','", accountIds)}')" : "")
                                        + (from != null ? " AND ChangeTimestamp > @from" : "")
                                        + (to != null ? " AND ChangeTimestamp < @to" : "");
             
@@ -70,11 +71,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
                     $"SELECT * FROM {TableName} {whereClause}", new { from, to });
 
-                return data.Select(x => _convertService.Convert<AccountBalanceChange>(x)).ToList();
+                return data.ToList();
             }
         }
 
-        public async Task AddAsync(AccountBalanceChange change)
+        public async Task AddAsync(IAccountBalanceChange change)
         {
             var entity = _convertService.Convert<AccountBalanceChangeEntity>(change);
             

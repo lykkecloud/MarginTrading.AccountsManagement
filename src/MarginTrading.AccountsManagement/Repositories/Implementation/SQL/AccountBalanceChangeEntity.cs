@@ -18,14 +18,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public string ClientId { get; set; }
 
-        decimal IAccountBalanceChange.ChangeAmount => (decimal) ChangeAmount;
-        public double ChangeAmount { get; set; }
+        public decimal ChangeAmount { get; set; }
 
-        decimal IAccountBalanceChange.Balance => (decimal) Balance;
-        public double Balance { get; set; }
+        public decimal Balance { get; set; }
 
-        decimal IAccountBalanceChange.WithdrawTransferLimit => (decimal) WithdrawTransferLimit;
-        public double WithdrawTransferLimit { get; set; }
+        public decimal WithdrawTransferLimit { get; set; }
 
         public string Comment { get; set; }
 

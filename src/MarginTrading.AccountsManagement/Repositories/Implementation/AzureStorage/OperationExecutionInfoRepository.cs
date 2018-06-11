@@ -6,6 +6,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
 using Newtonsoft.Json;
@@ -30,8 +31,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             _log = log.CreateComponentScope(nameof(OperationExecutionInfoRepository));
         }
         
-        public async Task<OperationExecutionInfo<TData>> GetOrAddAsync<TData>(string operationName, string operationId,
-            Func<OperationExecutionInfo<TData>> factory) where TData : class
+        public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(string operationName, string operationId,
+            Func<IOperationExecutionInfo<TData>> factory) where TData : class
         {
             var entity = await _tableStorage.GetOrInsertAsync(
                 partitionKey: OperationExecutionInfoEntity.GeneratePartitionKey(operationName),
@@ -41,7 +42,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return Convert<TData>(entity);
         }
 
-        public async Task<OperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id)
+        public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id)
             where TData : class
         {
             var obj = await _tableStorage.GetDataAsync(
@@ -52,16 +53,15 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return Convert<TData>(obj);
         }
 
-        public async Task Save<TData>(OperationExecutionInfo<TData> executionInfo) where TData : class
+        public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             await _tableStorage.ReplaceAsync(Convert(executionInfo));
         }
 
-        private static OperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
+        private static IOperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class
         {
             return new OperationExecutionInfo<TData>(
-                version: entity.ETag,
                 operationName: entity.OperationName,
                 id: entity.Id,
                 data: entity.Data is string dataStr
@@ -69,14 +69,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                     : ((JToken) entity.Data).ToObject<TData>());
         }
 
-        private static OperationExecutionInfoEntity Convert<TData>(OperationExecutionInfo<TData> model)
+        private static OperationExecutionInfoEntity Convert<TData>(IOperationExecutionInfo<TData> model)
             where TData : class
         {
             return new OperationExecutionInfoEntity
             {
                 Id = model.Id,
                 OperationName = model.OperationName,
-                ETag = model.Version,
                 Data = model.Data.ToJson(),
             };
         }
