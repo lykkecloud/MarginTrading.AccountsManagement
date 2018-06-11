@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using AzureStorage.Tables;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.AzureStorage.Tables.Entity.Metamodel;
@@ -12,8 +13,10 @@ using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
+using Lykke.Logs;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
+using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Modules;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Repositories.Implementation.SQL;
@@ -186,13 +189,42 @@ namespace MarginTrading.AccountsManagement
         private static ILog CreateLog(IServiceCollection services, IReloadingManager<AppSettings> settings)
         {
             var aggregateLogger = new AggregateLogger();
+            var consoleLogger = new LogToConsole();
             
-            aggregateLogger.AddLog(new LogToConsole());
-            
-            var sqlLogger = new LogToSql(new LogRepository("AccountManagementLog", 
-                settings.CurrentValue.MarginTradingAccountManagement.Db.SqlConnectionString));
-            
-            aggregateLogger.AddLog(sqlLogger);
+            aggregateLogger.AddLog(consoleLogger);
+
+            if (settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.SqlServer.ToString())
+            {
+                var sqlLogger = new LogToSql(new LogRepository("AccountManagementLog",
+                    settings.CurrentValue.MarginTradingAccountManagement.Db.SqlConnectionString));
+
+                aggregateLogger.AddLog(sqlLogger);
+            } 
+            else if (settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.Azure.ToString())
+            {
+                var dbLogConnectionStringManager = settings.Nested(x => x.MarginTradingAccountManagement.Db.LogsConnString);
+                var dbLogConnectionString = dbLogConnectionStringManager.CurrentValue;
+    
+                if (string.IsNullOrEmpty(dbLogConnectionString))
+                {
+                    consoleLogger.WriteWarningAsync(nameof(Startup), nameof(CreateLog), "Table loggger is not inited").Wait();
+                    return aggregateLogger;
+                }
+    
+                if (dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}"))
+                    throw new InvalidOperationException($"LogsConnString {dbLogConnectionString} is not filled in settings");
+    
+                var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
+                    AzureTableStorage<Lykke.Logs.LogEntity>.Create(dbLogConnectionStringManager, "AccountManagementLog", consoleLogger),
+                    consoleLogger);
+    
+                // Creating azure storage logger, which logs own messages to concole log
+                var azureStorageLogger = new LykkeLogToAzureStorage(persistenceManager, null, consoleLogger);
+                
+                azureStorageLogger.Start();
+                
+                aggregateLogger.AddLog(azureStorageLogger);
+            }
 
             return aggregateLogger;
         }

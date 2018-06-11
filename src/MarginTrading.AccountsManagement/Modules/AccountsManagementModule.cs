@@ -58,7 +58,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 builder.RegisterType<SqlRepos.OperationExecutionInfoRepository>()
                     .As<IOperationExecutionInfoRepository>().SingleInstance();
             }
-            else
+            else if (_settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.Azure.ToString())
             {
                 builder.RegisterType<AzureTableStorageFactoryService>().As<IAzureTableStorageFactoryService>()
                     .SingleInstance();
