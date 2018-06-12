@@ -140,10 +140,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         /// Notify TradingCode that withdrawal has failed to unfreeze the margin
         /// </summary>
         [UsedImplicitly]
-        private async Task Handle(WithdrawalFailedEvent e, ICommandSender sender)
+        private async Task Handle(AccountBalanceChangeFailedEvent e, ICommandSender sender)
         {
             var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
-            if (SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
+            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.UnfreezingAmount))
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
@@ -151,7 +151,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         operationId: e.OperationId,
                         clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
-                        amount: executionInfo.Data.Amount),
+                        amount: executionInfo.Data.Amount), 
                     _contextNames.TradingEngine);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
@@ -159,24 +159,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         }
 
         /// <summary>
-        /// The backend failed to freeze the amount in the margin => fail the withdrawal
-        /// </summary>
-        [UsedImplicitly]
-        private async Task Handle(UnfreezeMarginOnFailSucceededWithdrawalEvent e, ICommandSender sender)
-        {
-            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
-            if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
-            {
-                sender.SendCommand(
-                    new FailWithdrawalInternalCommand(e.OperationId, "Failed to freeze amount for deposit"), 
-                    _contextNames.AccountsManagement);
-                _chaosKitty.Meow(e.OperationId);
-                await _executionInfoRepository.Save(executionInfo);
-            }
-        }
-
-        /// <summary>
-        /// Notify TradingCode that withdrawal has succeded to unfreeze the margin
+        /// Unfreezing margin succeded, withdrawal completed
         /// </summary>
         [UsedImplicitly]
         private async Task Handle(UnfreezeMarginSucceededWithdrawalEvent e, ICommandSender sender)
@@ -194,7 +177,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
             } 
-        }
+        }AccountBalanceChangedEvent
 
         private static bool SwitchState(DepositData data, State expectedState, State nextState)
         {
