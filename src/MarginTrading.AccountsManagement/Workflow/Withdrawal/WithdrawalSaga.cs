@@ -11,8 +11,6 @@ using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
-using MarginTrading.Backend.Contracts.Commands;
-using MarginTrading.Backend.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 {
@@ -177,7 +175,24 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
             } 
-        }AccountBalanceChangedEvent
+        }
+
+        /// <summary>
+        /// Failed to change balance => withdrawal failed
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(UnfreezeMarginOnFailSucceededWithdrawalEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, State.UnfreezingAmount, State.Succeeded))
+            {
+                sender.SendCommand(
+                    new FailWithdrawalInternalCommand(e.OperationId, "Failed to change balance."), 
+                    _contextNames.AccountsManagement);
+                _chaosKitty.Meow(e.OperationId);
+                await _executionInfoRepository.Save(executionInfo);
+            } 
+        }
 
         private static bool SwitchState(DepositData data, State expectedState, State nextState)
         {

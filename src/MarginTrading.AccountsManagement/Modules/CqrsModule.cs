@@ -12,7 +12,6 @@ using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.AccountsManagement.Workflow;
 using MarginTrading.AccountsManagement.Workflow.ClosePosition;
 using MarginTrading.AccountsManagement.Workflow.Deposit;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
@@ -22,8 +21,6 @@ using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
-using MarginTrading.Backend.Contracts.Commands;
-using MarginTrading.Backend.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.Modules
 {
@@ -228,7 +225,7 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             return RegisterSaga<ClosePositionSaga>()
                 .ListeningEvents(
-                    typeof(PositionClosedEvent))
+                    typeof(Backend.Contracts.Events.PositionClosedEvent))
                 .From(_contextNames.TradingEngine)
                 .On(DefaultRoute)
                 .PublishingCommands(
