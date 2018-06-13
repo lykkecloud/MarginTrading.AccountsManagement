@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using AutoMapper;
 using JetBrains.Annotations;
+using Newtonsoft.Json;
 
 namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
 {
@@ -14,6 +16,8 @@ namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
             return new MapperConfiguration(cfg =>
             {
                 // todo: add some global configurations here?
+                cfg.CreateMap<List<string>, string>().ConvertUsing(JsonConvert.SerializeObject);
+                cfg.CreateMap<string, List<string>>().ConvertUsing(JsonConvert.DeserializeObject<List<string>>);
             }).CreateMapper();
         }
 

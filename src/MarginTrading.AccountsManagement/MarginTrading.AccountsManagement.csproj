@@ -17,6 +17,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="1.50.5" />
     <PackageReference Include="AutoMapper" Version="7.0.0" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Lykke.AzureStorage" Version="8.4.1" />

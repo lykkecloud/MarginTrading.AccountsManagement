@@ -32,11 +32,11 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         public bool IsDisabled { get; }
 
         [Key(8)]
-        public DateTimeOffset ModificationTimestamp { get; }
+        public DateTime ModificationTimestamp { get; }
 
         public AccountContract([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
             [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
-            bool isDisabled, DateTimeOffset modificationTimestamp)
+            bool isDisabled, DateTime modificationTimestamp)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));

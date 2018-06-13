@@ -6,6 +6,7 @@ using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -30,12 +31,12 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccounts(string[] accountIds,
             DateTime? from = null, DateTime? to = null)
         {
-            return (await _accountBalanceChangesRepository.GetAsync(accountIds, from?.ToUniversalTime(),
+            return (await _accountBalanceChangesRepository.GetAsync(accountIds, @from?.ToUniversalTime(),
                     to?.ToUniversalTime())).GroupBy(i => i.AccountId)
                 .ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }
 
-        private AccountBalanceChangeContract Convert(AccountBalanceChange arg)
+        private AccountBalanceChangeContract Convert(IAccountBalanceChange arg)
         {
             return _convertService.Convert<AccountBalanceChangeContract>(arg);
         }

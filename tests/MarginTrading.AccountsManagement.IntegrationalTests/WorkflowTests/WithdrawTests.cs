@@ -27,7 +27,7 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.WorkflowTests
             
             var messagesReceivedTask = Task.WhenAll(
                 RabbitUtil.WaitForCqrsMessage<AccountBalanceChangedEvent>(m => m.OperationId == operationId),
-                RabbitUtil.WaitForCqrsMessage<WithdrawalCompletedEvent>(m => m.OperationId == operationId));
+                RabbitUtil.WaitForCqrsMessage<WithdrawalSucceededEvent>(m => m.OperationId == operationId));
 
             await messagesReceivedTask;
 
@@ -53,7 +53,7 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.WorkflowTests
                 });
             
             var eventTask = await Task.WhenAny(
-                RabbitUtil.WaitForCqrsMessage<WithdrawalCompletedEvent>(m => m.OperationId == operationId),
+                RabbitUtil.WaitForCqrsMessage<WithdrawalSucceededEvent>(m => m.OperationId == operationId),
                 RabbitUtil.WaitForCqrsMessage<WithdrawalFailedEvent>(m => m.OperationId == operationId));
 
             eventTask.Should().BeOfType<Task<WithdrawalFailedEvent>>();

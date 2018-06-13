@@ -7,6 +7,7 @@ using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
 
@@ -26,14 +27,15 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                     settings.Nested(s => s.Db.ConnectionString), "AccountBalanceChanges", log);
         }
 
-        public async Task<List<AccountBalanceChange>> GetAsync(string[] accountIds, DateTime? from, DateTime? to)
+        public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string[] accountIds, DateTime? @from,
+            DateTime? to)
         {
             return (await _tableStorage.WhereAsync(accountIds, from ?? DateTime.MinValue,
-                    to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo)).Select(Convert)
+                    to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
                 .OrderByDescending(item => item.ChangeTimestamp).ToList();
         }
 
-        public async Task AddAsync(AccountBalanceChange change)
+        public async Task AddAsync(IAccountBalanceChange change)
         {
             var entity = _convertService.Convert<AccountBalanceChangeEntity>(change);
             // ReSharper disable once RedundantArgumentDefaultValue

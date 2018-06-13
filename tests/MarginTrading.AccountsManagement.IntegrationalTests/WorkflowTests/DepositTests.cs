@@ -28,7 +28,7 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.WorkflowTests
             
             var messagesReceivedTask = Task.WhenAll(
                 RabbitUtil.WaitForCqrsMessage<AccountBalanceChangedEvent>(m => m.OperationId == operationId),
-                RabbitUtil.WaitForCqrsMessage<DepositCompletedEvent>(m => m.OperationId == operationId));
+                RabbitUtil.WaitForCqrsMessage<DepositSucceededEvent>(m => m.OperationId == operationId));
 
             await messagesReceivedTask;
 

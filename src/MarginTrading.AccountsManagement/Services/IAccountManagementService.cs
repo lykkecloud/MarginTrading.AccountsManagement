@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.Services
 {
@@ -10,41 +11,41 @@ namespace MarginTrading.AccountsManagement.Services
         
         #region Create 
         
-        Task<Account> CreateAsync(string clientId, string accountId, string tradingConditionId, string baseAssetId);
+        Task<IAccount> CreateAsync(string clientId, string accountId, string tradingConditionId, string baseAssetId);
         
         /// <summary>
         /// Creates default accounts for client by trading condition id.
         /// </summary>
-        Task<List<Account>> CreateDefaultAccountsAsync(string clientId, string tradingConditionId);
+        Task<IReadOnlyList<IAccount>> CreateDefaultAccountsAsync(string clientId, string tradingConditionId);
         
         /// <summary>
         /// Create accounts with requested base asset for all users 
         /// that already have accounts with requested trading condition
         /// </summary>
-        Task<List<Account>> CreateAccountsForNewBaseAssetAsync(string tradingConditionId, string baseAssetId);
+        Task<IReadOnlyList<IAccount>> CreateAccountsForNewBaseAssetAsync(string tradingConditionId, string baseAssetId);
         
         #endregion
         
         
         #region Get
         
-        Task<List<Account>> ListAsync();
+        Task<IReadOnlyList<IAccount>> ListAsync();
         
-        Task<List<Account>> GetByClientAsync(string clientId);
+        Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId);
         
         [ItemCanBeNull]
-        Task<Account> GetByClientAndIdAsync(string clientId, string accountId);
+        Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId);
         
         #endregion
         
         
         #region Modify
         
-        Task<Account> SetTradingConditionAsync(string clientId, string accountId, string tradingConditionId);
+        Task<IAccount> SetTradingConditionAsync(string clientId, string accountId, string tradingConditionId);
         
-        Task<Account> SetDisabledAsync(string clientId, string accountId, bool isDisabled);
+        Task<IAccount> SetDisabledAsync(string clientId, string accountId, bool isDisabled);
 
-        Task<Account> ResetAccountAsync(string clientId, string accountId);
+        Task<IAccount> ResetAccountAsync(string clientId, string accountId);
         
         #endregion
         
