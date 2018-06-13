@@ -118,36 +118,13 @@ namespace MarginTrading.AccountsManagement.BrokerBase
 
         protected abstract void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<TSettings> settings, ILog log, bool isLive);
 
-        protected virtual ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<TApplicationSettings> settings, bool isLive)
-        {
-            var logToConsole = new LogToConsole();
-            var aggregateLogger = new AggregateLogger();
-
-            aggregateLogger.AddLog(logToConsole);
-            
-            // Creating azure storage logger, which logs own messages to concole log
-            var dbLogConnectionString = settings.CurrentValue.MtBrokersLogs?.DbConnString;
-            if (!string.IsNullOrEmpty(dbLogConnectionString) &&
-                !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
-            {
-                var logToAzureStorage = services.UseLogToAzureStorage(
-                    settings.Nested(s => s.MtBrokersLogs.DbConnString), 
-                    null,
-                    ApplicationName + Configuration.ServerType() + "Log",
-                    aggregateLogger);
-
-                aggregateLogger.AddLog(logToAzureStorage);
-            }
-
-            return aggregateLogger;
-        }
-
-
+        protected abstract ILog CreateLog(IServiceCollection services, IReloadingManager<TApplicationSettings> settings);
+        
         private void RegisterServices(IServiceCollection services, IReloadingManager<TApplicationSettings> applicationSettings,
             ContainerBuilder builder,
             bool isLive)
         {
-            Log = CreateLogWithSlack(services, applicationSettings, isLive);
+            Log = CreateLog(services, applicationSettings);
             builder.RegisterInstance(Log).As<ILog>().SingleInstance();
             builder.RegisterInstance(applicationSettings).AsSelf().SingleInstance();
 

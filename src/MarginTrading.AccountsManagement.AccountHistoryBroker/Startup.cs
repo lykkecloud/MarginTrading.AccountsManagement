@@ -1,12 +1,14 @@
 ﻿using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
+using Lykke.Logs;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
 using AzureRepos = MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.AzureRepositories;
 using SqlRepos = MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.SqlRepositories;
 using MarginTrading.AccountsManagement.BrokerBase;
+using MarginTrading.AccountsManagement.BrokerBase.Repositories;
 using MarginTrading.AccountsManagement.BrokerBase.Services;
 using MarginTrading.AccountsManagement.BrokerBase.Settings;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +19,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
     public class Startup : BrokerStartupBase<DefaultBrokerApplicationSettings<Settings>, Settings>
     {
         protected override string ApplicationName => "AccountHistoryBroker";
+        private const string LogTableName = "AccountHistoryBrokerLog";
 
         public Startup(IHostingEnvironment env) : base(env)
         {
@@ -44,6 +47,41 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
                     .As<IAccountHistoryRepository>()
                     .SingleInstance();
             }
+        }
+
+        protected override ILog CreateLog(IServiceCollection services, 
+            IReloadingManager<DefaultBrokerApplicationSettings<Settings>> settings)
+        {
+            var logToConsole = new LogToConsole();
+            var aggregateLogger = new AggregateLogger();
+
+            aggregateLogger.AddLog(logToConsole);
+            
+            if (settings.CurrentValue.MtBackend.MarginTradingLive.Db.StorageMode == StorageMode.SqlServer.ToString())
+            {
+                var sqlLogger = new LogToSql(new SqlRepos.LogRepository(LogTableName,
+                    settings.CurrentValue.MtBackend.MarginTradingLive.Db.HistorySqlConnString));
+
+                aggregateLogger.AddLog(sqlLogger);
+            } 
+            else if (settings.CurrentValue.MtBackend.MarginTradingLive.Db.StorageMode == StorageMode.Azure.ToString())
+            {
+                // Creating azure storage logger, which logs own messages to concole log
+                var dbLogConnectionString = settings.CurrentValue.MtBrokersLogs?.DbConnString;
+                if (!string.IsNullOrEmpty(dbLogConnectionString) &&
+                    !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
+                {
+                    var logToAzureStorage = services.UseLogToAzureStorage(
+                        settings.Nested(s => s.MtBrokersLogs.DbConnString),
+                        null,
+                        ApplicationName + Configuration.ServerType() + "Log",
+                        aggregateLogger);
+
+                    aggregateLogger.AddLog(logToAzureStorage);
+                }
+            }
+
+            return aggregateLogger;
         }
     }
 }
