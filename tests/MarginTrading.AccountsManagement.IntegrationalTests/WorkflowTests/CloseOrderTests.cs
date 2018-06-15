@@ -17,7 +17,7 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.WorkflowTests
             // arrange
             await TestsHelpers.EnsureAccountState();
             var operationId = Guid.NewGuid().ToString();
-
+/*
             // act
             //todo use specific command
             /*CqrsUtil.SendCommandToAccountManagement(

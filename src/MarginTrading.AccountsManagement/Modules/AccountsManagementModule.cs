@@ -1,19 +1,20 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using Autofac;
+﻿using Autofac;
 using Common.Log;
 using Lykke.Common.Chaos;
 using Lykke.SettingsReader;
-using MarginTrading.AccountsManagement.Controllers;
+using MarginTrading.AccountsManagement.Infrastructure;
+using MarginTrading.AccountsManagement.Infrastructure.Implementation;
+using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Repositories.AzureServices.Implementations;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Internal;
 using Module = Autofac.Module;
+using AzureRepos = MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage;
+using SqlRepos = MarginTrading.AccountsManagement.Repositories.Implementation.SQL;
 
 namespace MarginTrading.AccountsManagement.Modules
 {
@@ -35,43 +36,50 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement.Cqrs.ContextNames).SingleInstance();
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
             builder.RegisterInstance(_log).As<ILog>().SingleInstance();
-            builder.RegisterType<TradingConditionsService>().As<ITradingConditionsService>().SingleInstance();
+            
             builder.RegisterType<EventSender>().As<IEventSender>().SingleInstance();
-            builder.RegisterType<AzureTableStorageFactoryService>().As<IAzureTableStorageFactoryService>()
-                .SingleInstance();
             builder.RegisterChaosKitty(_settings.CurrentValue.MarginTradingAccountManagement.ChaosKitty);
 
-            RegisterDefaultImplementations(builder);
+            RegisterServices(builder);
+            RegisterRepositories(builder);
         }
 
-        /// <summary>
-        /// Scans for types in the current assembly and registers types which: <br/>
-        /// - are named like 'SmthService' <br/>
-        /// - implement an non-generic interface named like 'ISmthService' in the same assembly <br/>
-        /// - are the only implementations of the 'ISmthService' interface <br/>
-        /// - are not generic <br/><br/>
-        /// Types like SmthRepository are also supported.
-        /// Also registers startup for implementations of <see cref="IStartable"/>.
-        /// </summary>
-        private void RegisterDefaultImplementations(ContainerBuilder builder)
+        private void RegisterRepositories(ContainerBuilder builder)
         {
-            var assembly = GetType().Assembly;
-            var implementations = assembly.GetTypes()
-                .Where(t => !t.IsInterface && !t.IsGenericType && (t.Name.EndsWith("Service") || t.Name.EndsWith("Repository")))
-                .SelectMany(t =>
-                    t.GetInterfaces()
-                        .Where(i => i.Name.StartsWith('I') && i.Assembly == assembly)
-                        .Select(i => (Implementation: t, Interface: i)))
-                .GroupBy(t => t.Interface)
-                .Where(gr => gr.Count() == 1)
-                .SelectMany(gr => gr);
-
-            foreach (var t in implementations)
+            if (_settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.SqlServer.ToString())
             {
-                var registrationBuilder = builder.RegisterType(t.Implementation).As(t.Interface).SingleInstance();
-                if (typeof(IStartable).IsAssignableFrom(t.Implementation))
-                    registrationBuilder.OnActivated(args => ((IStartable) args.Instance).Start()).AutoActivate();
+                builder.RegisterType<SqlRepos.LogRepository>().As<ILogRepository>().SingleInstance();
+                
+
+                builder.RegisterType<SqlRepos.AccountBalanceChangesRepository>()
+                    .As<IAccountBalanceChangesRepository>().SingleInstance();
+                builder.RegisterType<SqlRepos.AccountsRepository>()
+                    .As<IAccountsRepository>().SingleInstance();
+                builder.RegisterType<SqlRepos.OperationExecutionInfoRepository>()
+                    .As<IOperationExecutionInfoRepository>().SingleInstance();
             }
+            else if (_settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.Azure.ToString())
+            {
+                builder.RegisterType<AzureTableStorageFactoryService>().As<IAzureTableStorageFactoryService>()
+                    .SingleInstance();
+
+                builder.RegisterType<AzureRepos.AccountBalanceChangesRepository>()
+                    .As<IAccountBalanceChangesRepository>().SingleInstance();
+                builder.RegisterType<AzureRepos.AccountsRepository>()
+                    .As<IAccountsRepository>().SingleInstance();
+                builder.RegisterType<AzureRepos.OperationExecutionInfoRepository>()
+                    .As<IOperationExecutionInfoRepository>().SingleInstance();
+            }
+        }
+
+        private void RegisterServices(ContainerBuilder builder)
+        {
+            builder.RegisterType<AccountManagementService>().As<IAccountManagementService>().SingleInstance();
+            builder.RegisterType<SendBalanceCommandsService>().As<ISendBalanceCommandsService>().SingleInstance();
+            builder.RegisterType<TradingConditionsService>().As<ITradingConditionsService>().SingleInstance();
+            
+            builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
+            builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance(); 
         }
     }
 }

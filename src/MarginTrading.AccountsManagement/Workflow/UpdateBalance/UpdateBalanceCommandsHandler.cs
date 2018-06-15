@@ -7,6 +7,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 
@@ -52,7 +53,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
 
             var change = new AccountBalanceChangeContract(
                 id: command.OperationId,
-                changeTimestamp: account.ModificationTimestamp.UtcDateTime,
+                changeTimestamp: account.ModificationTimestamp,
                 accountId: account.Id,
                 clientId: account.ClientId,
                 changeAmount: command.AmountDelta,
@@ -76,7 +77,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             return CommandHandlingResult.Ok();
         }
 
-        private AccountContract Convert(Account account)
+        private AccountContract Convert(IAccount account)
         {
             return _convertService.Convert<AccountContract>(account);
         }

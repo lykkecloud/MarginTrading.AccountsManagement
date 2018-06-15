@@ -38,7 +38,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 operationName: OperationName,
                 operationId: e.OperationId,
                 factory: () => new OperationExecutionInfo<WithdrawalData>(
-                    version: null,
                     operationName: OperationName,
                     id: e.OperationId,
                     data: new WithdrawalData
