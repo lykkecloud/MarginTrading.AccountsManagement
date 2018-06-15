@@ -26,13 +26,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public string Comment { get; set; }
 
-        AccountBalanceChangeReasonType IAccountBalanceChange.Type => Enum.Parse<AccountBalanceChangeReasonType>(Type); 
-        public string Type { get; set; }
+        AccountBalanceChangeReasonType IAccountBalanceChange.ReasonType => Enum.Parse<AccountBalanceChangeReasonType>(ReasonType); 
+        public string ReasonType { get; set; }
 
         public string EventSourceId { get; set; }
 
         public string LegalEntity { get; set; }
 
         public string AuditLog { get; set; }
+        
+        public string Instrument { get; set; }
+        
+        public DateTime TradingDate { get; set; }
     }
 }

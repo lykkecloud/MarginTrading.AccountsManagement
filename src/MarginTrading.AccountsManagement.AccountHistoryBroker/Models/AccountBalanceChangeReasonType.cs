@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.AccountsManagement.InternalModels
+﻿namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Models
 {
     public enum AccountBalanceChangeReasonType
     {

@@ -31,8 +31,38 @@
         Swap = 5,
 
         /// <summary>
-        /// Chnage was done manually via api (usually via BO)
+        /// Change was done manually via api (usually via BO) / Temporary cash adjustment / Compensation payments
         /// </summary>
         Manual = 6,
+        
+        /// <summary>
+        /// Unrealized daily PnL
+        /// </summary>
+        UnrealizedDailyPnL = 7,
+        
+        /// <summary>
+        /// Realized daily PnL
+        /// </summary>
+        RealizedDailyPnL = 8,
+        
+        /// <summary>
+        /// Commissions
+        /// </summary>
+        Commission = 9,
+        
+        /// <summary>
+        /// Compensations payments for dividends
+        /// </summary>
+        Dividend = 10,
+        
+        /// <summary>
+        /// On behalf fees
+        /// </summary>
+        OnBehalf = 11,
+        
+        /// <summary>
+        /// Total tax
+        /// </summary>
+        Tax = 12,
     }
 }

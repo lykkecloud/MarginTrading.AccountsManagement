@@ -1,27 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using AutoMapper;
 using JetBrains.Annotations;
-using MarginTrading.AccountsManagement.InternalModels;
+using MoreLinq;
 using Newtonsoft.Json;
 
-namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
+namespace MarginTrading.AccountsManagement.BrokerBase.Services
 {
     [UsedImplicitly]
-    internal class ConvertService : IConvertService
+    public class ConvertService : IConvertService
     {
-        private readonly IMapper _mapper = CreateMapper();
+        public ConvertService(Action<IMapperConfigurationExpression> mapperConfig = null)
+        {
+            _mapper = CreateMapper(mapperConfig);
+        }
+        
+        private readonly IMapper _mapper;
 
-        private static IMapper CreateMapper()
+        private static IMapper CreateMapper(Action<IMapperConfigurationExpression> mapperConfig = null)
         {
             return new MapperConfiguration(cfg =>
             {
                 // todo: add some global configurations here?
-                cfg.CreateMap<AccountBalanceChangeReasonType, string>().ConvertUsing(x => x.ToString());
-                cfg.CreateMap<string, AccountBalanceChangeReasonType>()
-                    .ConvertUsing(Enum.Parse<AccountBalanceChangeReasonType>);
-                cfg.CreateMap<List<string>, string>().ConvertUsing(JsonConvert.SerializeObject);
-                cfg.CreateMap<string, List<string>>().ConvertUsing(JsonConvert.DeserializeObject<List<string>>);
+                mapperConfig?.Invoke(cfg);
             }).CreateMapper();
         }
 

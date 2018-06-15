@@ -48,7 +48,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         /// <summary>
         /// Why the chhange happend 
         /// </summary>
-        public AccountBalanceChangeReasonType Type { get; set; }
+        public AccountBalanceChangeReasonType ReasonType { get; set; }
 
         /// <summary>
         /// Id of object which caused the change (ex. order id)
@@ -64,5 +64,15 @@ namespace MarginTrading.AccountsManagement.InternalModels
         /// Log data
         /// </summary>
         public string AuditLog { get; set; }
+
+        /// <summary>
+        /// Instrument Id
+        /// </summary>
+        public string Instrument { get; set; }
+        
+        /// <summary>
+        /// Trading date is passed with model, if not it is set to current time
+        /// </summary>
+        public DateTime TradingDate { get; set; }
     }
 }

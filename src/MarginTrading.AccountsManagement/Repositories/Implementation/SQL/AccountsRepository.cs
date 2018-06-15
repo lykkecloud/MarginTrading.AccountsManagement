@@ -15,6 +15,7 @@ using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 {
@@ -41,13 +42,16 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
         private readonly IConvertService _convertService;
+        private readonly ISystemClock _systemClock;
         private readonly AccountManagementSettings _settings;
         private readonly ILog _log;
         private const int MaxOperationsCount = 200;
         
-        public AccountsRepository(IConvertService convertService, AccountManagementSettings settings, ILog log)
+        public AccountsRepository(IConvertService convertService, ISystemClock systemClock, 
+            AccountManagementSettings settings, ILog log)
         {
             _convertService = convertService;
+            _systemClock = systemClock;
             _log = log;
             _settings = settings;
             
@@ -110,6 +114,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                     if (changeLimit)
                         account.WithdrawTransferLimit += amountDelta;
+                    
+                    account.ModificationTimestamp = _systemClock.UtcNow.DateTime;
                 }
             });
         }

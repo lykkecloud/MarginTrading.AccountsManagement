@@ -10,11 +10,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
     [MessagePackObject]
     public class AccountBalanceChangeContract
     {
-        /// <inheritdoc />
-        public AccountBalanceChangeContract([NotNull] string id, DateTime changeTimestamp, [NotNull] string accountId, 
-            [NotNull] string clientId, decimal changeAmount, decimal balance, decimal withdrawTransferLimit, 
-            [NotNull] string comment, AccountBalanceChangeReasonTypeContract reasonType, [NotNull] string eventSourceId, 
-            [NotNull] string legalEntity, [NotNull] string auditLog)
+        public AccountBalanceChangeContract([NotNull] string id, DateTime changeTimestamp, [NotNull] string accountId,
+            [NotNull] string clientId, decimal changeAmount, decimal balance, decimal withdrawTransferLimit,
+            [NotNull] string comment, AccountBalanceChangeReasonTypeContract reasonType, [NotNull] string eventSourceId,
+            [NotNull] string legalEntity, string auditLog, string instrument, DateTime tradingDate)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             ChangeTimestamp = changeTimestamp;
@@ -27,12 +26,15 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             ReasonType = reasonType;
             EventSourceId = eventSourceId ?? throw new ArgumentNullException(nameof(eventSourceId));
             LegalEntity = legalEntity ?? throw new ArgumentNullException(nameof(legalEntity));
-            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
+            AuditLog = auditLog;
+            Instrument = instrument;
+            TradingDate = tradingDate == DateTime.MinValue ? DateTime.UtcNow : tradingDate;
         }
 
         /// <summary>
         /// Change Id 
         /// </summary>
+        [NotNull]
         [Key(0)]
         public string Id { get; }
 
@@ -45,12 +47,14 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         /// <summary>
         /// Account id
         /// </summary>
+        [NotNull]
         [Key(2)]
         public string AccountId { get; }
 
         /// <summary>
         /// Client id
         /// </summary>
+        [NotNull]
         [Key(3)]
         public string ClientId { get; }
 
@@ -75,6 +79,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         /// <summary>
         /// Why the change happend in a human readable form
         /// </summary>
+        [NotNull]
         [Key(7)]
         public string Comment { get; }
 
@@ -87,19 +92,35 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         /// <summary>
         /// Id of object which caused the change (ex. order id)
         /// </summary>
+        [NotNull]
         [Key(9)]
         public string EventSourceId { get; }
 
         /// <summary>
         /// Legal entity of the account
         /// </summary>
+        [NotNull]
         [Key(10)]
         public string LegalEntity { get; }
 
         /// <summary>
         /// Log data
         /// </summary>
+        [CanBeNull]
         [Key(11)]
         public string AuditLog { get; }
+        
+        /// <summary>
+        /// Instrument Id
+        /// </summary>
+        [CanBeNull]
+        [Key(12)]
+        public string Instrument { get; }
+        
+        /// <summary>
+        /// Trading date is passed with model, if not it is set to current time
+        /// </summary>
+        [Key(13)]
+        public DateTime TradingDate { get; }
     }
 }

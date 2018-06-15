@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure;
@@ -17,13 +18,10 @@ namespace MarginTrading.AccountsManagement.Controllers
     public class AccountBalanceHistoryController : Controller, IAccountBalanceHistoryApi
     {
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
-        private readonly IConvertService _convertService;
 
-        public AccountBalanceHistoryController(IAccountBalanceChangesRepository accountBalanceChangesRepository,
-            IConvertService convertService)
+        public AccountBalanceHistoryController(IAccountBalanceChangesRepository accountBalanceChangesRepository)
         {
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
-            _convertService = convertService;
         }
 
         [Route("")]
@@ -31,14 +29,17 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccounts(string[] accountIds,
             DateTime? from = null, DateTime? to = null)
         {
-            return (await _accountBalanceChangesRepository.GetAsync(accountIds, @from?.ToUniversalTime(),
-                    to?.ToUniversalTime())).GroupBy(i => i.AccountId)
-                .ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
+            var data = await _accountBalanceChangesRepository.GetAsync(accountIds, @from?.ToUniversalTime(),
+                to?.ToUniversalTime());
+            return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }
 
         private AccountBalanceChangeContract Convert(IAccountBalanceChange arg)
         {
-            return _convertService.Convert<AccountBalanceChangeContract>(arg);
+            return new AccountBalanceChangeContract(arg.Id, arg.ChangeTimestamp, arg.AccountId, arg.ClientId,
+                arg.ChangeAmount, arg.Balance, arg.WithdrawTransferLimit, arg.Comment, 
+                Enum.Parse<AccountBalanceChangeReasonTypeContract>(arg.ReasonType.ToString()),
+                arg.EventSourceId, arg.LegalEntity, arg.AccountId, arg.Instrument, arg.TradingDate);
         }
     }
 }

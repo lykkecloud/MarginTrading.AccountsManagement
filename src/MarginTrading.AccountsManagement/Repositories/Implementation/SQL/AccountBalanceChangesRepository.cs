@@ -15,7 +15,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 {
     public class AccountBalanceChangesRepository : IAccountBalanceChangesRepository
     {
-        private const string TableName = "AccountBalanceChanges";
+        private const string TableName = "AccountHistory";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  "[Oid] [bigint] NOT NULL IDENTITY (1,1) PRIMARY KEY," +
                                                  "[AccountId] [nvarchar] (64) NOT NULL," +
@@ -29,7 +29,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[Type] [nvarchar] (64) NULL, " +
                                                  "[EventSourceId] [nvarchar] (64) NULL, " +
                                                  "[LegalEntity] [nvarchar] (64) NULL, " +
-                                                 "[AuditLog] [nvarchar] (MAX) NULL " +
+                                                 "[AuditLog] [nvarchar] (MAX) NULL, " +
+                                                 "[Instrument] [nvarchar] (64) NULL, " +
+                                                 "[TradingDate] [datetime] NULL" +
                                                  ");";
         
         private static Type DataType => typeof(IAccountBalanceChange);

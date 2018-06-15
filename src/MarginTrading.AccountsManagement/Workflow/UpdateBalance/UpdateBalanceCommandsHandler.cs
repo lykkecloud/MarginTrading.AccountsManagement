@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
@@ -54,7 +55,9 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 reasonType: Convert(command.ChangeReasonType),
                 eventSourceId: command.AuditLog,
                 legalEntity: account.LegalEntity,
-                auditLog: command.AuditLog);
+                auditLog: command.AuditLog,
+                instrument: null,//TODO pass through ClosePositionSaga from MT Core
+                tradingDate: DateTime.UtcNow);//TODO pass from API call
 
             var convertedAccount = Convert(account);
             
