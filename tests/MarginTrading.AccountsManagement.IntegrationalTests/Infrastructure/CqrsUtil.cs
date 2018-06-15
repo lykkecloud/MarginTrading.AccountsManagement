@@ -43,10 +43,9 @@ namespace MarginTrading.AccountsManagement.IntegrationalTests.Infrastructure
         {
             return Register.BoundedContext(sett.ContextNames.TradingEngine)
                 //todo place specific command here
-                //.PublishingCommands(typeof(BeginClosePositionBalanceUpdateCommand))
-                //.To(sett.ContextNames.AccountsManagement)
-                //.With("Default")
-                ;
+                .PublishingCommands(typeof(DepositCommand))//BeginClosePositionBalanceUpdateCommand))
+                .To(sett.ContextNames.AccountsManagement)
+                .With("Default");
         }
 
         public static void SendCommandToAccountManagement<T>(T command)

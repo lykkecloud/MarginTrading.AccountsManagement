@@ -2,17 +2,18 @@
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.Repositories
 {
     internal interface IAccountsRepository
     {
-        Task AddAsync(Account account);
+        Task AddAsync(IAccount account);
         
-        Task<List<Account>> GetAllAsync(string clientId = null);
+        Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null);
 
         [ItemCanBeNull]
-        Task<Account> GetAsync(string clientId, string accountId);
+        Task<IAccount> GetAsync(string clientId, string accountId);
 
         /// <summary>
         /// Updates the account if the operation has not yet been executed. 
@@ -20,12 +21,12 @@ namespace MarginTrading.AccountsManagement.Repositories
         /// <returns>
         /// Account after update
         /// </returns>
-        Task<Account> UpdateBalanceAsync(string operationId, string clientId, string accountId, decimal amountDelta,
+        Task<IAccount> UpdateBalanceAsync(string operationId, string clientId, string accountId, decimal amountDelta,
             bool changeLimit);
 
-        Task<Account> UpdateTradingConditionIdAsync(string clientId, string accountId,
+        Task<IAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
             string tradingConditionId);
 
-        Task<Account> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled);
+        Task<IAccount> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled);
     }
 }
