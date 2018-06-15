@@ -19,7 +19,6 @@ namespace MarginTrading.AccountsManagement.BrokerBase.Controllers
             return Ok(new {
                 ApplicationName = _applicationInfo.ApplicationName,
                 Version = _applicationInfo.ApplicationVersion,
-                Env = "Live",
             });
         }
     }

@@ -55,7 +55,7 @@ namespace MarginTrading.AccountsManagement.BrokerBase
             var applicationSettings = Configuration.LoadSettings<TApplicationSettings>()
                 .Nested(s =>
                 {
-                    var settings = s.MtBackend.MarginTradingLive;
+                    var settings = s.MtBackend.MarginTradingSettings;
                     if (!string.IsNullOrEmpty(Configuration["Env"]))
                     {
                         settings.Env = Configuration["Env"];
@@ -123,7 +123,7 @@ namespace MarginTrading.AccountsManagement.BrokerBase
             builder.RegisterInstance(Log).As<ILog>().SingleInstance();
             builder.RegisterInstance(applicationSettings).AsSelf().SingleInstance();
 
-            var settings = applicationSettings.Nested(s => s.MtBackend.MarginTradingLive);
+            var settings = applicationSettings.Nested(s => s.MtBackend.MarginTradingSettings);
             builder.RegisterInstance(settings).AsSelf().SingleInstance();
             builder.RegisterInstance(settings.CurrentValue).AsSelf().SingleInstance();
 
