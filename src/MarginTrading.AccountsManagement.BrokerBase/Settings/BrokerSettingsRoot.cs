@@ -7,7 +7,5 @@ namespace MarginTrading.AccountsManagement.BrokerBase.Settings
         where TBrokerSettings: BrokerSettingsBase
     {
         public TBrokerSettings MarginTradingLive { get; set; }
-        [Optional, CanBeNull]
-        public TBrokerSettings MarginTradingDemo { get; set; }
     }
 }

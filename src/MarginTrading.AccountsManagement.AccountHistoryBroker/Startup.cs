@@ -26,7 +26,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         }
 
         protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, 
-            IReloadingManager<Settings> settings, ILog log, bool isLive)
+            IReloadingManager<Settings> settings, ILog log)
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
             builder.RegisterInstance(new ConvertService(cfg =>
@@ -74,7 +74,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
                     var logToAzureStorage = services.UseLogToAzureStorage(
                         settings.Nested(s => s.MtBrokersLogs.DbConnString),
                         null,
-                        ApplicationName + Configuration.ServerType() + "Log",
+                        ApplicationName + "Log",
                         aggregateLogger);
 
                     aggregateLogger.AddLog(logToAzureStorage);

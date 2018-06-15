@@ -28,6 +28,8 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                                                  "[EventSourceId] [text] NULL, " +
                                                  "[LegalEntity] [nvarchar] (64) NULL, " +
                                                  "[AuditLog] [text] NULL, " +
+                                                 "[Instrument] [nvarchar] (64) NULL, " +
+                                                 "[TradingDate] [datetime] NULL, " +
                                                  "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
                                                  ");";
         

@@ -52,12 +52,10 @@ namespace MarginTrading.AccountsManagement.BrokerBase
             services.AddSingleton(Configuration);
             services.AddMvc();
 
-            var isLive = Configuration.IsLive();
             var applicationSettings = Configuration.LoadSettings<TApplicationSettings>()
                 .Nested(s =>
                 {
-                    var settings = isLive ? s.MtBackend.MarginTradingLive : s.MtBackend.MarginTradingDemo;
-                    settings.IsLive = isLive;
+                    var settings = s.MtBackend.MarginTradingLive;
                     if (!string.IsNullOrEmpty(Configuration["Env"]))
                     {
                         settings.Env = Configuration["Env"];
@@ -66,10 +64,8 @@ namespace MarginTrading.AccountsManagement.BrokerBase
                     return s;
                 });
 
-            Console.WriteLine($"IsLive: {isLive}");
-
             var builder = new ContainerBuilder();
-            RegisterServices(services, applicationSettings, builder, isLive);
+            RegisterServices(services, applicationSettings, builder);
             ApplicationContainer = builder.Build();
 
             return new AutofacServiceProvider(ApplicationContainer);
@@ -94,7 +90,7 @@ namespace MarginTrading.AccountsManagement.BrokerBase
                     application.Run();
                 }
                 
-                await Log.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
+                await Log.WriteMonitorAsync("", "", $"Started");
             });
 
             appLifetime.ApplicationStopping.Register(() =>
@@ -109,37 +105,33 @@ namespace MarginTrading.AccountsManagement.BrokerBase
             {
                 if (Log != null)
                 {
-                    await Log.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Terminating");
+                    await Log.WriteMonitorAsync("", "", $"Terminating");
                 }
                 
                 ApplicationContainer.Dispose();
             });
         }
 
-        protected abstract void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<TSettings> settings, ILog log, bool isLive);
+        protected abstract void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<TSettings> settings, ILog log);
 
         protected abstract ILog CreateLog(IServiceCollection services, IReloadingManager<TApplicationSettings> settings);
         
         private void RegisterServices(IServiceCollection services, IReloadingManager<TApplicationSettings> applicationSettings,
-            ContainerBuilder builder,
-            bool isLive)
+            ContainerBuilder builder)
         {
             Log = CreateLog(services, applicationSettings);
             builder.RegisterInstance(Log).As<ILog>().SingleInstance();
             builder.RegisterInstance(applicationSettings).AsSelf().SingleInstance();
 
-            var settings = isLive
-                ? applicationSettings.Nested(s => s.MtBackend.MarginTradingLive)
-                : applicationSettings.Nested(s => s.MtBackend.MarginTradingDemo);
+            var settings = applicationSettings.Nested(s => s.MtBackend.MarginTradingLive);
             builder.RegisterInstance(settings).AsSelf().SingleInstance();
             builder.RegisterInstance(settings.CurrentValue).AsSelf().SingleInstance();
 
-            builder.RegisterInstance(new CurrentApplicationInfo(isLive,
-                PlatformServices.Default.Application.ApplicationVersion,
+            builder.RegisterInstance(new CurrentApplicationInfo(PlatformServices.Default.Application.ApplicationVersion,
                 ApplicationName
             )).AsSelf().SingleInstance();
 
-            RegisterCustomServices(services, builder, settings, Log, isLive);
+            RegisterCustomServices(services, builder, settings, Log);
             builder.Populate(services);
         }
     }

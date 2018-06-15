@@ -6,8 +6,6 @@ namespace MarginTrading.AccountsManagement.BrokerBase.Settings
     {
         public string MtRabbitMqConnString { get; set; }
         [Optional]
-        public bool IsLive { get; set; }
-        [Optional]
         public string Env { get; set; }
     }
 }
