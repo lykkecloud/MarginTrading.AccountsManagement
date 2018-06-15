@@ -29,7 +29,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[Type] [nvarchar] (64) NULL, " +
                                                  "[EventSourceId] [nvarchar] (64) NULL, " +
                                                  "[LegalEntity] [nvarchar] (64) NULL, " +
-                                                 "[AuditLog] [nvarchar] (MAX) NULL " +
+                                                 "[AuditLog] [nvarchar] (MAX) NULL, " +
+                                                 "[Instrument] [nvarchar] (64) NULL, " +
+                                                 "[TradingDate] [datetime] NULL" +
                                                  ");";
         
         private static Type DataType => typeof(IAccountBalanceChange);

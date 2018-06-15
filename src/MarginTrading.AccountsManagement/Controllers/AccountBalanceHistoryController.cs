@@ -18,13 +18,10 @@ namespace MarginTrading.AccountsManagement.Controllers
     public class AccountBalanceHistoryController : Controller, IAccountBalanceHistoryApi
     {
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
-        private readonly IConvertService _convertService;
 
-        public AccountBalanceHistoryController(IAccountBalanceChangesRepository accountBalanceChangesRepository,
-            IConvertService convertService)
+        public AccountBalanceHistoryController(IAccountBalanceChangesRepository accountBalanceChangesRepository)
         {
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
-            _convertService = convertService;
         }
 
         [Route("")]
@@ -42,7 +39,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             return new AccountBalanceChangeContract(arg.Id, arg.ChangeTimestamp, arg.AccountId, arg.ClientId,
                 arg.ChangeAmount, arg.Balance, arg.WithdrawTransferLimit, arg.Comment, 
                 Enum.Parse<AccountBalanceChangeReasonTypeContract>(arg.ReasonType.ToString()),
-                arg.EventSourceId, arg.LegalEntity, arg.AccountId);
+                arg.EventSourceId, arg.LegalEntity, arg.AccountId, arg.Instrument, arg.TradingDate);
         }
     }
 }

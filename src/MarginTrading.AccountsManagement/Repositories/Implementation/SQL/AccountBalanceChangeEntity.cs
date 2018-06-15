@@ -34,5 +34,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public string LegalEntity { get; set; }
 
         public string AuditLog { get; set; }
+        
+        public string Instrument { get; set; }
+        
+        public DateTime TradingDate { get; set; }
     }
 }

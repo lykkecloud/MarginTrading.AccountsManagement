@@ -27,5 +27,9 @@ namespace MarginTrading.AccountsManagement.InternalModels.Interfaces
         string LegalEntity { get; }
 
         string AuditLog { get; }
+        
+        string Instrument { get; }
+        
+        DateTime TradingDate { get; }
     }
 }

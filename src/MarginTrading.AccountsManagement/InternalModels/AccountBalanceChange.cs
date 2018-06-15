@@ -64,5 +64,15 @@ namespace MarginTrading.AccountsManagement.InternalModels
         /// Log data
         /// </summary>
         public string AuditLog { get; set; }
+
+        /// <summary>
+        /// Instrument Id
+        /// </summary>
+        public string Instrument { get; set; }
+        
+        /// <summary>
+        /// Trading date is passed with model, if not it is set to current time
+        /// </summary>
+        public DateTime TradingDate { get; set; }
     }
 }

@@ -6,7 +6,8 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Models
     {
         public AccountHistory(string id, DateTime changeTimestamp, string accountId, string clientId,
             decimal changeAmount, decimal balance, decimal withdrawTransferLimit, string comment,
-            AccountBalanceChangeReasonType reasonType, string eventSourceId, string legalEntity, string auditLog)
+            AccountBalanceChangeReasonType reasonType, string eventSourceId, string legalEntity, string auditLog,
+            string instrument, DateTime tradingDate)
         {
             Id = id;
             ChangeTimestamp = changeTimestamp;
@@ -20,6 +21,8 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Models
             EventSourceId = eventSourceId;
             LegalEntity = legalEntity;
             AuditLog = auditLog;
+            Instrument = instrument;
+            TradingDate = tradingDate;
         }
 
         public string Id { get; }
@@ -34,6 +37,8 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Models
         public string EventSourceId { get; }
         public string LegalEntity { get; }
         public string AuditLog { get; }
+        public string Instrument { get; }
+        public DateTime TradingDate { get; }
     }
 }
 

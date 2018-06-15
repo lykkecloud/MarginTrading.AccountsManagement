@@ -8,5 +8,11 @@
         Reset = 4,
         Swap = 5,
         Manual = 6,
+        UnrealizedDailyPnL = 7,
+        RealizedDailyPnL = 8,
+        Commission = 9,
+        Dividend = 10,
+        OnBehalf = 11,
+        Tax = 12,
     }
 }

@@ -16,5 +16,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Models
         string EventSourceId { get; }
         string LegalEntity { get; }
         string AuditLog { get; }
+        string Instrument { get; }
+        DateTime TradingDate { get; }
     }
 }
