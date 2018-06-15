@@ -10,7 +10,7 @@ namespace MarginTrading.AccountsManagement.Repositories
     {
         Task AddAsync(IAccount account);
         
-        Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null);
+        Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null);
 
         [ItemCanBeNull]
         Task<IAccount> GetAsync(string clientId, string accountId);

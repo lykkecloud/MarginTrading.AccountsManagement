@@ -12,6 +12,7 @@ using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Services;
 using Microsoft.AspNetCore.Mvc;
+using Refit;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
@@ -35,9 +36,9 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        public Task<List<AccountContract>> List()
+        public Task<List<AccountContract>> List([FromQuery] string search = null)
         {
-            return Convert(_accountManagementService.ListAsync());
+            return Convert(_accountManagementService.ListAsync(search));
         }
 
         /// <summary>
