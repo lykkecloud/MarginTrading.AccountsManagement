@@ -15,7 +15,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 {
     public class AccountBalanceChangesRepository : IAccountBalanceChangesRepository
     {
-        private const string TableName = "AccountBalanceChanges";
+        private const string TableName = "AccountHistory";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  "[Oid] [bigint] NOT NULL IDENTITY (1,1) PRIMARY KEY," +
                                                  "[AccountId] [nvarchar] (64) NOT NULL," +

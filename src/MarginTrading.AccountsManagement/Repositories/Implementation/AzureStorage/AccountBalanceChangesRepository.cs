@@ -24,7 +24,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             _convertService = convertService;
             _tableStorage =
                 azureTableStorageFactoryService.Create<AccountBalanceChangeEntity>(
-                    settings.Nested(s => s.Db.ConnectionString), "AccountBalanceChanges", log);
+                    settings.Nested(s => s.Db.ConnectionString), "AccountHistory", log);
         }
 
         public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string[] accountIds, DateTime? @from,

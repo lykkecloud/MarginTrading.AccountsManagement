@@ -20,7 +20,7 @@ namespace MarginTrading.AccountsManagement.InternalModels.Interfaces
 
         string Comment { get; }
 
-        AccountBalanceChangeReasonType Type { get; }
+        AccountBalanceChangeReasonType ReasonType { get; }
 
         string EventSourceId { get; }
 

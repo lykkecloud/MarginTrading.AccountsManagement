@@ -14,7 +14,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         public AccountBalanceChangeContract([NotNull] string id, DateTime changeTimestamp, [NotNull] string accountId, 
             [NotNull] string clientId, decimal changeAmount, decimal balance, decimal withdrawTransferLimit, 
             [NotNull] string comment, AccountBalanceChangeReasonTypeContract reasonType, [NotNull] string eventSourceId, 
-            [NotNull] string legalEntity, [NotNull] string auditLog)
+            [NotNull] string legalEntity, string auditLog)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             ChangeTimestamp = changeTimestamp;
@@ -27,7 +27,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             ReasonType = reasonType;
             EventSourceId = eventSourceId ?? throw new ArgumentNullException(nameof(eventSourceId));
             LegalEntity = legalEntity ?? throw new ArgumentNullException(nameof(legalEntity));
-            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
+            AuditLog = auditLog;
         }
 
         /// <summary>

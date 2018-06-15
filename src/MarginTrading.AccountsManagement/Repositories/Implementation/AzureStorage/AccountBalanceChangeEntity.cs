@@ -62,8 +62,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
         public string Comment { get; set; }
 
-        AccountBalanceChangeReasonType IAccountBalanceChange.Type => Enum.Parse<AccountBalanceChangeReasonType>(Type);
-        public string Type { get; set; }
+        AccountBalanceChangeReasonType IAccountBalanceChange.ReasonType => Enum.Parse<AccountBalanceChangeReasonType>(ReasonType);
+        public string ReasonType { get; set; }
         
         public string EventSourceId { get; set; }
 

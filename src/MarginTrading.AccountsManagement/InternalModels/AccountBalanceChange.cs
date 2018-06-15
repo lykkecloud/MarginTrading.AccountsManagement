@@ -48,7 +48,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         /// <summary>
         /// Why the chhange happend 
         /// </summary>
-        public AccountBalanceChangeReasonType Type { get; set; }
+        public AccountBalanceChangeReasonType ReasonType { get; set; }
 
         /// <summary>
         /// Id of object which caused the change (ex. order id)
