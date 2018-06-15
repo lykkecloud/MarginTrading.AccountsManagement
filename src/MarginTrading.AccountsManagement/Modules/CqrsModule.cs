@@ -150,6 +150,11 @@ namespace MarginTrading.AccountsManagement.Modules
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
 
+            sagaRegistration
+                .ListeningEvents(typeof(WithdrawalFailedEvent), typeof(WithdrawalSucceededEvent))
+                .From(_contextNames.AccountsManagement)
+                .On(DefaultRoute);
+
             return sagaRegistration;
         }
 

@@ -194,6 +194,24 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             } 
         }
 
+        /// <summary>
+        /// Withdrawal failed
+        /// </summary>
+        [UsedImplicitly]
+        private Task Handle(WithdrawalFailedEvent e, ICommandSender sender)
+        {
+            return Task.CompletedTask;
+        }
+        
+        /// <summary>
+        /// Withdrawal succeeded
+        /// </summary>
+        [UsedImplicitly]
+        private Task Handle(WithdrawalSucceededEvent e, ICommandSender sender)
+        {
+            return Task.CompletedTask;
+        }
+
         private static bool SwitchState(DepositData data, State expectedState, State nextState)
         {
             if (data.State < expectedState)
