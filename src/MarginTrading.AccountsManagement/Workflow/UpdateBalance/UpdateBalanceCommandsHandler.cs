@@ -61,7 +61,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 withdrawTransferLimit: account.WithdrawTransferLimit,
                 comment: command.Comment,
                 reasonType: Convert(command.ChangeReasonType),
-                eventSourceId: command.AuditLog,
+                eventSourceId: command.Source,
                 legalEntity: account.LegalEntity,
                 auditLog: command.AuditLog);
 
