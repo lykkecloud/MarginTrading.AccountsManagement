@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Contracts
@@ -13,7 +14,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         public string AccountId { get; }
 
         [Key(2)]
-        public Decimal Amount { get; }
+        public decimal Amount { get; }
 
         [Key(3)]
         public string OperationId { get; }
@@ -21,25 +22,14 @@ namespace MarginTrading.AccountsManagement.Contracts
         [Key(4)]
         public string Reason { get; }
 
-        protected AccountBalanceMessageBase(string clientId, string accountId, Decimal amount, string operationId, string reason)
+        protected AccountBalanceMessageBase([NotNull] string clientId, [NotNull] string accountId, decimal amount, 
+            [NotNull] string operationId, [NotNull] string reason)
         {
-            string str1 = clientId;
-            if (str1 == null)
-                throw new ArgumentNullException(nameof (clientId));
-            this.ClientId = str1;
-            string str2 = accountId;
-            if (str2 == null)
-                throw new ArgumentNullException(nameof (accountId));
-            this.AccountId = str2;
+            this.ClientId = clientId ?? throw new ArgumentNullException(nameof (clientId));
+            this.AccountId = accountId ?? throw new ArgumentNullException(nameof (accountId));
             this.Amount = amount;
-            string str3 = operationId;
-            if (str3 == null)
-                throw new ArgumentNullException(nameof (operationId));
-            this.OperationId = str3;
-            string str4 = reason;
-            if (str4 == null)
-                throw new ArgumentNullException(nameof (reason));
-            this.Reason = str4;
+            this.OperationId = operationId ?? throw new ArgumentNullException(nameof (operationId));
+            this.Reason = reason ?? throw new ArgumentNullException(nameof (reason));
         }
     }
 }
