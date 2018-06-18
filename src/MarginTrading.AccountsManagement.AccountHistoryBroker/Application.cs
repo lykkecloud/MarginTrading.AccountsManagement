@@ -10,7 +10,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 {
-    internal class Application : BrokerApplicationBase<AccountBalanceChangedEvent>
+    internal class Application : BrokerApplicationBase<AccountChangedEvent>
     {
         private readonly IAccountHistoryRepository _accountHistoryRepository;
         private readonly Settings _settings;
@@ -27,11 +27,11 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 
         protected override BrokerSettingsBase Settings => _settings;
         protected override string ExchangeName => _settings.RabbitMqQueues.AccountHistory.ExchangeName;
-        protected override string RoutingKey => nameof(AccountBalanceChangedEvent);
+        protected override string RoutingKey => nameof(AccountChangedEvent);
 
-        protected override Task HandleMessage(AccountBalanceChangedEvent accountBalanceChangedEvent)
+        protected override Task HandleMessage(AccountChangedEvent accountChangedEvent)
         {
-            var accountHistory = _convertService.Convert<AccountHistory>(accountBalanceChangedEvent.Change);
+            var accountHistory = _convertService.Convert<AccountHistory>(accountChangedEvent.BalanceChange);
             
             return _accountHistoryRepository.InsertOrReplaceAsync(accountHistory);
         }

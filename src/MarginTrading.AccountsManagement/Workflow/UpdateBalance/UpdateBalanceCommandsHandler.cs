@@ -69,7 +69,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 tradingDate: DateTime.UtcNow);//TODO pass from API call
 
             var convertedAccount = Convert(account);
-            
+
             publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, command.Source, convertedAccount,
                 AccountChangedEventTypeContract.BalanceUpdated, change));
             

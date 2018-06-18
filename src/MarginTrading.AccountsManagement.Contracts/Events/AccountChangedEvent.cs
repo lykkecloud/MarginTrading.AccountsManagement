@@ -44,7 +44,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         /// </summary>
         [Key(1)]
         public string Source { get; }
-        
+      
         /// <summary>
         /// Account snapshot at the moment immediately after the event happened
         /// </summary>
@@ -57,7 +57,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         /// </summary>
         [Key(3)]
         public AccountChangedEventTypeContract EventType { get; }
-        
+      
         /// <summary>
         /// Account balance change details
         /// </summary>

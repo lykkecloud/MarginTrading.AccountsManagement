@@ -16,21 +16,21 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
         private const string TableName = "AccountHistory";
 
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
-                                                 "[Id] [nvarchar](64) NOT NULL, " +
-                                                 "[AccountId] [nvarchar] (64) NOT NULL, " +
+                                                 "[Oid] [bigint] NOT NULL IDENTITY (1,1) PRIMARY KEY," +
+                                                 "[Id] [nvarchar] (64) NOT NULL UNIQUE, " +
+                                                 "[AccountId] [nvarchar] (64) NOT NULL," +
                                                  "[ChangeTimestamp] [datetime] NOT NULL," +
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
                                                  "[ChangeAmount] decimal (24, 12) NOT NULL, " +
                                                  "[Balance] decimal (24, 12) NOT NULL, " +
                                                  "[WithdrawTransferLimit] decimal (24, 12) NOT NULL, " +
-                                                 "[Comment] [text] NULL, " +
-                                                 "[ReasonType] [nvarchar] (64) NOT NULL, " +
-                                                 "[EventSourceId] [text] NULL, " +
+                                                 "[Comment] [nvarchar] (MAX) NULL, " +
+                                                 "[ReasonType] [nvarchar] (64) NULL, " +
+                                                 "[EventSourceId] [nvarchar] (64) NULL, " +
                                                  "[LegalEntity] [nvarchar] (64) NULL, " +
-                                                 "[AuditLog] [text] NULL, " +
+                                                 "[AuditLog] [nvarchar] (MAX) NULL, " +
                                                  "[Instrument] [nvarchar] (64) NULL, " +
-                                                 "[TradingDate] [datetime] NULL, " +
-                                                 "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
+                                                 "[TradingDate] [datetime] NULL" +
                                                  ");";
         
         private static Type DataType => typeof(IAccountHistory);
