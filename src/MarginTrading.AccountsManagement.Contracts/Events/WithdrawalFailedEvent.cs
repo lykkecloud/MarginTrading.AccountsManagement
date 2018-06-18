@@ -1,4 +1,6 @@
-﻿using MessagePack;
+﻿using System;
+using JetBrains.Annotations;
+using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Contracts.Events
 {
@@ -11,9 +13,13 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         [Key(0)]
         public string OperationId { get; }
         
-        public WithdrawalFailedEvent(string operationId)
+        [Key(1)]
+        public string Reason { get; }
+        
+        public WithdrawalFailedEvent([NotNull] string operationId, [NotNull] string reason)
         {
-            OperationId = operationId;
+            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
+            Reason = reason ?? throw new ArgumentNullException(nameof(reason));
         }
     }
 }

@@ -34,12 +34,21 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
             IEventPublisher publisher)
         {
-            var account = await _accountsRepository.UpdateBalanceAsync(
-                operationId: command.OperationId,
-                clientId: command.ClientId,
-                accountId: command.AccountId,
-                amountDelta: command.AmountDelta,
-                changeLimit: false);
+            IAccount account = null;
+            try
+            {
+                account = await _accountsRepository.UpdateBalanceAsync(
+                    operationId: command.OperationId,
+                    clientId: command.ClientId,
+                    accountId: command.AccountId,
+                    amountDelta: command.AmountDelta,
+                    changeLimit: false);
+            }
+            catch (Exception ex)
+            {
+                publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId, ex.Message));
+                return CommandHandlingResult.Ok(); //means no retries required
+            }
 
             _chaosKitty.Meow(command.OperationId);
 
@@ -53,20 +62,16 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 withdrawTransferLimit: account.WithdrawTransferLimit,
                 comment: command.Comment,
                 reasonType: Convert(command.ChangeReasonType),
-                eventSourceId: command.AuditLog,
+                eventSourceId: command.Source,
                 legalEntity: account.LegalEntity,
                 auditLog: command.AuditLog,
                 instrument: null,//TODO pass through ClosePositionSaga from MT Core
                 tradingDate: DateTime.UtcNow);//TODO pass from API call
 
             var convertedAccount = Convert(account);
-            
-            publisher.PublishEvent(new AccountBalanceChangedEvent(command.OperationId, command.Source, change, convertedAccount));
-            
-            _chaosKitty.Meow(command.OperationId);
 
-            publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, command.Source, convertedAccount, 
-                AccountChangedEventTypeContract.BalanceUpdated, change)); 
+            publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, command.Source, convertedAccount,
+                AccountChangedEventTypeContract.BalanceUpdated, change));
             
             return CommandHandlingResult.Ok();
         }

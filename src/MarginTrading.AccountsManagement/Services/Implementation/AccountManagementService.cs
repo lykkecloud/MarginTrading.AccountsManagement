@@ -11,6 +11,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
@@ -202,7 +203,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var result =
                 await _accountsRepository.UpdateTradingConditionIdAsync(clientId, accountId, tradingConditionId);
-            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), result,
+            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), result, 
                 AccountChangedEventTypeContract.Updated);
             return result;
         }
@@ -210,8 +211,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         public async Task<IAccount> SetDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
             var account = await _accountsRepository.ChangeIsDisabledAsync(clientId, accountId, isDisabled);
-            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account,  
-                AccountChangedEventTypeContract.Updated); 
+            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account, 
+                AccountChangedEventTypeContract.Updated);
             return account;
         }
 
@@ -249,8 +250,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             await _accountsRepository.AddAsync(account);
             account = await _accountsRepository.GetAsync(account.ClientId, accountId);
 
-            _eventSender.SendAccountChangedEvent(nameof(CreateAccount), account,  
-                AccountChangedEventTypeContract.Created); 
+            _eventSender.SendAccountChangedEvent(nameof(CreateAccount), account, 
+                AccountChangedEventTypeContract.Created);
 
             if (_settings.Behavior?.DefaultBalance != null)
             {
@@ -265,8 +266,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             // todo: move to workflow command handler
             var account = await _accountsRepository.UpdateBalanceAsync(operationId, clientId, accountId, amountDelta, changeTransferLimit);
-            _eventSender.SendAccountChangedEvent(nameof(UpdateBalanceAsync), account,  
-                AccountChangedEventTypeContract.BalanceUpdated); 
+            _eventSender.SendAccountChangedEvent(nameof(UpdateBalanceAsync), account, 
+                AccountChangedEventTypeContract.BalanceUpdated);
             return account;
         }
 
