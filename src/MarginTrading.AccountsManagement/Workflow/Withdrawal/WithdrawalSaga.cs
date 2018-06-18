@@ -110,25 +110,17 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         }
 
         /// <summary>
-        /// The balance has changed => notify TradingCode that withdrawal has failed to unfreeze the margin
+        /// The balance has changed => process succeeded
         /// </summary>
         [UsedImplicitly]
-        private async Task Handle(AccountBalanceChangedEvent e, ICommandSender sender)
+        private async Task Handle(AccountChangedEvent e, ICommandSender sender)
         {
             if (e.Source != OperationName)
                 return;
 
-            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
-            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.UnfreezingAmount))
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.BalanceChange.Id);
+            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Succeeded))
             {
-                sender.SendCommand(
-                    new UnfreezeMarginWithdrawalCommand(
-                        operationId: e.OperationId,
-                        clientId: executionInfo.Data.ClientId,
-                        accountId: executionInfo.Data.AccountId,
-                        amount: executionInfo.Data.Amount),
-                    _contextNames.TradingEngine);
-                _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
             }
         }

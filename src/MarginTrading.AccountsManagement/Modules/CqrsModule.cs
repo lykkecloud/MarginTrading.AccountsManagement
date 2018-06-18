@@ -135,7 +135,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 .With(DefaultPipeline);
             
             sagaRegistration
-                .ListeningEvents(typeof(AccountBalanceChangedEvent), typeof(AccountBalanceChangeFailedEvent))
+                .ListeningEvents(typeof(AccountChangedEvent), typeof(AccountBalanceChangeFailedEvent))
                 .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
                 .PublishingCommands(typeof(UnfreezeMarginWithdrawalCommand), typeof(UnfreezeMarginOnFailWithdrawalCommand))
@@ -179,7 +179,7 @@ namespace MarginTrading.AccountsManagement.Modules
             return RegisterSaga<DepositSaga>()
                 .ListeningEvents(
                     typeof(DepositStartedInternalEvent),
-                    typeof(AccountBalanceChangedEvent), 
+                    typeof(AccountChangedEvent), 
                     typeof(AccountBalanceChangeFailedEvent),
                     typeof(AmountForDepositFrozenInternalEvent),
                     typeof(AmountForDepositFreezeFailedInternalEvent))
@@ -222,7 +222,6 @@ namespace MarginTrading.AccountsManagement.Modules
                 .On(DefaultRoute)
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
                 .PublishingEvents(
-                    typeof(AccountBalanceChangedEvent),
                     typeof(AccountChangedEvent),
                     typeof(AccountBalanceChangeFailedEvent))
                 .With(DefaultPipeline);

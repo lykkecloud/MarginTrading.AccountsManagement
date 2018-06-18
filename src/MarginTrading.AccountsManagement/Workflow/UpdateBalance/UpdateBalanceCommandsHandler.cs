@@ -34,7 +34,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
             IEventPublisher publisher)
         {
-            Account account = null;
+            IAccount account = null;
             try
             {
                 account = await _accountsRepository.UpdateBalanceAsync(
@@ -47,6 +47,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             catch (Exception ex)
             {
                 publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId, ex.Message));
+                return CommandHandlingResult.Ok(); //means no retries required
             }
 
             _chaosKitty.Meow(command.OperationId);
@@ -67,12 +68,8 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
 
             var convertedAccount = Convert(account);
             
-            publisher.PublishEvent(new AccountBalanceChangedEvent(command.OperationId, command.Source, change, convertedAccount));
-            
-            _chaosKitty.Meow(command.OperationId);
-
-            publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, convertedAccount,
-                AccountChangedEventTypeContract.BalanceUpdated));
+            publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, command.Source, convertedAccount,
+                AccountChangedEventTypeContract.BalanceUpdated, change));
             
             return CommandHandlingResult.Ok();
         }

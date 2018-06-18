@@ -105,22 +105,22 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         /// The balance has changed => finish the operation
         /// </summary>
         [UsedImplicitly]
-        private async Task Handle(AccountBalanceChangedEvent e, ICommandSender sender)
+        private async Task Handle(AccountChangedEvent e, ICommandSender sender)
         {
             if (e.Source != OperationName)
                 return;
 
-            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.OperationId);
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.BalanceChange.Id);
             if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Succeeded))
             {
                 sender.SendCommand(
                     new CompleteDepositInternalCommand(
-                        operationId: e.OperationId,
+                        operationId: e.BalanceChange.Id,
                         clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
                         amount: executionInfo.Data.Amount),
                     _contextNames.AccountsManagement);
-                _chaosKitty.Meow(e.OperationId);
+                _chaosKitty.Meow(e.BalanceChange.Id);
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
