@@ -202,14 +202,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var result =
                 await _accountsRepository.UpdateTradingConditionIdAsync(clientId, accountId, tradingConditionId);
-            _eventSender.SendAccountChangedEvent(result, AccountChangedEventTypeContract.Updated);
+            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), result,
+                AccountChangedEventTypeContract.Updated);
             return result;
         }
 
         public async Task<IAccount> SetDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
             var account = await _accountsRepository.ChangeIsDisabledAsync(clientId, accountId, isDisabled);
-            _eventSender.SendAccountChangedEvent(account, AccountChangedEventTypeContract.Updated);
+            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account,  
+                AccountChangedEventTypeContract.Updated); 
             return account;
         }
 
@@ -247,7 +249,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             await _accountsRepository.AddAsync(account);
             account = await _accountsRepository.GetAsync(account.ClientId, accountId);
 
-            _eventSender.SendAccountChangedEvent(account, AccountChangedEventTypeContract.Created);
+            _eventSender.SendAccountChangedEvent(nameof(CreateAccount), account,  
+                AccountChangedEventTypeContract.Created); 
 
             if (_settings.Behavior?.DefaultBalance != null)
             {
@@ -262,7 +265,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             // todo: move to workflow command handler
             var account = await _accountsRepository.UpdateBalanceAsync(operationId, clientId, accountId, amountDelta, changeTransferLimit);
-            _eventSender.SendAccountChangedEvent(account, AccountChangedEventTypeContract.BalanceUpdated);
+            _eventSender.SendAccountChangedEvent(nameof(UpdateBalanceAsync), account,  
+                AccountChangedEventTypeContract.BalanceUpdated); 
             return account;
         }
 

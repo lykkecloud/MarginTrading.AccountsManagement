@@ -29,13 +29,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _contextNames = contextNames;
         }
 
-        public void SendAccountChangedEvent(IAccount account, AccountChangedEventTypeContract eventType)
+        public void SendAccountChangedEvent(string source, IAccount account, AccountChangedEventTypeContract eventType,
+            AccountBalanceChangeContract balanceChangeContract = null)
         {
             _cqrsEngine.PublishEvent(
                 new AccountChangedEvent(
                     account.ModificationTimestamp,
+                    source,
                     _convertService.Convert<IAccount, AccountContract>(account),
-                    eventType),
+                    eventType,
+                    balanceChangeContract),
                 _contextNames.AccountsManagement);
         }
     }

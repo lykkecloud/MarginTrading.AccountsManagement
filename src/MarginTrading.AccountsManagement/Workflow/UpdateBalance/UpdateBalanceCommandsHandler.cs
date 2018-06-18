@@ -65,8 +65,8 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             
             _chaosKitty.Meow(command.OperationId);
 
-            publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, convertedAccount,
-                AccountChangedEventTypeContract.BalanceUpdated));
+            publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, command.Source, convertedAccount, 
+                AccountChangedEventTypeContract.BalanceUpdated, change)); 
             
             return CommandHandlingResult.Ok();
         }

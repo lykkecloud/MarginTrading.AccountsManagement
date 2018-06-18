@@ -37,7 +37,7 @@ namespace MarginTrading.AccountsManagement.BrokerBase
             return settings;
         }
 
-        protected abstract Task HandleMessage(TMessage message);
+        protected abstract Task HandleMessage(TMessage accountChangedEvent);
 
         protected BrokerApplicationBase(ILog logger, ISlackNotificationsSender slackNotificationsSender,
             CurrentApplicationInfo applicationInfo)

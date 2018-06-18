@@ -14,8 +14,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     [MessagePackObject]
     public class AccountChangedEvent
     {
-        public AccountChangedEvent(DateTime changeTimestamp, [NotNull] AccountContract account,
-            AccountChangedEventTypeContract eventType)
+        public AccountChangedEvent(DateTime changeTimestamp, [NotNull] string source, [NotNull] AccountContract account,
+            AccountChangedEventTypeContract eventType, AccountBalanceChangeContract balanceChange = null)
         {
             if (!Enum.IsDefined(typeof(AccountChangedEventTypeContract), eventType))
                 throw new InvalidEnumArgumentException(
@@ -26,9 +26,11 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
             if (changeTimestamp == default(DateTime))
                 throw new ArgumentOutOfRangeException(nameof(changeTimestamp));
 
+            Source = source;
             ChangeTimestamp = changeTimestamp;
             Account = account ?? throw new ArgumentNullException(nameof(account));
             EventType = eventType;
+            BalanceChange = balanceChange;
         }
 
         /// <summary>
@@ -38,16 +40,29 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         public DateTime ChangeTimestamp { get; }
 
         /// <summary>
+        /// Event sender process
+        /// </summary>
+        [Key(1)]
+        public string Source { get; }
+
+        /// <summary>
         /// Account snapshot at the moment immediately after the event happened
         /// </summary>
         [NotNull]
-        [Key(1)]
+        [Key(2)]
         public AccountContract Account { get; }
 
         /// <summary>
         /// What happend to the account
         /// </summary>
-        [Key(2)]
+        [Key(3)]
         public AccountChangedEventTypeContract EventType { get; }
+
+        /// <summary>
+        /// Account balance change details
+        /// </summary>
+        [CanBeNull]
+        [Key(4)]
+        public AccountBalanceChangeContract BalanceChange { get; }
     }
 }
