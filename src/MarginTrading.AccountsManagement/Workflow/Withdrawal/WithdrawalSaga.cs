@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
@@ -10,8 +11,6 @@ using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
-using MarginTrading.Backend.Contracts.Commands;
-using MarginTrading.Backend.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 {
@@ -57,11 +56,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo.Data.State == State.FreezingAmount)
                 sender.SendCommand(
                     new FreezeAmountForWithdrawalCommand(
-                        clientId: e.OperationId,
+                        clientId: e.ClientId,
                         accountId: e.AccountId,
                         amount: e.Amount,
                         operationId: e.OperationId,
-                        reason: string.Empty),
+                        reason: e.Comment),
                     _contextNames.TradingEngine);
         }
 
@@ -85,7 +84,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         source: OperationName,
                         changeReasonType: AccountBalanceChangeReasonType.Withdraw),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -109,16 +110,51 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         }
 
         /// <summary>
-        /// The balance has changed => finish the operation
+        /// The balance has changed => process succeeded
         /// </summary>
         [UsedImplicitly]
-        private async Task Handle(AccountBalanceChangedEvent e, ICommandSender sender)
+        private async Task Handle(AccountChangedEvent e, ICommandSender sender)
         {
             if (e.Source != OperationName)
                 return;
 
-            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.BalanceChange.Id);
             if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Succeeded))
+            {
+                await _executionInfoRepository.Save(executionInfo);
+            }
+        }
+
+        /// <summary>
+        /// Notify TradingCode that withdrawal has failed to unfreeze the margin
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(AccountBalanceChangeFailedEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.UnfreezingAmount))
+            {
+                executionInfo.Data.FailReason = e.Reason;
+                sender.SendCommand(
+                    new UnfreezeMarginOnFailWithdrawalCommand(
+                        operationId: e.OperationId,
+                        clientId: executionInfo.Data.ClientId,
+                        accountId: executionInfo.Data.AccountId,
+                        amount: executionInfo.Data.Amount), 
+                    _contextNames.TradingEngine);
+                _chaosKitty.Meow(e.OperationId);
+                await _executionInfoRepository.Save(executionInfo);
+            }
+        }
+
+        /// <summary>
+        /// Unfreezing margin succeded, withdrawal completed
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(UnfreezeMarginSucceededWithdrawalEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, State.UnfreezingAmount, State.Succeeded))
             {
                 sender.SendCommand(
                     new CompleteWithdrawalInternalCommand(
@@ -128,6 +164,49 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         amount: executionInfo.Data.Amount), 
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
+                await _executionInfoRepository.Save(executionInfo);
+            } 
+        }
+
+        /// <summary>
+        /// Failed to change balance => withdrawal failed
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(UnfreezeMarginOnFailSucceededWithdrawalEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, State.UnfreezingAmount, State.Succeeded))
+            {
+                sender.SendCommand(
+                    new FailWithdrawalInternalCommand(e.OperationId, "Failed to change balance."), 
+                    _contextNames.AccountsManagement);
+                _chaosKitty.Meow(e.OperationId);
+                await _executionInfoRepository.Save(executionInfo);
+            } 
+        }
+
+        /// <summary>
+        /// Withdrawal failed
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(WithdrawalFailedEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, executionInfo.Data.State, State.Succeeded))
+            {
+                await _executionInfoRepository.Save(executionInfo);
+            }
+        }
+        
+        /// <summary>
+        /// Withdrawal succeeded
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(WithdrawalSucceededEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
+            {
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -169,8 +248,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         {
             FreezingAmount = 1,
             UpdatingBalance = 2,
-            Succeeded = 3,
-            Failed = 4,
+            UnfreezingAmount = 3,
+            Succeeded = 4,
+            Failed = 5,
         }
     }
 }
