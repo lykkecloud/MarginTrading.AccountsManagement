@@ -84,7 +84,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         }
 
         /// <summary>
-        /// Failed to freeze the amount in the margin => fail the withdrawal
+        /// Failed to freeze the amount in the margin => fail the deposit
         /// </summary>
         [UsedImplicitly]
         private async Task Handle(AmountForDepositFreezeFailedInternalEvent e, ICommandSender sender)
@@ -125,6 +125,25 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             }
         }
 
+        /// <summary>
+        /// Failed to change account balance => fail the deposit
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(AccountBalanceChangeFailedEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Failed))
+            {
+                executionInfo.Data.FailReason = e.Reason;
+                sender.SendCommand(
+                    new FailDepositInternalCommand(e.OperationId, "Failed to change account balance: " + e.Reason),
+                    _contextNames.AccountsManagement);
+                _chaosKitty.Meow(e.OperationId);
+                await _executionInfoRepository.Save(executionInfo);
+            }
+        }
+        
+        
         private static bool SwitchState(WithdrawalData data, State expectedState, State nextState)
         {
             if (data.State < expectedState)
