@@ -119,39 +119,38 @@ namespace MarginTrading.AccountsManagement.Modules
             var sagaRegistration = RegisterSaga<WithdrawalSaga>();
 
             sagaRegistration
-                .ListeningEvents(typeof(WithdrawalStartedInternalEvent))
+                .ListeningEvents(
+                    typeof(WithdrawalStartedInternalEvent),
+                    typeof(AccountChangedEvent), 
+                    typeof(AccountBalanceChangeFailedEvent))
                 .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
-                .PublishingCommands(typeof(FreezeAmountForWithdrawalCommand))
+                .PublishingCommands(
+                    typeof(FreezeAmountForWithdrawalCommand),
+                    typeof(UnfreezeMarginOnFailWithdrawalCommand))
                 .To(_contextNames.TradingEngine)
                 .With(DefaultPipeline);
 
             sagaRegistration
-                .ListeningEvents(typeof(AmountForWithdrawalFrozenEvent), typeof(AmountForWithdrawalFreezeFailedEvent))
+                .ListeningEvents(
+                    typeof(AmountForWithdrawalFrozenEvent), 
+                    typeof(AmountForWithdrawalFreezeFailedEvent),
+                    typeof(UnfreezeMarginSucceededWithdrawalEvent), 
+                    typeof(UnfreezeMarginOnFailSucceededWithdrawalEvent))
                 .From(_contextNames.TradingEngine)
                 .On(DefaultRoute)
-                .PublishingCommands(typeof(UpdateBalanceInternalCommand), typeof(FailWithdrawalInternalCommand))
+                .PublishingCommands(
+                    typeof(UpdateBalanceInternalCommand), 
+                    typeof(FailWithdrawalInternalCommand),
+                    typeof(CompleteWithdrawalInternalCommand), 
+                    typeof(FailWithdrawalInternalCommand))
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
             
             sagaRegistration
-                .ListeningEvents(typeof(AccountChangedEvent), typeof(AccountBalanceChangeFailedEvent))
-                .From(_contextNames.AccountsManagement)
-                .On(DefaultRoute)
-                .PublishingCommands(typeof(UnfreezeMarginWithdrawalCommand), typeof(UnfreezeMarginOnFailWithdrawalCommand))
-                .To(_contextNames.TradingEngine)
-                .With(DefaultPipeline);
-            
-            sagaRegistration
-                .ListeningEvents(typeof(UnfreezeMarginSucceededWithdrawalEvent), typeof(UnfreezeMarginOnFailSucceededWithdrawalEvent))
-                .From(_contextNames.TradingEngine)
-                .On(DefaultRoute)
-                .PublishingCommands(typeof(CompleteWithdrawalInternalCommand), typeof(FailWithdrawalInternalCommand))
-                .To(_contextNames.AccountsManagement)
-                .With(DefaultPipeline);
-
-            sagaRegistration
-                .ListeningEvents(typeof(WithdrawalFailedEvent), typeof(WithdrawalSucceededEvent))
+                .ListeningEvents(
+                    typeof(WithdrawalFailedEvent), 
+                    typeof(WithdrawalSucceededEvent))
                 .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute);
 

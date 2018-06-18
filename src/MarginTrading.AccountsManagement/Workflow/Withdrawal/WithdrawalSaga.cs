@@ -189,18 +189,26 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         /// Withdrawal failed
         /// </summary>
         [UsedImplicitly]
-        private Task Handle(WithdrawalFailedEvent e, ICommandSender sender)
+        private async Task Handle(WithdrawalFailedEvent e, ICommandSender sender)
         {
-            return Task.CompletedTask;
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, executionInfo.Data.State, State.Succeeded))
+            {
+                await _executionInfoRepository.Save(executionInfo);
+            }
         }
         
         /// <summary>
         /// Withdrawal succeeded
         /// </summary>
         [UsedImplicitly]
-        private Task Handle(WithdrawalSucceededEvent e, ICommandSender sender)
+        private async Task Handle(WithdrawalSucceededEvent e, ICommandSender sender)
         {
-            return Task.CompletedTask;
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            if (SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
+            {
+                await _executionInfoRepository.Save(executionInfo);
+            }
         }
 
         private static bool SwitchState(DepositData data, State expectedState, State nextState)
