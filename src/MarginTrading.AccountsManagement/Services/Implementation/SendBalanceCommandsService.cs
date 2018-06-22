@@ -41,7 +41,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         }
 
         public Task<string> WithdrawAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason)
+            [CanBeNull] string operationId, string reason, string auditLog)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
@@ -51,14 +51,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     accountId: accountId,
                     amount: amountDelta,
                     comment: reason,
-                    auditLog: reason),
+                    auditLog: auditLog),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
         }
 
         public Task<string> DepositAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason)
+            [CanBeNull] string operationId, string reason, string auditLog)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
@@ -68,7 +68,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     accountId: accountId,
                     amount: amountDelta,
                     comment: reason,
-                    auditLog: reason),
+                    auditLog: auditLog),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);

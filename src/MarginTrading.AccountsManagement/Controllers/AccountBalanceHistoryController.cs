@@ -39,7 +39,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             return new AccountBalanceChangeContract(arg.Id, arg.ChangeTimestamp, arg.AccountId, arg.ClientId,
                 arg.ChangeAmount, arg.Balance, arg.WithdrawTransferLimit, arg.Comment, 
                 Enum.Parse<AccountBalanceChangeReasonTypeContract>(arg.ReasonType.ToString()),
-                arg.EventSourceId, arg.LegalEntity, arg.AccountId, arg.Instrument, arg.TradingDate);
+                arg.EventSourceId, arg.LegalEntity, arg.AuditLog, arg.Instrument, arg.TradingDate);
         }
     }
 }

@@ -131,7 +131,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
                 reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
                 source: "Api",
-                auditLog: GetAuditLog());
+                auditLog: request.AdditionalInfo);
         }
 
         /// <summary>
@@ -149,7 +149,8 @@ namespace MarginTrading.AccountsManagement.Controllers
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
                 amountDelta: request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)));
+                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
+                auditLog: request.AdditionalInfo);
         }
 
         /// <summary>
@@ -167,7 +168,8 @@ namespace MarginTrading.AccountsManagement.Controllers
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
                 amountDelta: request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)));
+                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
+                auditLog: request.AdditionalInfo);
         }
 
         /// <summary>
@@ -229,11 +231,6 @@ namespace MarginTrading.AccountsManagement.Controllers
         private Account Convert(AccountContract account)
         {
             return _convertService.Convert<AccountContract, Account>(account);
-        }
-
-        private string GetAuditLog()
-        {
-            return string.Empty; // todo: implement
         }
 
         private async Task ValidateClientAndAccountId(string clientId, string accountId)

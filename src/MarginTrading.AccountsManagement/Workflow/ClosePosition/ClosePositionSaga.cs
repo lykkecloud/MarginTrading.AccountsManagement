@@ -31,7 +31,7 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
                     comment: $"Balance changed on position close (id = {evt.PositionId})",
                     auditLog: string.Empty,
                     source: nameof(ClosePositionSaga),
-                    changeReasonType: AccountBalanceChangeReasonType.PositionClosed),
+                    changeReasonType: AccountBalanceChangeReasonType.RealizedPnL),
                 _contextNames.AccountsManagement);
         }
     }

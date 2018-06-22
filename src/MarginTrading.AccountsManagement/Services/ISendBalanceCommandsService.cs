@@ -8,9 +8,9 @@ namespace MarginTrading.AccountsManagement.Services
             string reason, string source, string auditLog);
 
         Task<string> WithdrawAsync(string clientId, string accountId, decimal amountDelta,
-            string operationId, string reason);
+            string operationId, string reason, string auditLog);
 
         Task<string> DepositAsync(string clientId, string accountId, decimal amountDelta,
-            string operationId, string reason);
+            string operationId, string reason, string auditLog);
     }
 }
