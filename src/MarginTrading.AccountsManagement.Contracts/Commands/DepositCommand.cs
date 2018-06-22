@@ -29,7 +29,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         public string AuditLog { get; }
 
         public DepositCommand([NotNull] string operationId, [NotNull] string clientId, [NotNull] string accountId, 
-            decimal amount, [NotNull] string comment, [NotNull] string auditLog)
+            decimal amount, [NotNull] string comment, [CanBeNull] string auditLog)
         {
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "");
@@ -39,7 +39,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
             Comment = comment ?? throw new ArgumentNullException(nameof(comment));
-            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
+            AuditLog = auditLog;
         }
     }
 }
