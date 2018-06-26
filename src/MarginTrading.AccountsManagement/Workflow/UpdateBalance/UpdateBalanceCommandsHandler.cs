@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure;
@@ -28,7 +29,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         }
 
         /// <summary>
-        /// Handles the command to change the balance
+        /// Handles internal command to change the balance
         /// </summary>
         [UsedImplicitly]
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
@@ -74,6 +75,24 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 AccountChangedEventTypeContract.BalanceUpdated, change));
             
             return CommandHandlingResult.Ok();
+        }
+
+        /// <summary>
+        /// Handles external balance changing command
+        /// </summary>
+        [UsedImplicitly]
+        public async Task<CommandHandlingResult> Handle(ChangeBalanceCommand command, IEventPublisher publisher)
+        {
+            return await Handle(new UpdateBalanceInternalCommand(
+                operationId: command.OperationId,
+                clientId: command.ClientId,
+                accountId: command.AccountId,
+                amountDelta: command.Amount,
+                comment: command.Reason,
+                auditLog: command.AuditLog,
+                source: $"{command.ReasonType.ToString()} command",
+                changeReasonType: command.ReasonType.ToType<AccountBalanceChangeReasonType>()
+            ), publisher);
         }
 
         private AccountContract Convert(IAccount account)

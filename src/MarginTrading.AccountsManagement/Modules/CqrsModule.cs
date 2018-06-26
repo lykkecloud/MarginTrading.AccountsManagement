@@ -217,7 +217,8 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             contextRegistration
                 .ListeningCommands(
-                    typeof(UpdateBalanceInternalCommand))
+                    typeof(UpdateBalanceInternalCommand),
+                    typeof(ChangeBalanceCommand))
                 .On(DefaultRoute)
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
                 .PublishingEvents(

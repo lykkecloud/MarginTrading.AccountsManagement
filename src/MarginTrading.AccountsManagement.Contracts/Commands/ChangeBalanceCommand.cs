@@ -54,12 +54,12 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         /// Reason of modification.
         /// </summary>
         [Key(5)]
-        public string Reason { get; set; }
+        public string Reason { get; }
 
         /// <summary>
         /// Any additional information.
         /// </summary>
-        [NotNull]
+        [CanBeNull]
         [Key(6)]
         public string AuditLog { get; }
 
