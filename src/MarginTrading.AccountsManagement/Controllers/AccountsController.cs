@@ -74,7 +74,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 _accountManagementService.CreateAsync(
                     clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)),
                     request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
-                    request.TradingConditionId.RequiredNotNullOrWhiteSpace(nameof(request.TradingConditionId)),
+                    request.TradingConditionId,
                     request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId))));
         }
 
