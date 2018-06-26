@@ -5,12 +5,9 @@ using MessagePack;
 namespace MarginTrading.AccountsManagement.Contracts.Events
 {
     [MessagePackObject]
-    public class AccountBalanceChangeFailedEvent
+    public class AccountBalanceChangeFailedEvent : BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-        
-        [Key(1)]
+        [Key(2)]
         public string Reason { get; }
         
         public AccountBalanceChangeFailedEvent([NotNull] string operationId, [NotNull] string reason)

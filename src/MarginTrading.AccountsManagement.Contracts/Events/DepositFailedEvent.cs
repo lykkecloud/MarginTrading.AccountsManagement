@@ -6,11 +6,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// Deposit operation failed
     /// </summary>
     [MessagePackObject]
-    public class DepositFailedEvent
-    {
-        [Key(0)]
-        public string OperationId { get; }
-        
+    public class DepositFailedEvent : BaseEvent
+    {   
         public DepositFailedEvent(string operationId)
         {
             OperationId = operationId;

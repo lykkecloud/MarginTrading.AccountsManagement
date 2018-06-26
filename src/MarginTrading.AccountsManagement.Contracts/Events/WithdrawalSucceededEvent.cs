@@ -8,18 +8,15 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// Happens when the withdrawal is completed
     /// </summary>
     [MessagePackObject]
-    public class WithdrawalSucceededEvent
+    public class WithdrawalSucceededEvent : BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-        
-        [Key(1)]
+        [Key(2)]
         public string ClientId { get; }
 
-        [Key(2)]
+        [Key(3)]
         public string AccountId { get; }
 
-        [Key(3)]
+        [Key(4)]
         public decimal Amount { get; }
 
         public WithdrawalSucceededEvent([NotNull] string operationId, [NotNull] string clientId,

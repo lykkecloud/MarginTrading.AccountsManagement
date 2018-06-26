@@ -1,28 +1,26 @@
 ﻿using System;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Contracts.Events;
 using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Workflow.Deposit.Events
 {
     [MessagePackObject]
-    internal class DepositStartedInternalEvent
+    internal class DepositStartedInternalEvent : BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-
-        [Key(1)]
+        [Key(2)]
         public string ClientId { get; }
 
-        [Key(2)]
+        [Key(3)]
         public string AccountId { get; }
 
-        [Key(3)]
+        [Key(4)]
         public decimal Amount { get; }
 
-        [Key(4)]
+        [Key(5)]
         public string Comment { get; }
 
-        [Key(5)]
+        [Key(6)]
         public string AuditLog { get; }
 
         public DepositStartedInternalEvent(string operationId, string clientId, string accountId, decimal amount, [NotNull] string comment, string auditLog)

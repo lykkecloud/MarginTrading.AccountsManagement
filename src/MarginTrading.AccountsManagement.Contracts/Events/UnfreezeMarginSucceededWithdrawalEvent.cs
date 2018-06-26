@@ -8,18 +8,15 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// Margin unfreezing has succeeded
     /// </summary>
     [MessagePackObject]
-    public class UnfreezeMarginSucceededWithdrawalEvent
+    public class UnfreezeMarginSucceededWithdrawalEvent : BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-        
-        [Key(1)]
+        [Key(2)]
         public string ClientId { get; }
 
-        [Key(2)]
+        [Key(3)]
         public string AccountId { get; }
 
-        [Key(3)]
+        [Key(4)]
         public decimal Amount { get; }
         
         public UnfreezeMarginSucceededWithdrawalEvent([NotNull] string operationId, [NotNull] string clientId,

@@ -2,27 +2,24 @@
 using JetBrains.Annotations;
 using MessagePack;
 
-namespace MarginTrading.AccountsManagement.Contracts
+namespace MarginTrading.AccountsManagement.Contracts.Events
 {
     [MessagePackObject(false)]
-    public abstract class AccountBalanceMessageBase
+    public abstract class AccountBalanceBaseEvent : BaseEvent
     {
-        [Key(0)]
+        [Key(2)]
         public string ClientId { get; }
 
-        [Key(1)]
+        [Key(3)]
         public string AccountId { get; }
 
-        [Key(2)]
+        [Key(4)]
         public decimal Amount { get; }
 
-        [Key(3)]
-        public string OperationId { get; }
-
-        [Key(4)]
+        [Key(5)]
         public string Reason { get; }
 
-        protected AccountBalanceMessageBase([NotNull] string clientId, [NotNull] string accountId, decimal amount, 
+        protected AccountBalanceBaseEvent([NotNull] string clientId, [NotNull] string accountId, decimal amount, 
             [NotNull] string operationId, [NotNull] string reason)
         {
             this.ClientId = clientId ?? throw new ArgumentNullException(nameof (clientId));
