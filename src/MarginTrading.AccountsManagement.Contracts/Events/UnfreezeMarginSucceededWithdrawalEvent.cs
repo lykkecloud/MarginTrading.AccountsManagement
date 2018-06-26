@@ -18,11 +18,11 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
 
         [Key(4)]
         public decimal Amount { get; }
-        
-        public UnfreezeMarginSucceededWithdrawalEvent([NotNull] string operationId, [NotNull] string clientId,
-            [NotNull] string accountId, decimal amount)
+
+        public UnfreezeMarginSucceededWithdrawalEvent([NotNull] string operationId, DateTime _, 
+            [NotNull] string clientId, [NotNull] string accountId, decimal amount)
+            : base(operationId)
         {
-            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;

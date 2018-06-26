@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Contracts.Events
@@ -10,13 +11,14 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     public abstract class BaseEvent
     {
         [Key(0)]
-        public string OperationId { get; protected set; }
+        public string OperationId { get; }
         
         [Key(1)]
         public DateTime EventTimestamp { get; }
 
-        protected BaseEvent()
+        protected BaseEvent([NotNull] string operationId)
         {
+            OperationId = operationId;
             EventTimestamp = DateTime.UtcNow;
         }
     }

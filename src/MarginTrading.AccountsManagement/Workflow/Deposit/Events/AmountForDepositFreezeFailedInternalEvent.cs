@@ -11,10 +11,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit.Events
         [Key(2)]
         public string Reason { get; }
 
-        public AmountForDepositFreezeFailedInternalEvent([NotNull] string operationId, 
+        public AmountForDepositFreezeFailedInternalEvent([NotNull] string operationId, DateTime _, 
             [NotNull] string reason)
+            : base(operationId)
         {
-            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             Reason = reason ?? throw new ArgumentNullException(nameof(reason));
         }
     }
