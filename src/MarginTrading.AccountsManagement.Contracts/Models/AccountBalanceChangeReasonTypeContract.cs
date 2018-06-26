@@ -16,11 +16,6 @@
         Withdraw = 2,
 
         /// <summary>
-        /// Position was closed and the pnl was fixed in the balance
-        /// </summary>
-        PositionClosed = 3,
-
-        /// <summary>
         /// An account balance was reset (used for demo accounts)
         /// </summary>
         Reset = 4,
@@ -41,9 +36,9 @@
         UnrealizedDailyPnL = 7,
         
         /// <summary>
-        /// Realized daily PnL
+        /// Realized PnL
         /// </summary>
-        RealizedDailyPnL = 8,
+        RealizedPnL = 8,
         
         /// <summary>
         /// Commissions
@@ -51,7 +46,7 @@
         Commission = 9,
         
         /// <summary>
-        /// Compensations payments for dividends
+        /// Compensation payments for dividends
         /// </summary>
         Dividend = 10,
         
@@ -64,5 +59,15 @@
         /// Total tax
         /// </summary>
         Tax = 12,
+        
+        /// <summary>
+        /// Temporary cash adjustment
+        /// </summary>
+        TemporaryCashAdjustment = 13,
+        
+        /// <summary>
+        /// Compensation payments
+        /// </summary>
+        CompensationPayments = 14,
     }
 }
