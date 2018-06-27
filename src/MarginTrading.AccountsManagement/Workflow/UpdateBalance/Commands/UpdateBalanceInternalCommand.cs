@@ -37,7 +37,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands
             string source, AccountBalanceChangeReasonType changeReasonType)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            ClientId = clientId;
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             AmountDelta = amountDelta;
             Comment = comment ?? throw new ArgumentNullException(nameof(comment));
