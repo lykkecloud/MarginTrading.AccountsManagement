@@ -25,9 +25,9 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         public string OperationId { get; }
 
         /// <summary>
-        /// Client Id.
+        /// Client Id. If null is passed clientId will be taken from repository by AccountId.
         /// </summary>
-        [NotNull]
+        [CanBeNull]
         [Key(1)]
         public string ClientId { get; }
 
@@ -63,12 +63,12 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [Key(6)]
         public string AuditLog { get; }
 
-        public ChangeBalanceCommand([NotNull] string operationId, [NotNull] string clientId, [NotNull] string accountId,
+        public ChangeBalanceCommand([NotNull] string operationId, [CanBeNull] string clientId, [NotNull] string accountId,
             decimal amount, AccountBalanceChangeReasonTypeContract reasonType, [NotNull] string reason,
             [CanBeNull] string auditLog)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            ClientId = clientId;
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
             ReasonType = reasonType;

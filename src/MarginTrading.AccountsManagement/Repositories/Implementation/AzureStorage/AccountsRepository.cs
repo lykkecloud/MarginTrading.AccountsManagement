@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using AutoMapper;
 using AzureStorage;
@@ -55,6 +56,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             decimal amountDelta, bool changeLimit)
         {
             AccountEntity account = null;
+
+            if (string.IsNullOrWhiteSpace(clientId))
+            {
+                clientId = (await _tableStorage.GetDataAsync(x => x.RowKey == AccountEntity.GenerateRowKey(accountId)))
+                    .Single().ClientId;
+            }
+            
             await _tableStorage.InsertOrModifyAsync(AccountEntity.GeneratePartitionKey(clientId),
                 AccountEntity.GenerateRowKey(accountId), 
                 () => throw new InvalidOperationException($"Account {accountId} not exists"),
