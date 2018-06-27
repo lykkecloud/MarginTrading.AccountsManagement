@@ -77,6 +77,21 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
+        public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, string eventSourceId)
+        {
+            var whereClause = "WHERE AccountId=@accountId "
+                + (string.IsNullOrWhiteSpace(eventSourceId) ? "" : "AND EventSourceId=@eventSourceId");
+            
+            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            {
+                var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
+                    $"SELECT * FROM {TableName} {whereClause}", 
+                    new { accountId, eventSourceId });
+
+                return data.ToList();
+            }
+        }
+
         public async Task AddAsync(IAccountBalanceChange change)
         {
             var entity = _convertService.Convert<AccountBalanceChangeEntity>(change);

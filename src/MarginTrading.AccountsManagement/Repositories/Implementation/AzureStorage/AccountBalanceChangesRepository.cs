@@ -35,6 +35,14 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 .OrderByDescending(item => item.ChangeTimestamp).ToList();
         }
 
+        public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, string eventSourceId)
+        {
+            return (await _tableStorage.GetDataAsync(x => x.PartitionKey == accountId
+                                                          && (string.IsNullOrWhiteSpace(eventSourceId) ||
+                                                              x.EventSourceId == eventSourceId)))
+                .OrderByDescending(item => item.ChangeTimestamp).ToList();
+        }
+
         public async Task AddAsync(IAccountBalanceChange change)
         {
             var entity = _convertService.Convert<AccountBalanceChangeEntity>(change);

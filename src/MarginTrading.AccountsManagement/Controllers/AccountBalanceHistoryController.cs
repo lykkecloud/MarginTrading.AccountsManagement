@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure;
@@ -32,6 +33,16 @@ namespace MarginTrading.AccountsManagement.Controllers
             var data = await _accountBalanceChangesRepository.GetAsync(accountIds, @from?.ToUniversalTime(),
                 to?.ToUniversalTime());
             return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
+        }
+
+        [Route("{accountId}")]
+        [HttpGet]
+        public async Task<AccountBalanceChangeContract[]> ByAccountAndEventSource(
+            string accountId, [FromQuery] string eventSourceId = null)
+        {
+            var data = await _accountBalanceChangesRepository.GetAsync(accountId, eventSourceId);
+
+            return data.Select(Convert).ToArray();
         }
 
         private AccountBalanceChangeContract Convert(IAccountBalanceChange arg)
