@@ -16,12 +16,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[Env] [nvarchar] (64) NULL, " +
                                                  "[AppName] [nvarchar] (256) NULL, " +
                                                  "[Version] [nvarchar] (256) NULL, " +
-                                                 "[Component] [nvarchar] (256) NULL, " +
-                                                 "[Process] [nvarchar] (256) NOT NULL, " +
-                                                 "[Context] [nvarchar] (256) NOT NULL, " +
-                                                 "[Type] [nvarchar] (256) NOT NULL, " +
-                                                 "[Stack] [text] NULL, " +
-                                                 "[Msg] [text] NULL " +
+                                                 "[Component] [nvarchar] (MAX) NULL, " +
+                                                 "[Process] [nvarchar] (MAX) NOT NULL, " +
+                                                 "[Context] [nvarchar] (MAX) NOT NULL, " +
+                                                 "[Type] [nvarchar] (MAX) NOT NULL, " +
+                                                 "[Stack] [nvarchar] (MAX), " +
+                                                 "[Msg] [nvarchar] (MAX) NULL " +
                                                  ");";
         
         private static Type DataType => typeof(LogEntity);
