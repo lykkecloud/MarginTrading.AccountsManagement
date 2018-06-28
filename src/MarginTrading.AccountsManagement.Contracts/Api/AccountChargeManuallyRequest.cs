@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Contracts.Models;
 
 namespace MarginTrading.AccountsManagement.Contracts.Api
 {
@@ -34,5 +35,15 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         /// Info will be saved to history in AuditLog field.
         /// </summary>
         public string AdditionalInfo { get; set; }
+        
+        /// <summary>
+        /// Balance change reason type
+        /// </summary>
+        public AccountBalanceChangeReasonTypeContract ReasonType { get; set; }
+        
+        /// <summary>
+        /// Id of linked object
+        /// </summary>
+        public string EventSourceId { get; set; }
     }
 }

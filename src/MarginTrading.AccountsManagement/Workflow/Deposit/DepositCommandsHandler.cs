@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -23,7 +24,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(DepositCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<DepositStartedInternalEvent>(c));
+            publisher.PublishEvent(new DepositStartedInternalEvent(c.OperationId, new DateTime(), c.ClientId,
+                c.AccountId, c.Amount, c.Comment, c.AuditLog));
         }
 
         /// <summary>
@@ -33,7 +35,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         private void Handle(FreezeAmountForDepositInternalCommand c, IEventPublisher publisher)
         {
             // todo: Now it always succeeds. Will be used for deposit limiting.
-            publisher.PublishEvent(_convertService.Convert<AmountForDepositFrozenInternalEvent>(c));
+            publisher.PublishEvent(new AmountForDepositFrozenInternalEvent(c.OperationId));
         }
 
         /// <summary>
@@ -42,7 +44,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(FailDepositInternalCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<DepositFailedEvent>(c));
+            publisher.PublishEvent(new DepositFailedEvent(c.OperationId));
         }
 
         /// <summary>
@@ -51,7 +53,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(CompleteDepositInternalCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<DepositSucceededEvent>(c));
+            publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, new DateTime(), c.ClientId, c.AccountId,
+                c.Amount));
         }
     }
 }

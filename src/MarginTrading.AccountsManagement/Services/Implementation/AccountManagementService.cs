@@ -85,7 +85,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         public async Task<IReadOnlyList<IAccount>> CreateDefaultAccountsAsync(string clientId,
             string tradingConditionId)
         {
-            var existingAccounts = (await _accountsRepository.GetAllAsync(clientId)).ToList();
+            var existingAccounts = (await _accountsRepository.GetAllAsync(clientId: clientId)).ToList();
 
             if (existingAccounts.Any())
             {
@@ -155,14 +155,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Get
 
-        public Task<IReadOnlyList<IAccount>> ListAsync()
+        public Task<IReadOnlyList<IAccount>> ListAsync(string search)
         {
-            return _accountsRepository.GetAllAsync();
+            return _accountsRepository.GetAllAsync(search: search);
         }
 
         public Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId)
         {
-            return _accountsRepository.GetAllAsync(clientId);
+            return _accountsRepository.GetAllAsync(clientId: clientId);
         }
 
         public Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId)

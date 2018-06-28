@@ -35,11 +35,15 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             await _tableStorage.InsertAsync(Convert(account));
         }
 
-        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null)
+        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null)
         {
+            var filter = string.IsNullOrEmpty(search)
+                ? null
+                : new Func<AccountEntity, bool>(accont => accont.Id.Contains(search));
+
             var accounts = string.IsNullOrEmpty(clientId)
-                ? await _tableStorage.GetDataAsync()
-                : await _tableStorage.GetDataAsync(AccountEntity.GeneratePartitionKey(clientId));
+                ? await _tableStorage.GetDataAsync(filter)
+                : await _tableStorage.GetDataAsync(AccountEntity.GeneratePartitionKey(clientId), filter);
 
             return accounts.ToList();
         }

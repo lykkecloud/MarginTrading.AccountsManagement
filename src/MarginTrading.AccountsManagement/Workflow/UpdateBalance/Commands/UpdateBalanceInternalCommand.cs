@@ -40,8 +40,8 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands
             ClientId = clientId;
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             AmountDelta = amountDelta;
-            Comment = comment ?? throw new ArgumentNullException(nameof(comment));
-            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
+            Comment = comment;
+            AuditLog = auditLog;
             Source = source ?? throw new ArgumentNullException(nameof(source));
             ChangeReasonType = changeReasonType.RequiredEnum(nameof(changeReasonType));
         }

@@ -8,24 +8,21 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// The deposit operation has succeeded
     /// </summary>
     [MessagePackObject]
-    public class DepositSucceededEvent
+    public class DepositSucceededEvent : BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-        
-        [Key(1)]
+        [Key(2)]
         public string ClientId { get; }
 
-        [Key(2)]
+        [Key(3)]
         public string AccountId { get; }
 
-        [Key(3)]
+        [Key(4)]
         public decimal Amount { get; }
-        
-        public DepositSucceededEvent([NotNull] string operationId, [NotNull] string clientId,
+
+        public DepositSucceededEvent([NotNull] string operationId, DateTime _, [NotNull] string clientId,
             [NotNull] string accountId, decimal amount)
+            : base(operationId)
         {
-            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;

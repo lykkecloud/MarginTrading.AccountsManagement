@@ -1,21 +1,20 @@
 ﻿using System;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Contracts.Events;
 using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Workflow.Deposit.Events
 {
     [MessagePackObject]
-    internal class AmountForDepositFreezeFailedInternalEvent
+    internal class AmountForDepositFreezeFailedInternalEvent: BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-
-        [Key(1)]
+        [Key(2)]
         public string Reason { get; }
 
-        public AmountForDepositFreezeFailedInternalEvent([NotNull] string operationId, [NotNull] string reason)
+        public AmountForDepositFreezeFailedInternalEvent([NotNull] string operationId, DateTime _, 
+            [NotNull] string reason)
+            : base(operationId)
         {
-            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             Reason = reason ?? throw new ArgumentNullException(nameof(reason));
         }
     }

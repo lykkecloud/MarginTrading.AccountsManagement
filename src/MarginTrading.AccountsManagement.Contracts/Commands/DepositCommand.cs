@@ -38,7 +38,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
-            Comment = comment ?? throw new ArgumentNullException(nameof(comment));
+            Comment = comment;
             AuditLog = auditLog;
         }
     }

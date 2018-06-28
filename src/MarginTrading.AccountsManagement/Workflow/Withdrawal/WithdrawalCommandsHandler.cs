@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using AutoMapper;
+using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -23,7 +25,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(WithdrawCommand command, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<WithdrawalStartedInternalEvent>(command));
+            publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, new DateTime(), 
+                command.ClientId, command.AccountId, command.Amount, command.Comment, command.AuditLog));
         }
 
         /// <summary>
@@ -32,7 +35,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(FailWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<WithdrawalFailedEvent>(command));
+            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, new DateTime(), command.Reason));
         }
 
         /// <summary>
@@ -41,7 +44,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(CompleteWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<WithdrawalSucceededEvent>(command));
+            publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, new DateTime(), command.ClientId,
+                command.AccountId, command.Amount));
         }
     }
 }

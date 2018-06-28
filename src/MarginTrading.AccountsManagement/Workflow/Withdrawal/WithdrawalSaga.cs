@@ -56,10 +56,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo.Data.State == State.FreezingAmount)
                 sender.SendCommand(
                     new FreezeAmountForWithdrawalCommand(
+                        operationId: e.OperationId,
+                        _: new DateTime(), 
                         clientId: e.ClientId,
                         accountId: e.AccountId,
                         amount: e.Amount,
-                        operationId: e.OperationId,
                         reason: e.Comment),
                     _contextNames.TradingEngine);
         }

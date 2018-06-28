@@ -22,7 +22,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         }
 
         public Task<string> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason, string source, string auditLog)
+            [CanBeNull] string operationId, string reason, string source, string auditLog, AccountBalanceChangeReasonType type)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
@@ -34,7 +34,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     comment: reason,
                     auditLog: auditLog,
                     source: source,
-                    changeReasonType: AccountBalanceChangeReasonType.Manual),
+                    changeReasonType: type),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);

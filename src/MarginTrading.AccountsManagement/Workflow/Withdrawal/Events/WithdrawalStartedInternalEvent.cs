@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Contracts.Events;
 using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Events
@@ -8,37 +9,35 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Events
     /// Withdrawal started
     /// </summary>
     [MessagePackObject]
-    public class WithdrawalStartedInternalEvent
+    public class WithdrawalStartedInternalEvent : BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-
-        [Key(1)]
+        [Key(2)]
         public string ClientId { get; }
 
-        [Key(2)]
+        [Key(3)]
         public string AccountId { get; }
 
-        [Key(3)]
+        [Key(4)]
         public decimal Amount { get; }
 
-        [Key(4)]
+        [Key(5)]
         public string Comment { get; }
 
-        [Key(5)]
+        [Key(6)]
         public string AuditLog { get; }
 
-        public WithdrawalStartedInternalEvent(string operationId, string clientId, string accountId, decimal amount, [NotNull] string comment, string auditLog)
+        public WithdrawalStartedInternalEvent(string operationId, DateTime _, string clientId, string accountId,
+            decimal amount, [NotNull] string comment, string auditLog)
+            : base(operationId)
         {
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "");
 
-            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
-            Comment = comment ?? throw new ArgumentNullException(nameof(comment));
-            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
+            Comment = comment;
+            AuditLog = auditLog;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using MessagePack;
+﻿using System;
+using JetBrains.Annotations;
+using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Contracts.Events
 {
@@ -6,14 +8,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// Deposit operation failed
     /// </summary>
     [MessagePackObject]
-    public class DepositFailedEvent
+    public class DepositFailedEvent : BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-        
-        public DepositFailedEvent(string operationId)
+        public DepositFailedEvent([NotNull] string operationId, DateTime _ = default) : base(operationId)
         {
-            OperationId = operationId;
         }
     }
 }
