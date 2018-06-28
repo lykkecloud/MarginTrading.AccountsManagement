@@ -44,6 +44,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands
         [Key(9)]
         public string AssetPairId { get; }
         
+        [Key(10)]
         public DateTime TradingDay { get; }
 
         public UpdateBalanceInternalCommand(string operationId, string clientId,
