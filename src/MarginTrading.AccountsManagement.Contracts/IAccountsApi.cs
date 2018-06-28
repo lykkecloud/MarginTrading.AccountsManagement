@@ -55,13 +55,13 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// Starts the operation of depositing funds to the client's account. Amount should be positive.
         /// </summary>
         [Post("/api/accounts/{clientId}/{accountId}/balance/deposit")]
-        Task<string> BeginDeposit(string clientId, string accountId, [Body] AccountChargeManuallyRequest request);
+        Task<string> BeginDeposit(string clientId, string accountId, [Body] AccountChargeRequest request);
 
         /// <summary>
         /// Starts the operation of withdrawing funds to the client's account. Amount should be positive.
         /// </summary>
         [Post("/api/accounts/{clientId}/{accountId}/balance/withdraw")]
-        Task<string> BeginWithdraw(string clientId, string accountId, [Body] AccountChargeManuallyRequest request);
+        Task<string> BeginWithdraw(string clientId, string accountId, [Body] AccountChargeRequest request);
 
         /// <summary>
         /// Creates default accounts for client by trading condition id.

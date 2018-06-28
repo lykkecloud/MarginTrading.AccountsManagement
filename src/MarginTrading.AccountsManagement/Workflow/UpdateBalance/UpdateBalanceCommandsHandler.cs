@@ -63,11 +63,11 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 withdrawTransferLimit: account.WithdrawTransferLimit,
                 comment: command.Comment,
                 reasonType: Convert(command.ChangeReasonType),
-                eventSourceId: command.Source,
+                eventSourceId: command.EventSourceId,
                 legalEntity: account.LegalEntity,
                 auditLog: command.AuditLog,
-                instrument: null,//TODO pass through ClosePositionSaga from MT Core
-                tradingDate: DateTime.UtcNow);//TODO pass from API call
+                instrument: command.AssetPairId,
+                tradingDate: command.TradingDay);//TODO pass from API call
 
             var convertedAccount = Convert(account);
 
@@ -91,7 +91,10 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 comment: command.Reason,
                 auditLog: command.AuditLog,
                 source: $"{command.ReasonType.ToString()} command",
-                changeReasonType: command.ReasonType.ToType<AccountBalanceChangeReasonType>()
+                changeReasonType: command.ReasonType.ToType<AccountBalanceChangeReasonType>(),
+                eventSourceId: command.EventSourceId,
+                assetPairId: string.Empty,
+                tradingDay: DateTime.UtcNow
             ), publisher);
         }
 

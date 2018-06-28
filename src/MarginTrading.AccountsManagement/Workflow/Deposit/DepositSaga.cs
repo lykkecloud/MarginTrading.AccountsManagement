@@ -76,7 +76,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                         comment: "Funds deposit " + e.OperationId,
                         auditLog: executionInfo.Data.AuditLog,
                         source: OperationName,
-                        changeReasonType: AccountBalanceChangeReasonType.Deposit),
+                        changeReasonType: AccountBalanceChangeReasonType.Deposit,
+                        eventSourceId: e.OperationId,
+                        assetPairId: string.Empty,
+                        tradingDay: DateTime.UtcNow),
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);

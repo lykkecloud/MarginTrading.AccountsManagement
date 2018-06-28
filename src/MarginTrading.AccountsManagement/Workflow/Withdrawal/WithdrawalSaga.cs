@@ -83,7 +83,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         comment: "Funds withdrawal " + e.OperationId,
                         auditLog: executionInfo.Data.AuditLog,
                         source: OperationName,
-                        changeReasonType: AccountBalanceChangeReasonType.Withdraw),
+                        changeReasonType: AccountBalanceChangeReasonType.Withdraw,
+                        eventSourceId: e.OperationId,
+                        assetPairId: string.Empty,
+                        tradingDay: DateTime.UtcNow),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow(e.OperationId);

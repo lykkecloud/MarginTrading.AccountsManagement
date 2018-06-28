@@ -62,10 +62,24 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [CanBeNull]
         [Key(6)]
         public string AuditLog { get; }
+        
+        /// <summary>
+        /// Event source ID (order, position, trade, etc).
+        /// </summary>
+        [CanBeNull]
+        [Key(7)]
+        public string EventSourceId { get; }
+        
+        /// <summary>
+        /// Asset Pair ID (if can be found any)
+        /// </summary>
+        [CanBeNull]
+        [Key(8)]
+        public string AssetPairId { get; }
 
         public ChangeBalanceCommand([NotNull] string operationId, [CanBeNull] string clientId, [NotNull] string accountId,
             decimal amount, AccountBalanceChangeReasonTypeContract reasonType, [NotNull] string reason,
-            [CanBeNull] string auditLog)
+            [CanBeNull] string auditLog, [CanBeNull] string eventSourceId, [CanBeNull] string assetPairId)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             ClientId = clientId;
@@ -74,6 +88,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
             ReasonType = reasonType;
             Reason = reason ?? throw new ArgumentNullException(nameof(reason));
             AuditLog = auditLog;
+            EventSourceId = eventSourceId;
+            AssetPairId = assetPairId;
         }
     }
 }

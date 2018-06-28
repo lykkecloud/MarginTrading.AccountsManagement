@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
@@ -31,7 +32,10 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
                     comment: $"Balance changed on position close (id = {evt.PositionId})",
                     auditLog: string.Empty,
                     source: nameof(ClosePositionSaga),
-                    changeReasonType: AccountBalanceChangeReasonType.RealizedPnL),
+                    changeReasonType: AccountBalanceChangeReasonType.RealizedPnL,
+                    eventSourceId: evt.PositionId,
+                    assetPairId: string.Empty, //TODO pass through ClosePositionSaga from MT Core
+                    tradingDay: DateTime.UtcNow),
                 _contextNames.AccountsManagement);
         }
     }
