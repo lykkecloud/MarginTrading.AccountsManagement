@@ -78,12 +78,12 @@ namespace MarginTrading.AccountsManagement.TestClient
         private static async Task CheckAccountsBalabceHistoryApiWorking(IHttpClientGenerator clientGenerator)
         {
             var client = clientGenerator.Generate<IAccountBalanceHistoryApi>();
-            var history = await client.ByAccounts(new []{"AA0011"}).Dump();
+            var history = await client.ByAccount("AA0011").Dump();
             var res = await client.ByAccountAndEventSource("AA0011");
             var record = history?.FirstOrDefault();
             if (record != null)
             {
-                var historyByAccount = await client.ByAccounts(new[] {record.Value.Key}).Dump();
+                var historyByAccount = await client.ByAccount(record.Value.Key).Dump();
                 var historyByAccountAndEvent = await client.ByAccountAndEventSource(record.Value.Key)
                     .Dump();
             }
