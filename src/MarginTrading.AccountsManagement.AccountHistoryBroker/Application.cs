@@ -33,7 +33,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         {
             var accountHistory = _convertService.Convert<AccountHistory>(accountChangedEvent.BalanceChange);
             
-            return _accountHistoryRepository.InsertOrReplaceAsync(accountHistory);
+            return _accountHistoryRepository.InsertAsync(accountHistory);
         }
     }
 }

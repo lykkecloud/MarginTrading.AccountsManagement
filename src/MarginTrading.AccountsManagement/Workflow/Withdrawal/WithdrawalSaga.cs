@@ -143,7 +143,14 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private async Task Handle(AccountBalanceChangeFailedEvent e, ICommandSender sender)
         {
+            if (e.Source != OperationName)
+                return;
+            
             var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+
+            if (executionInfo == null)
+                return;
+            
             if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.UnfreezingAmount))
             {
                 executionInfo.Data.FailReason = e.Reason;

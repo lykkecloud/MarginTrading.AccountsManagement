@@ -27,8 +27,8 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         [Route("")]
         [HttpGet]
-        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccounts(string[] accountIds,
-            DateTime? from = null, DateTime? to = null)
+        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccounts([FromQuery]string[] accountIds,
+            [FromQuery]DateTime? from = null, [FromQuery]DateTime? to = null)
         {
             var data = await _accountBalanceChangesRepository.GetAsync(accountIds, @from?.ToUniversalTime(),
                 to?.ToUniversalTime());

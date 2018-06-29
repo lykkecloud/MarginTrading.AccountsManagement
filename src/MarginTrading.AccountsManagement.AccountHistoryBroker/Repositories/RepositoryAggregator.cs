@@ -14,11 +14,11 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories
             _repositories.AddRange(repositories);
         }
 
-        public async Task InsertOrReplaceAsync(IAccountHistory report)
+        public async Task InsertAsync(IAccountHistory report)
         {
             foreach (var item in _repositories)
             {
-                await item.InsertOrReplaceAsync(report);
+                await item.InsertAsync(report);
             }
         }
     }

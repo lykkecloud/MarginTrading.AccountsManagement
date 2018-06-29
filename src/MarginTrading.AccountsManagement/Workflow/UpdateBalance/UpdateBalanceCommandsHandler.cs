@@ -47,7 +47,8 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             }
             catch (Exception ex)
             {
-                publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId, new DateTime(), ex.Message));
+                publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId, 
+                    new DateTime(), ex.Message, command.Source));
                 return CommandHandlingResult.Ok(); //means no retries required
             }
 

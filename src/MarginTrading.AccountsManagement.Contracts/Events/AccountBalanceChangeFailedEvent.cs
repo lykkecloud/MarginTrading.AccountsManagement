@@ -9,12 +9,16 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     {
         [Key(2)]
         public string Reason { get; }
+        
+        [Key(3)]
+        public string Source { get; }
 
         public AccountBalanceChangeFailedEvent([NotNull] string operationId, DateTime _, 
-            [NotNull] string reason)
+            [NotNull] string reason, string source)
             : base(operationId)
         {
             Reason = reason ?? throw new ArgumentNullException(nameof(reason));
+            Source = source;
         }
     }
 }
