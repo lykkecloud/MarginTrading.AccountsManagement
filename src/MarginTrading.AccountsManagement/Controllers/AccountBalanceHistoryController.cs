@@ -25,12 +25,12 @@ namespace MarginTrading.AccountsManagement.Controllers
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
         }
 
-        [Route("")]
+        [Route("by-account/{accountId}")]
         [HttpGet]
-        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccounts([FromQuery]string[] accountIds,
-            [FromQuery]DateTime? from = null, [FromQuery]DateTime? to = null)
+        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount(string accountId,
+            [FromQuery] DateTime? @from = null, [FromQuery] DateTime? to = null)
         {
-            var data = await _accountBalanceChangesRepository.GetAsync(accountIds, @from?.ToUniversalTime(),
+            var data = await _accountBalanceChangesRepository.GetAsync(accountId, @from?.ToUniversalTime(),
                 to?.ToUniversalTime());
             return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }

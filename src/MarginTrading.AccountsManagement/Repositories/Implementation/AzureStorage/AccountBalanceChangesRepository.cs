@@ -27,10 +27,10 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                     settings.Nested(s => s.Db.ConnectionString), "AccountHistory", log);
         }
 
-        public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string[] accountIds, DateTime? @from,
+        public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, DateTime? @from,
             DateTime? to)
         {
-            return (await _tableStorage.WhereAsync(accountIds, from ?? DateTime.MinValue,
+            return (await _tableStorage.WhereAsync(accountId, from ?? DateTime.MinValue,
                     to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
                 .OrderByDescending(item => item.ChangeTimestamp).ToList();
         }
