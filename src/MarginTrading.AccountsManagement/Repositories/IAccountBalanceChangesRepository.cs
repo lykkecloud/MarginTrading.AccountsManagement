@@ -8,7 +8,7 @@ namespace MarginTrading.AccountsManagement.Repositories
 {
     public interface IAccountBalanceChangesRepository
     {
-        Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string[] accountIds, DateTime? @from, DateTime? to);
+        Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, DateTime? @from, DateTime? to);
         Task AddAsync(IAccountBalanceChange change);
     }
 }

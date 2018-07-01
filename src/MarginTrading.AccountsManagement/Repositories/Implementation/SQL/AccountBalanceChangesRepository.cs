@@ -61,17 +61,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
         
-        public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string[] accountIds, DateTime? @from,
+        public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, DateTime? @from,
             DateTime? to)
         {
-            var whereClause = "WHERE 1=1 " + (accountIds.Any() ? $" AND AccountId IN ('{string.Join("','", accountIds)}')" : "")
+            var whereClause = "WHERE 1=1 " + (!string.IsNullOrWhiteSpace(accountId) ? " AND AccountId=@accountId" : "")
                                        + (from != null ? " AND ChangeTimestamp > @from" : "")
                                        + (to != null ? " AND ChangeTimestamp < @to" : "");
             
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
                 var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
-                    $"SELECT * FROM {TableName} {whereClause}", new { from, to });
+                    $"SELECT * FROM {TableName} {whereClause}", new { accountId, from, to });
 
                 return data.ToList();
             }
