@@ -17,7 +17,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// Gets all accounts
         /// </summary>
         [Get("/api/accounts/")]
-        Task<List<AccountContract>> List();
+        Task<List<AccountContract>> List([Query] string search = null);
 
         /// <summary>
         /// Gets all accounts by <paramref name="clientId"/>
