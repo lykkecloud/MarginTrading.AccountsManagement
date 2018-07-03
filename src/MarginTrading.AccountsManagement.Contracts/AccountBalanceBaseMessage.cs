@@ -26,16 +26,15 @@ namespace MarginTrading.AccountsManagement.Contracts
         public string Reason { get; }
 
         [SerializationConstructor]
-        public AccountBalanceBaseMessage([NotNull] string operationId, DateTime _, 
+        public AccountBalanceBaseMessage([NotNull] string operationId, DateTime eventTimestamp, 
             [NotNull] string clientId, [NotNull] string accountId, decimal amount, [NotNull] string reason)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
-            this.ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            this.AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
-            this.Amount = amount;
-            this.Reason = reason ?? throw new ArgumentNullException(nameof(reason));
-            
-            EventTimestamp = DateTime.UtcNow;
+            EventTimestamp = eventTimestamp;
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
+            Amount = amount;
+            Reason = reason ?? throw new ArgumentNullException(nameof(reason));
         }
     }
 }

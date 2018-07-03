@@ -11,13 +11,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
 {
     internal class DepositCommandsHandler
     {
-        private readonly IConvertService _convertService;
-
-        public DepositCommandsHandler(IConvertService convertService)
-        {
-            _convertService = convertService;
-        }
-
         /// <summary>
         /// Handles the command to begin deposit
         /// </summary>

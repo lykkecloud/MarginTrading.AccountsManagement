@@ -6,9 +6,9 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
 {
     public class FreezeAmountForWithdrawalCommand : AccountBalanceBaseMessage
     {
-        public FreezeAmountForWithdrawalCommand(string operationId, DateTime _, string clientId, string accountId, 
+        public FreezeAmountForWithdrawalCommand(string operationId, DateTime eventTimestamp, string clientId, string accountId, 
             decimal amount, string reason)
-            : base(operationId, _, clientId, accountId, amount, reason)
+            : base(operationId, eventTimestamp, clientId, accountId, amount, reason)
         {
         }
     }

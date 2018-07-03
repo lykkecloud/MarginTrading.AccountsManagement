@@ -12,13 +12,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 {
     internal class WithdrawalCommandsHandler
     {
-        private readonly IConvertService _convertService;
-
-        public WithdrawalCommandsHandler(IConvertService convertService)
-        {
-            _convertService = convertService;
-        }
-
         /// <summary>
         /// Handles the command to begin the withdrawal
         /// </summary>

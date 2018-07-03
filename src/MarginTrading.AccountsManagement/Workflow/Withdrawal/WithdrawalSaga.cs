@@ -57,7 +57,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 sender.SendCommand(
                     new FreezeAmountForWithdrawalCommand(
                         operationId: e.OperationId,
-                        _: new DateTime(), 
+                        eventTimestamp: new DateTime(), 
                         clientId: e.ClientId,
                         accountId: e.AccountId,
                         amount: e.Amount,
