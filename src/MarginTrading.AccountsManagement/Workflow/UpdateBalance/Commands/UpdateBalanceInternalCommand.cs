@@ -31,18 +31,36 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands
 
         [Key(7)]
         public AccountBalanceChangeReasonType ChangeReasonType { get; }
+        
+        /// <summary>
+        /// Event source ID (order, position, trade, etc).
+        /// </summary>
+        [Key(8)]
+        public string EventSourceId { get; }
+        
+        /// <summary>
+        /// Asset Pair ID (if can be found any)
+        /// </summary>
+        [Key(9)]
+        public string AssetPairId { get; }
+        
+        [Key(10)]
+        public DateTime TradingDay { get; }
 
         public UpdateBalanceInternalCommand(string operationId, string clientId,
             string accountId, decimal amountDelta, string comment, string auditLog,
-            string source, AccountBalanceChangeReasonType changeReasonType)
+            string source, AccountBalanceChangeReasonType changeReasonType, string eventSourceId, string assetPairId, DateTime tradingDay)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            ClientId = clientId;
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             AmountDelta = amountDelta;
-            Comment = comment ?? throw new ArgumentNullException(nameof(comment));
-            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
+            Comment = comment;
+            AuditLog = auditLog;
             Source = source ?? throw new ArgumentNullException(nameof(source));
+            EventSourceId = eventSourceId;
+            AssetPairId = assetPairId;
+            TradingDay = tradingDay;
             ChangeReasonType = changeReasonType.RequiredEnum(nameof(changeReasonType));
         }
     }

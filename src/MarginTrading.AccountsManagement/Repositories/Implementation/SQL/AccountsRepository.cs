@@ -75,14 +75,21 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null)
+        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null)
         {
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = "%" + search + "%";
+            }
+            
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
-                var whereClause = string.IsNullOrWhiteSpace(clientId) ? "" : "WHERE ClientId = @clientId";
+                var whereClause = "WHERE 1=1" +
+                                  (string.IsNullOrWhiteSpace(clientId) ? "" : " AND ClientId = @clientId")
+                    + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search");
                 var accounts = await conn.QueryAsync<AccountEntity>(
                     $"SELECT * FROM {TableName} {whereClause}", 
-                    new { clientId });
+                    new { clientId, search });
                 
                 return accounts.ToList();
             }
@@ -115,7 +122,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     if (changeLimit)
                         account.WithdrawTransferLimit += amountDelta;
                     
-                    account.ModificationTimestamp = _systemClock.UtcNow.DateTime;
+                    account.ModificationTimestamp = _systemClock.UtcNow.UtcDateTime;
                 }
             });
         }

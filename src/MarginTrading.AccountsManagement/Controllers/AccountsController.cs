@@ -12,6 +12,7 @@ using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Services;
 using Microsoft.AspNetCore.Mvc;
+using Refit;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
@@ -35,9 +36,9 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        public Task<List<AccountContract>> List()
+        public Task<List<AccountContract>> List([FromQuery] string search = null)
         {
-            return Convert(_accountManagementService.ListAsync());
+            return Convert(_accountManagementService.ListAsync(search));
         }
 
         /// <summary>
@@ -74,7 +75,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 _accountManagementService.CreateAsync(
                     clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)),
                     request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
-                    request.TradingConditionId.RequiredNotNullOrWhiteSpace(nameof(request.TradingConditionId)),
+                    request.TradingConditionId,
                     request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId))));
         }
 
@@ -127,11 +128,15 @@ namespace MarginTrading.AccountsManagement.Controllers
             return await _sendBalanceCommandsService.ChargeManuallyAsync(
                 clientId: clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)),
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredNotEqualsTo(default, nameof(request.AmountDelta)),
+                amountDelta: request.AmountDelta.RequiredNotEqualsTo(default(decimal), nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
                 reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
                 source: "Api",
-                auditLog: GetAuditLog());
+                auditLog: request.AdditionalInfo,
+                type: request.ReasonType.ToType<AccountBalanceChangeReasonType>(),
+                eventSourceId: request.EventSourceId, 
+                assetPairId: request.AssetPairId, 
+                tradingDate: request.TradingDay ?? DateTime.UtcNow);
         }
 
         /// <summary>
@@ -140,16 +145,17 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpPost]
         [Route("{clientId}/{accountId}/balance/deposit")]
         public async Task<string> BeginDeposit([NotNull] string clientId, [NotNull] string accountId,
-            [FromBody][NotNull] AccountChargeManuallyRequest request)
+            [FromBody][NotNull] AccountChargeRequest request)
         {
             await ValidateClientAndAccountId(clientId, accountId);
             
             return await _sendBalanceCommandsService.DepositAsync(
                 clientId: clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)),
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
+                amountDelta: request.AmountDelta.RequiredGreaterThan(default(decimal), nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)));
+                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
+                auditLog: request.AdditionalInfo);
         }
 
         /// <summary>
@@ -158,16 +164,17 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpPost]
         [Route("{clientId}/{accountId}/balance/withdraw")]
         public async Task<string> BeginWithdraw([NotNull] string clientId, [NotNull] string accountId,
-            [FromBody][NotNull] AccountChargeManuallyRequest request)
+            [FromBody][NotNull] AccountChargeRequest request)
         {
             await ValidateClientAndAccountId(clientId, accountId);
             
             return await _sendBalanceCommandsService.WithdrawAsync(
                 clientId: clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)),
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
+                amountDelta: request.AmountDelta.RequiredGreaterThan(default(decimal), nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)));
+                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
+                auditLog: request.AdditionalInfo);
         }
 
         /// <summary>
@@ -229,11 +236,6 @@ namespace MarginTrading.AccountsManagement.Controllers
         private Account Convert(AccountContract account)
         {
             return _convertService.Convert<AccountContract, Account>(account);
-        }
-
-        private string GetAuditLog()
-        {
-            return string.Empty; // todo: implement
         }
 
         private async Task ValidateClientAndAccountId(string clientId, string accountId)

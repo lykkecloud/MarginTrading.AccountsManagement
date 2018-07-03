@@ -22,10 +22,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             ChangeAmount = changeAmount;
             Balance = balance;
             WithdrawTransferLimit = withdrawTransferLimit;
-            Comment = comment ?? throw new ArgumentNullException(nameof(comment));
+            Comment = comment;
             ReasonType = reasonType;
-            EventSourceId = eventSourceId ?? throw new ArgumentNullException(nameof(eventSourceId));
-            LegalEntity = legalEntity ?? throw new ArgumentNullException(nameof(legalEntity));
+            EventSourceId = eventSourceId;
+            LegalEntity = legalEntity;
             AuditLog = auditLog;
             Instrument = instrument;
             TradingDate = tradingDate == DateTime.MinValue ? DateTime.UtcNow : tradingDate;

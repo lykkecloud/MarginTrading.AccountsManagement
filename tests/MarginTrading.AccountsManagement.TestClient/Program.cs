@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AsyncFriendlyStackTrace;
 using JetBrains.Annotations;
@@ -57,7 +58,7 @@ namespace MarginTrading.AccountsManagement.TestClient
                 .WithRetriesStrategy(new LinearRetryStrategy(TimeSpan.FromSeconds(10), 12))
                 .Create();
             
-            await CheckAccountsApiWorking(clientGenerator);
+            await CheckAccountsBalabceHistoryApiWorking(clientGenerator);
             // todo check other apis
 
             Console.WriteLine("Successfuly finished");
@@ -72,6 +73,21 @@ namespace MarginTrading.AccountsManagement.TestClient
             await client.GetByClientAndId("client1", account.Id).Dump();
             await client.Change("client1", account.Id,
                 new ChangeAccountRequest {IsDisabled = true, TradingConditionId = "tc2"}).Dump();
+        }
+        
+        private static async Task CheckAccountsBalabceHistoryApiWorking(IHttpClientGenerator clientGenerator)
+        {
+            var client = clientGenerator.Generate<IAccountBalanceHistoryApi>();
+            var history = await client.ByAccount("AA0011").Dump();
+            var res = await client.ByAccountAndEventSource("AA0011");
+            var record = history?.FirstOrDefault();
+            if (record != null)
+            {
+                var historyByAccount = await client.ByAccount(record.Value.Key).Dump();
+                var historyByAccountAndEvent = await client.ByAccountAndEventSource(record.Value.Key)
+                    .Dump();
+            }
+            
         }
 
         [CanBeNull]

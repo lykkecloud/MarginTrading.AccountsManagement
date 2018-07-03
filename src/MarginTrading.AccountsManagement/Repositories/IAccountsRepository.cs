@@ -10,7 +10,7 @@ namespace MarginTrading.AccountsManagement.Repositories
     {
         Task AddAsync(IAccount account);
         
-        Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null);
+        Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null);
 
         [ItemCanBeNull]
         Task<IAccount> GetAsync(string clientId, string accountId);
@@ -21,8 +21,8 @@ namespace MarginTrading.AccountsManagement.Repositories
         /// <returns>
         /// Account after update
         /// </returns>
-        Task<IAccount> UpdateBalanceAsync(string operationId, string clientId, string accountId, decimal amountDelta,
-            bool changeLimit);
+        Task<IAccount> UpdateBalanceAsync(string operationId, [CanBeNull] string clientId, string accountId, 
+            decimal amountDelta, bool changeLimit);
 
         Task<IAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
             string tradingConditionId);

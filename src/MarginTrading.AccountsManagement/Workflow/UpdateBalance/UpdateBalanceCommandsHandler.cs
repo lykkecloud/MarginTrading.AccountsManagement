@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure;
@@ -10,6 +11,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
 {
@@ -17,18 +19,22 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
     {
         private readonly IAccountsRepository _accountsRepository;
         private readonly IChaosKitty _chaosKitty;
+        private readonly ISystemClock _systemClock;
         private readonly IConvertService _convertService;
 
         public UpdateBalanceCommandsHandler(IAccountsRepository accountsRepository,
-            IChaosKitty chaosKitty, IConvertService convertService)
+            IChaosKitty chaosKitty, 
+            ISystemClock systemClock,
+            IConvertService convertService)
         {
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
+            _systemClock = systemClock;
             _convertService = convertService;
         }
 
         /// <summary>
-        /// Handles the command to change the balance
+        /// Handles internal command to change the balance
         /// </summary>
         [UsedImplicitly]
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
@@ -46,7 +52,8 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             }
             catch (Exception ex)
             {
-                publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId, new DateTime(), ex.Message));
+                publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId, 
+                    _systemClock.UtcNow.UtcDateTime, ex.Message, command.Source));
                 return CommandHandlingResult.Ok(); //means no retries required
             }
 
@@ -62,11 +69,11 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 withdrawTransferLimit: account.WithdrawTransferLimit,
                 comment: command.Comment,
                 reasonType: Convert(command.ChangeReasonType),
-                eventSourceId: command.Source,
+                eventSourceId: command.EventSourceId,
                 legalEntity: account.LegalEntity,
                 auditLog: command.AuditLog,
-                instrument: null,//TODO pass through ClosePositionSaga from MT Core
-                tradingDate: DateTime.UtcNow);//TODO pass from API call
+                instrument: command.AssetPairId,
+                tradingDate: command.TradingDay);//TODO pass from API call
 
             var convertedAccount = Convert(account);
 
@@ -74,6 +81,27 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 AccountChangedEventTypeContract.BalanceUpdated, change));
             
             return CommandHandlingResult.Ok();
+        }
+
+        /// <summary>
+        /// Handles external balance changing command
+        /// </summary>
+        [UsedImplicitly]
+        public async Task<CommandHandlingResult> Handle(ChangeBalanceCommand command, IEventPublisher publisher)
+        {
+            return await Handle(new UpdateBalanceInternalCommand(
+                operationId: command.OperationId,
+                clientId: command.ClientId,
+                accountId: command.AccountId,
+                amountDelta: command.Amount,
+                comment: command.Reason,
+                auditLog: command.AuditLog,
+                source: $"{command.ReasonType.ToString()} command",
+                changeReasonType: command.ReasonType.ToType<AccountBalanceChangeReasonType>(),
+                eventSourceId: command.EventSourceId,
+                assetPairId: string.Empty,
+                tradingDay: DateTime.UtcNow
+            ), publisher);
         }
 
         private AccountContract Convert(IAccount account)

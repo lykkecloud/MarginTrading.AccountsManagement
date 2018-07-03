@@ -19,9 +19,9 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         [Key(4)]
         public decimal Amount { get; }
 
-        public DepositSucceededEvent([NotNull] string operationId, DateTime _, [NotNull] string clientId,
+        public DepositSucceededEvent([NotNull] string operationId, DateTime eventTimestamp, [NotNull] string clientId,
             [NotNull] string accountId, decimal amount)
-            : base(operationId)
+            : base(operationId, eventTimestamp)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));

@@ -22,7 +22,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         }
 
         public Task<string> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason, string source, string auditLog)
+            [CanBeNull] string operationId, string reason, string source, string auditLog, AccountBalanceChangeReasonType type, string eventSourceId, string assetPairId, DateTime tradingDay)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
@@ -34,14 +34,17 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     comment: reason,
                     auditLog: auditLog,
                     source: source,
-                    changeReasonType: AccountBalanceChangeReasonType.Manual),
+                    changeReasonType: type,
+                    eventSourceId: eventSourceId,
+                    assetPairId: assetPairId,
+                    tradingDay: tradingDay),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
         }
 
         public Task<string> WithdrawAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason)
+            [CanBeNull] string operationId, string reason, string auditLog)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
@@ -51,14 +54,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     accountId: accountId,
                     amount: amountDelta,
                     comment: reason,
-                    auditLog: reason),
+                    auditLog: auditLog),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
         }
 
         public Task<string> DepositAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason)
+            [CanBeNull] string operationId, string reason, string auditLog)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
@@ -68,7 +71,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     accountId: accountId,
                     amount: amountDelta,
                     comment: reason,
-                    auditLog: reason),
+                    auditLog: auditLog),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);

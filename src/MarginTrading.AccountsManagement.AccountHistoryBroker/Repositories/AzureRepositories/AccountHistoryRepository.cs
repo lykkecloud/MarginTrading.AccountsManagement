@@ -21,7 +21,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Azu
             _convertService = convertService;
         }
 
-        public Task InsertOrReplaceAsync(IAccountHistory obj)
+        public Task InsertAsync(IAccountHistory obj)
         {
             var entity = _convertService.Convert<AccountHistoryEntity>(obj);
             return _tableStorage.InsertOrReplaceAsync(entity);

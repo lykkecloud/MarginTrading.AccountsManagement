@@ -29,7 +29,7 @@ namespace MarginTrading.AccountsManagement.Services
         
         #region Get
         
-        Task<IReadOnlyList<IAccount>> ListAsync();
+        Task<IReadOnlyList<IAccount>> ListAsync(string search);
         
         Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId);
         

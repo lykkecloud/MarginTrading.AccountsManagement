@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using AutoMapper;
 using AzureStorage;
@@ -34,11 +35,15 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             await _tableStorage.InsertAsync(Convert(account));
         }
 
-        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null)
+        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null)
         {
+            var filter = string.IsNullOrEmpty(search)
+                ? null
+                : new Func<AccountEntity, bool>(accont => accont.Id.Contains(search));
+
             var accounts = string.IsNullOrEmpty(clientId)
-                ? await _tableStorage.GetDataAsync()
-                : await _tableStorage.GetDataAsync(AccountEntity.GeneratePartitionKey(clientId));
+                ? await _tableStorage.GetDataAsync(filter)
+                : await _tableStorage.GetDataAsync(AccountEntity.GeneratePartitionKey(clientId), filter);
 
             return accounts.ToList();
         }
@@ -55,6 +60,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             decimal amountDelta, bool changeLimit)
         {
             AccountEntity account = null;
+
+            if (string.IsNullOrWhiteSpace(clientId))
+            {
+                clientId = (await _tableStorage.GetDataAsync(x => x.RowKey == AccountEntity.GenerateRowKey(accountId)))
+                    .Single().ClientId;
+            }
+            
             await _tableStorage.InsertOrModifyAsync(AccountEntity.GeneratePartitionKey(clientId),
                 AccountEntity.GenerateRowKey(accountId), 
                 () => throw new InvalidOperationException($"Account {accountId} not exists"),

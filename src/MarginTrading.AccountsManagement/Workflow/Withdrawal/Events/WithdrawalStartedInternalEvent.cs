@@ -26,9 +26,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Events
         [Key(6)]
         public string AuditLog { get; }
 
-        public WithdrawalStartedInternalEvent(string operationId, DateTime _, string clientId, string accountId,
+        public WithdrawalStartedInternalEvent(string operationId, DateTime eventTimestamp, string clientId, string accountId,
             decimal amount, [NotNull] string comment, string auditLog)
-            : base(operationId)
+            : base(operationId, eventTimestamp)
         {
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "");
@@ -36,8 +36,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Events
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
-            Comment = comment ?? throw new ArgumentNullException(nameof(comment));
-            AuditLog = auditLog ?? throw new ArgumentNullException(nameof(auditLog));
+            Comment = comment;
+            AuditLog = auditLog;
         }
     }
 }
