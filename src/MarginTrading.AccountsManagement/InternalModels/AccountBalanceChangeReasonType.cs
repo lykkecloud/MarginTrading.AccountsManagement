@@ -13,5 +13,7 @@
         Dividend = 10,
         OnBehalf = 11,
         Tax = 12,
+        TemporaryCashAdjustment = 13,
+        CompensationPayments = 14,
     }
 }

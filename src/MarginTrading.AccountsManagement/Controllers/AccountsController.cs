@@ -128,11 +128,15 @@ namespace MarginTrading.AccountsManagement.Controllers
             return await _sendBalanceCommandsService.ChargeManuallyAsync(
                 clientId: clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)),
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredNotEqualsTo(default, nameof(request.AmountDelta)),
+                amountDelta: request.AmountDelta.RequiredNotEqualsTo(default(decimal), nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
                 reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
                 source: "Api",
-                auditLog: request.AdditionalInfo);
+                auditLog: request.AdditionalInfo,
+                type: request.ReasonType.ToType<AccountBalanceChangeReasonType>(),
+                eventSourceId: request.EventSourceId, 
+                assetPairId: request.AssetPairId, 
+                tradingDate: request.TradingDay ?? DateTime.UtcNow);
         }
 
         /// <summary>
@@ -141,14 +145,14 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpPost]
         [Route("{clientId}/{accountId}/balance/deposit")]
         public async Task<string> BeginDeposit([NotNull] string clientId, [NotNull] string accountId,
-            [FromBody][NotNull] AccountChargeManuallyRequest request)
+            [FromBody][NotNull] AccountChargeRequest request)
         {
             await ValidateClientAndAccountId(clientId, accountId);
             
             return await _sendBalanceCommandsService.DepositAsync(
                 clientId: clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)),
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
+                amountDelta: request.AmountDelta.RequiredGreaterThan(default(decimal), nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
                 reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
                 auditLog: request.AdditionalInfo);
@@ -160,14 +164,14 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpPost]
         [Route("{clientId}/{accountId}/balance/withdraw")]
         public async Task<string> BeginWithdraw([NotNull] string clientId, [NotNull] string accountId,
-            [FromBody][NotNull] AccountChargeManuallyRequest request)
+            [FromBody][NotNull] AccountChargeRequest request)
         {
             await ValidateClientAndAccountId(clientId, accountId);
             
             return await _sendBalanceCommandsService.WithdrawAsync(
                 clientId: clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)),
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
+                amountDelta: request.AmountDelta.RequiredGreaterThan(default(decimal), nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
                 reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
                 auditLog: request.AdditionalInfo);

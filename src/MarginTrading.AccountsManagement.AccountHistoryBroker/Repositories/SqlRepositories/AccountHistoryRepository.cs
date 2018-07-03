@@ -17,7 +17,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
 
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  "[Oid] [bigint] NOT NULL IDENTITY (1,1) PRIMARY KEY," +
-                                                 "[Id] [nvarchar] (64) NOT NULL UNIQUE, " +
+                                                 "[Id] [nvarchar] (128) NOT NULL UNIQUE, " +
                                                  "[AccountId] [nvarchar] (64) NOT NULL," +
                                                  "[ChangeTimestamp] [datetime] NOT NULL," +
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
@@ -26,7 +26,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                                                  "[WithdrawTransferLimit] decimal (24, 12) NOT NULL, " +
                                                  "[Comment] [nvarchar] (MAX) NULL, " +
                                                  "[ReasonType] [nvarchar] (64) NULL, " +
-                                                 "[EventSourceId] [nvarchar] (64) NULL, " +
+                                                 "[EventSourceId] [nvarchar] (128) NULL, " +
                                                  "[LegalEntity] [nvarchar] (64) NULL, " +
                                                  "[AuditLog] [nvarchar] (MAX) NULL, " +
                                                  "[Instrument] [nvarchar] (64) NULL, " +
@@ -60,7 +60,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             }
         }
 
-        public async Task InsertOrReplaceAsync(IAccountHistory obj)
+        public async Task InsertAsync(IAccountHistory obj)
         {
             var entity = _convertService.Convert<AccountHistoryEntity>(obj);
             
@@ -68,23 +68,15 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             {
                 try
                 {
-                    try
-                    {
                         await conn.ExecuteAsync(
                             $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
-                    }
-                    catch (SqlException)
-                    {
-                        await conn.ExecuteAsync(
-                            $"update {TableName} set {GetUpdateClause} where Id=@Id", entity); 
-                    }
                 }
                 catch (Exception ex)
                 {
                     var msg = $"Error {ex.Message} \n" +
                            "Entity <IAccountTransactionsReport>: \n" +
                            entity.ToJson();
-                    _log?.WriteWarningAsync(nameof(AccountHistoryRepository), nameof(InsertOrReplaceAsync), null, msg);
+                    _log?.WriteWarningAsync(nameof(AccountHistoryRepository), nameof(InsertAsync), null, msg);
                     throw new Exception(msg);
                 }
             }

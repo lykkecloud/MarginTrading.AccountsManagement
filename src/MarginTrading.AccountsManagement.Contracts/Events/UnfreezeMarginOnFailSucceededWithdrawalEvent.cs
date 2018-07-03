@@ -5,24 +5,21 @@ using MessagePack;
 namespace MarginTrading.AccountsManagement.Contracts.Events
 {
     [MessagePackObject]
-    public class UnfreezeMarginOnFailSucceededWithdrawalEvent
+    public class UnfreezeMarginOnFailSucceededWithdrawalEvent : BaseEvent
     {
-        [Key(0)]
-        public string OperationId { get; }
-        
-        [Key(1)]
+        [Key(2)]
         public string ClientId { get; }
 
-        [Key(2)]
+        [Key(3)]
         public string AccountId { get; }
 
-        [Key(3)]
+        [Key(4)]
         public decimal Amount { get; }
-        
-        public UnfreezeMarginOnFailSucceededWithdrawalEvent([NotNull] string operationId, [NotNull] string clientId,
-            [NotNull] string accountId, decimal amount)
+
+        public UnfreezeMarginOnFailSucceededWithdrawalEvent([NotNull] string operationId, DateTime eventTimestamp, 
+            [NotNull] string clientId, [NotNull] string accountId, decimal amount)
+            : base(operationId, eventTimestamp)
         {
-            OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;

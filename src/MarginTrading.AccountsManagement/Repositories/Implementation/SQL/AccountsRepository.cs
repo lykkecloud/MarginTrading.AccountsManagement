@@ -122,7 +122,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     if (changeLimit)
                         account.WithdrawTransferLimit += amountDelta;
                     
-                    account.ModificationTimestamp = _systemClock.UtcNow.DateTime;
+                    account.ModificationTimestamp = _systemClock.UtcNow.UtcDateTime;
                 }
             });
         }

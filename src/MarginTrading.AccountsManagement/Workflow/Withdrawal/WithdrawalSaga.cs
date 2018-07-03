@@ -11,6 +11,7 @@ using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 {
@@ -20,12 +21,16 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private readonly CqrsContextNamesSettings _contextNames;
         private const string OperationName = "Withdraw";
         private readonly IChaosKitty _chaosKitty;
+        private readonly ISystemClock _systemClock;
 
         public WithdrawalSaga(CqrsContextNamesSettings contextNames,
-            IOperationExecutionInfoRepository executionInfoRepository, IChaosKitty chaosKitty)
+            IOperationExecutionInfoRepository executionInfoRepository,
+            ISystemClock systemClock,
+            IChaosKitty chaosKitty)
         {
             _contextNames = contextNames;
             _executionInfoRepository = executionInfoRepository;
+            _systemClock = systemClock;
             _chaosKitty = chaosKitty;
         }
 
@@ -56,10 +61,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo.Data.State == State.FreezingAmount)
                 sender.SendCommand(
                     new FreezeAmountForWithdrawalCommand(
+                        operationId: e.OperationId,
+                        _: _systemClock.UtcNow.UtcDateTime, 
                         clientId: e.ClientId,
                         accountId: e.AccountId,
                         amount: e.Amount,
-                        operationId: e.OperationId,
                         reason: e.Comment),
                     _contextNames.TradingEngine);
         }
@@ -82,7 +88,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         comment: "Funds withdrawal " + e.OperationId,
                         auditLog: executionInfo.Data.AuditLog,
                         source: OperationName,
-                        changeReasonType: AccountBalanceChangeReasonType.Withdraw),
+                        changeReasonType: AccountBalanceChangeReasonType.Withdraw,
+                        eventSourceId: e.OperationId,
+                        assetPairId: string.Empty,
+                        tradingDay: DateTime.UtcNow),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow(e.OperationId);
@@ -139,7 +148,14 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private async Task Handle(AccountBalanceChangeFailedEvent e, ICommandSender sender)
         {
+            if (e.Source != OperationName)
+                return;
+            
             var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+
+            if (executionInfo == null)
+                return;
+            
             if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.UnfreezingAmount))
             {
                 executionInfo.Data.FailReason = e.Reason;

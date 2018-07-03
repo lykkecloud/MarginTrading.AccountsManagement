@@ -1,20 +1,24 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.Deposit
 {
     internal class DepositCommandsHandler
     {
         private readonly IConvertService _convertService;
+        private readonly ISystemClock _systemClock;
 
-        public DepositCommandsHandler(IConvertService convertService)
+        public DepositCommandsHandler(IConvertService convertService, ISystemClock systemClock)
         {
             _convertService = convertService;
+            _systemClock = systemClock;
         }
 
         /// <summary>
@@ -23,7 +27,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(DepositCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<DepositStartedInternalEvent>(c));
+            publisher.PublishEvent(new DepositStartedInternalEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime, 
+                c.ClientId, c.AccountId, c.Amount, c.Comment, c.AuditLog));
         }
 
         /// <summary>
@@ -33,7 +38,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         private void Handle(FreezeAmountForDepositInternalCommand c, IEventPublisher publisher)
         {
             // todo: Now it always succeeds. Will be used for deposit limiting.
-            publisher.PublishEvent(_convertService.Convert<AmountForDepositFrozenInternalEvent>(c));
+            publisher.PublishEvent(new AmountForDepositFrozenInternalEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
         }
 
         /// <summary>
@@ -42,7 +47,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(FailDepositInternalCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<DepositFailedEvent>(c));
+            publisher.PublishEvent(new DepositFailedEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
         }
 
         /// <summary>
@@ -51,7 +56,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(CompleteDepositInternalCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(_convertService.Convert<DepositSucceededEvent>(c));
+            publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime, c.ClientId, 
+                c.AccountId, c.Amount));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.AccountsManagement.Contracts.Events
+﻿namespace MarginTrading.AccountsManagement.Contracts.Models
 {
     /// <summary>
     /// What happend to the account

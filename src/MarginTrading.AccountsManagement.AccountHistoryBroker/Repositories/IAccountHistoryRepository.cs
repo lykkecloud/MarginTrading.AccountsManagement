@@ -5,6 +5,6 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories
 {
     public interface IAccountHistoryRepository
     {
-        Task InsertOrReplaceAsync(IAccountHistory entity);
+        Task InsertAsync(IAccountHistory entity);
     }
 }

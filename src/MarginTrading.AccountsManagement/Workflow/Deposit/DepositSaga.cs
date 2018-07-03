@@ -76,7 +76,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                         comment: "Funds deposit " + e.OperationId,
                         auditLog: executionInfo.Data.AuditLog,
                         source: OperationName,
-                        changeReasonType: AccountBalanceChangeReasonType.Deposit),
+                        changeReasonType: AccountBalanceChangeReasonType.Deposit,
+                        eventSourceId: e.OperationId,
+                        assetPairId: string.Empty,
+                        tradingDay: DateTime.UtcNow),
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
@@ -131,7 +134,14 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private async Task Handle(AccountBalanceChangeFailedEvent e, ICommandSender sender)
         {
+            if (e.Source != OperationName)
+                return;
+            
             var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.OperationId);
+
+            if (executionInfo == null)
+                return;
+            
             if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Failed))
             {
                 executionInfo.Data.FailReason = e.Reason;

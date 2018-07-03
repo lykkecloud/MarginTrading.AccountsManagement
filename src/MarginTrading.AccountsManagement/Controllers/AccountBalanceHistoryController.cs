@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Infrastructure;
@@ -24,14 +25,24 @@ namespace MarginTrading.AccountsManagement.Controllers
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
         }
 
-        [Route("")]
+        [Route("by-account/{accountId}")]
         [HttpGet]
-        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccounts(string[] accountIds,
-            DateTime? from = null, DateTime? to = null)
+        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount(string accountId,
+            [FromQuery] DateTime? @from = null, [FromQuery] DateTime? to = null)
         {
-            var data = await _accountBalanceChangesRepository.GetAsync(accountIds, @from?.ToUniversalTime(),
+            var data = await _accountBalanceChangesRepository.GetAsync(accountId, @from?.ToUniversalTime(),
                 to?.ToUniversalTime());
             return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
+        }
+
+        [Route("{accountId}")]
+        [HttpGet]
+        public async Task<AccountBalanceChangeContract[]> ByAccountAndEventSource(
+            string accountId, [FromQuery] string eventSourceId = null)
+        {
+            var data = await _accountBalanceChangesRepository.GetAsync(accountId, eventSourceId);
+
+            return data.Select(Convert).ToArray();
         }
 
         private AccountBalanceChangeContract Convert(IAccountBalanceChange arg)
