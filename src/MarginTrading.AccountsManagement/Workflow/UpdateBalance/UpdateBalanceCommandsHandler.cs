@@ -11,6 +11,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
 {
@@ -18,13 +19,17 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
     {
         private readonly IAccountsRepository _accountsRepository;
         private readonly IChaosKitty _chaosKitty;
+        private readonly ISystemClock _systemClock;
         private readonly IConvertService _convertService;
 
         public UpdateBalanceCommandsHandler(IAccountsRepository accountsRepository,
-            IChaosKitty chaosKitty, IConvertService convertService)
+            IChaosKitty chaosKitty, 
+            ISystemClock systemClock,
+            IConvertService convertService)
         {
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
+            _systemClock = systemClock;
             _convertService = convertService;
         }
 
@@ -48,7 +53,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             catch (Exception ex)
             {
                 publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId, 
-                    new DateTime(), ex.Message, command.Source));
+                    _systemClock.UtcNow.UtcDateTime, ex.Message, command.Source));
                 return CommandHandlingResult.Ok(); //means no retries required
             }
 

@@ -10,7 +10,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     [MessagePackObject]
     public class DepositFailedEvent : BaseEvent
     {
-        public DepositFailedEvent([NotNull] string operationId, DateTime _ = default(DateTime)) : base(operationId)
+        public DepositFailedEvent([NotNull] string operationId, DateTime eventTimestamp) 
+            : base(operationId, eventTimestamp)
         {
         }
     }

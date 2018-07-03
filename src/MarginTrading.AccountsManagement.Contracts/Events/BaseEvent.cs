@@ -16,10 +16,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         [Key(1)]
         public DateTime EventTimestamp { get; }
 
-        protected BaseEvent([NotNull] string operationId)
+        protected BaseEvent([NotNull] string operationId, DateTime eventTimestamp)
         {
             OperationId = operationId;
-            EventTimestamp = DateTime.UtcNow;
+            EventTimestamp = eventTimestamp;
         }
     }
 }

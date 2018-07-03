@@ -23,9 +23,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit.Events
         [Key(6)]
         public string AuditLog { get; }
 
-        public DepositStartedInternalEvent(string operationId, DateTime _, string clientId, string accountId, 
+        public DepositStartedInternalEvent(string operationId, DateTime eventTimestamp, string clientId, string accountId, 
             decimal amount, [NotNull] string comment, string auditLog)
-            : base(operationId)
+            : base(operationId, eventTimestamp)
         {
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "");
