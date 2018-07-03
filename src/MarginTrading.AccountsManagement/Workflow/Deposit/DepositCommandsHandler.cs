@@ -12,12 +12,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
 {
     internal class DepositCommandsHandler
     {
-        private readonly IConvertService _convertService;
         private readonly ISystemClock _systemClock;
 
-        public DepositCommandsHandler(IConvertService convertService, ISystemClock systemClock)
+        public DepositCommandsHandler(ISystemClock systemClock)
         {
-            _convertService = convertService;
             _systemClock = systemClock;
         }
 

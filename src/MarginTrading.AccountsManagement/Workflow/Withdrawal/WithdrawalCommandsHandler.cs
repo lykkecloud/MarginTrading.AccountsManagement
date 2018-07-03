@@ -13,12 +13,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 {
     internal class WithdrawalCommandsHandler
     {
-        private readonly IConvertService _convertService;
         private readonly ISystemClock _systemClock;
 
-        public WithdrawalCommandsHandler(IConvertService convertService, ISystemClock systemClock)
+        public WithdrawalCommandsHandler(ISystemClock systemClock)
         {
-            _convertService = convertService;
             _systemClock = systemClock;
         }
 
