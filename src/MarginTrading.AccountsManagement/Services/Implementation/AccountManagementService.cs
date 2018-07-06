@@ -64,12 +64,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new NotSupportedException($"Client [{clientId}] already has account with ID [{accountId}]");
             }
 
-            if (clientAccounts.Any(a => a.BaseAssetId == baseAssetId && a.TradingConditionId == tradingConditionId))
-            {
-                throw new NotSupportedException(
-                    $"Client [{clientId}] already has account with base asset [{baseAssetId}] and trading condition [{tradingConditionId}]");
-            }
-
             #endregion
 
             var legalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
