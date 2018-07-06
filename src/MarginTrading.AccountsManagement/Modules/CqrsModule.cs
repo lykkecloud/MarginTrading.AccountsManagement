@@ -153,11 +153,13 @@ namespace MarginTrading.AccountsManagement.Modules
             
             sagaRegistration
                 .ListeningEvents(
-                    typeof(AccountChangedEvent))
+                    typeof(AccountChangedEvent),
+                    typeof(AmountForWithdrawalNotEnoughInternalEvent))
                 .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
                 .PublishingCommands(
-                    typeof(CompleteWithdrawalInternalCommand))
+                    typeof(CompleteWithdrawalInternalCommand),
+                    typeof(FailWithdrawalInternalCommand))
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
 
@@ -176,6 +178,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 .PublishingEvents(
                     typeof(WithdrawalFailedEvent),
                     typeof(WithdrawalStartedInternalEvent),
+                    typeof(AmountForWithdrawalNotEnoughInternalEvent),
                     typeof(WithdrawalSucceededEvent))
                 .With(DefaultPipeline);
         }
