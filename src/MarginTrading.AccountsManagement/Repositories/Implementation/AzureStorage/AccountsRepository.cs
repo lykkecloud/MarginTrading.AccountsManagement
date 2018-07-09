@@ -56,6 +56,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return account;
         }
 
+        public async Task<IAccount> GetAsync(string accountId)
+        {
+            var account = (await _tableStorage.GetDataAsync(x => x.RowKey == accountId)).SingleOrDefault();
+
+            return account;
+        }
+
         public async Task<IAccount> UpdateBalanceAsync(string operationId, string clientId, string accountId,
             decimal amountDelta, bool changeLimit)
         {

@@ -35,6 +35,8 @@ namespace MarginTrading.AccountsManagement.Services
         
         [ItemCanBeNull]
         Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId);
+
+        Task<AccountStat> GetStat(string accountId);
         
         #endregion
         
@@ -48,6 +50,5 @@ namespace MarginTrading.AccountsManagement.Services
         Task<IAccount> ResetAccountAsync(string clientId, string accountId);
         
         #endregion
-        
     }
 }

@@ -12,6 +12,7 @@ using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.CodeAnalysis.Operations;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
@@ -19,20 +20,28 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
     internal class AccountManagementService : IAccountManagementService
     {
         private readonly IAccountsRepository _accountsRepository;
+        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly ITradingConditionsService _tradingConditionsService;
         private readonly AccountManagementSettings _settings;
         private readonly IEventSender _eventSender;
         private readonly ILog _log;
+        private readonly ISystemClock _systemClock;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
-            ITradingConditionsService tradingConditionsService, AccountManagementSettings settings,
-            IEventSender eventSender, ILog log)
+            IAccountBalanceChangesRepository accountBalanceChangesRepository,
+            ITradingConditionsService tradingConditionsService, 
+            AccountManagementSettings settings,
+            IEventSender eventSender, 
+            ILog log,
+            ISystemClock systemClock)
         {
             _accountsRepository = accountsRepository;
+            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _tradingConditionsService = tradingConditionsService;
             _settings = settings;
             _eventSender = eventSender;
             _log = log;
+            _systemClock = systemClock;
         }
 
 
@@ -168,6 +177,39 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         public Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId)
         {
             return _accountsRepository.GetAsync(clientId, accountId);
+        }
+
+        public async Task<AccountStat> GetStat(string accountId)
+        {
+            var accountHistory = (await _accountBalanceChangesRepository.GetAsync(
+                accountId: accountId,
+                //TODO rethink the way trading day's start & end are selected 
+                from: _systemClock.UtcNow.UtcDateTime.Date
+            )).ToList();
+
+            var sortedHistory = accountHistory.OrderByDescending(x => x.ChangeTimestamp).ToList();
+            var firstEvent = sortedHistory.LastOrDefault();
+            return new AccountStat(
+                accountId: accountId,
+                created: _systemClock.UtcNow.UtcDateTime,
+                realisedPnl: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL)
+                    .Sum(x => x.ChangeAmount),// todo recheck!
+                depositAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Deposit)
+                    .Sum(x => x.ChangeAmount),
+                withdrawalAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Withdraw)
+                    .Sum(x => x.ChangeAmount),
+                commissionAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Commission)
+                    .Sum(x => x.ChangeAmount),
+                otherAmount: accountHistory.Where(x => !new []
+                {
+                    AccountBalanceChangeReasonType.RealizedPnL,
+                    AccountBalanceChangeReasonType.Deposit,
+                    AccountBalanceChangeReasonType.Withdraw,
+                    AccountBalanceChangeReasonType.Commission,
+                }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
+                accountBalance: sortedHistory.FirstOrDefault()?.Balance ?? 0,
+                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? 0
+            );
         }
 
         #endregion
