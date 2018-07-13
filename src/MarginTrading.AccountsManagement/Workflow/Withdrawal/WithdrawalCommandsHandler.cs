@@ -33,8 +33,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             var account = _accountsRepository.GetAsync(command.ClientId, command.AccountId).GetAwaiter().GetResult();
             if (account == null || account.Balance < command.Amount)
             {
-                publisher.PublishEvent(new AmountForWithdrawalNotEnoughInternalEvent(command.OperationId,
-                    _systemClock.UtcNow.UtcDateTime, command.ClientId, command.AccountId, command.Amount));
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime, command.ClientId, command.AccountId, command.Amount,
+                    "Not enough balance for withdrawal"));
                 return;
             }
             

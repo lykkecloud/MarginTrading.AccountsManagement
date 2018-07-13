@@ -192,10 +192,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         /// Balance check failed => withdrawal failed
         /// </summary>
         [UsedImplicitly]
-        private async Task Handle(AmountForWithdrawalNotEnoughInternalEvent e, ICommandSender sender)
+        private async Task Handle(WithdrawalStartFailedInternalEvent e, ICommandSender sender)
         {
             //there's no operation state at that point, so just failing the process.
-            sender.SendCommand(new FailWithdrawalInternalCommand(e.OperationId, "Balance not enough."), 
+            sender.SendCommand(new FailWithdrawalInternalCommand(e.OperationId, e.Reason), 
                 _contextNames.AccountsManagement);
         }
 
