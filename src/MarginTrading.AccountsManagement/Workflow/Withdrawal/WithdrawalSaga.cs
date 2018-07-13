@@ -189,13 +189,24 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         }
 
         /// <summary>
+        /// Balance check failed => withdrawal failed
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(WithdrawalStartFailedInternalEvent e, ICommandSender sender)
+        {
+            //there's no operation state at that point, so just failing the process.
+            sender.SendCommand(new FailWithdrawalInternalCommand(e.OperationId, e.Reason), 
+                _contextNames.AccountsManagement);
+        }
+
+        /// <summary>
         /// Withdrawal failed
         /// </summary>
         [UsedImplicitly]
         private async Task Handle(WithdrawalFailedEvent e, ICommandSender sender)
         {
             var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
-            if (SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
+            if (executionInfo != null && SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
             {
                 await _executionInfoRepository.Save(executionInfo);
             }
