@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
+using MarginTrading.AccountsManagement.Settings;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -12,15 +13,18 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
         private readonly IEventSender _eventSender;
         private readonly ISystemClock _systemClock;
+        private readonly bool _negativeProtectionAutoCompensation;
         
         public NegativeProtectionService(
             ISendBalanceCommandsService sendBalanceCommandsService,
             IEventSender eventSender,
-            ISystemClock systemClock)
+            ISystemClock systemClock,
+            AccountManagementSettings accountManagementSettings)
         {
             _sendBalanceCommandsService = sendBalanceCommandsService;
             _eventSender = eventSender;
             _systemClock = systemClock;
+            _negativeProtectionAutoCompensation = accountManagementSettings.NegativeProtectionAutoCompensation;
         }
         
         public async Task CheckAsync(string correlationId, string causationId, IAccount account)
@@ -29,20 +33,23 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 return;
             
             //idempotency is satisfied at source sagas
-            
-            await _sendBalanceCommandsService.ChargeManuallyAsync(
-                clientId: account.ClientId,
-                accountId: account.Id,
-                amountDelta: Math.Abs(account.Balance),
-                operationId: $"{causationId}-negative-protection",
-                reason: "Negative protection",
-                source: nameof(NegativeProtectionService),
-                auditLog: null,
-                type: AccountBalanceChangeReasonType.CompensationPayments,
-                eventSourceId: correlationId,
-                assetPairId: null, 
-                tradingDate: _systemClock.UtcNow.UtcDateTime
-            );
+
+            if (_negativeProtectionAutoCompensation)
+            {
+                await _sendBalanceCommandsService.ChargeManuallyAsync(
+                    clientId: account.ClientId,
+                    accountId: account.Id,
+                    amountDelta: Math.Abs(account.Balance),
+                    operationId: $"{causationId}-negative-protection",
+                    reason: "Negative protection",
+                    source: nameof(NegativeProtectionService),
+                    auditLog: null,
+                    type: AccountBalanceChangeReasonType.CompensationPayments,
+                    eventSourceId: correlationId,
+                    assetPairId: null,
+                    tradingDate: _systemClock.UtcNow.UtcDateTime
+                );
+            }
 
             await _eventSender.SendNegativeProtectionMessage(
                 correlationId: correlationId,

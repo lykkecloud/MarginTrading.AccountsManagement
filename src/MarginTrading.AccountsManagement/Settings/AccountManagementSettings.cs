@@ -27,6 +27,9 @@ namespace MarginTrading.AccountsManagement.Settings
         
         [Optional]
         public bool EnableOperationsLogs { get; set; }
+        
+        [Optional]
+        public bool NegativeProtectionAutoCompensation { get; set; }
 
         [Optional, CanBeNull]
         public ChaosSettings ChaosKitty { get; set; }
