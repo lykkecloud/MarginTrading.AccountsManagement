@@ -37,7 +37,11 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
             builder.RegisterInstance(_log).As<ILog>().SingleInstance();
             
-            builder.RegisterType<EventSender>().As<IEventSender>().SingleInstance();
+            builder.RegisterType<EventSender>().As<IEventSender>()
+                .WithParameter(new NamedParameter("negativeProtectionSettings", _settings.Nested(x => 
+                    x.MarginTradingAccountManagement.RabbitMq.NegativeProtection)))
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
+                .SingleInstance();
             builder.RegisterChaosKitty(_settings.CurrentValue.MarginTradingAccountManagement.ChaosKitty);
 
             RegisterServices(builder);
@@ -75,8 +79,10 @@ namespace MarginTrading.AccountsManagement.Modules
         private void RegisterServices(ContainerBuilder builder)
         {
             builder.RegisterType<AccountManagementService>().As<IAccountManagementService>().SingleInstance();
-            builder.RegisterType<SendBalanceCommandsService>().As<ISendBalanceCommandsService>().SingleInstance();
+            builder.RegisterType<SendBalanceCommandsService>().As<ISendBalanceCommandsService>()
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<TradingConditionsService>().As<ITradingConditionsService>().SingleInstance();
+            builder.RegisterType<NegativeProtectionService>().As<INegativeProtectionService>().SingleInstance();
             
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
             builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance(); 

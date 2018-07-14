@@ -1,13 +1,17 @@
-﻿using MarginTrading.AccountsManagement.Contracts.Events;
+﻿using System.Threading.Tasks;
+using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.Services
 {
-    internal interface IEventSender
+    public interface IEventSender
     {
         void SendAccountChangedEvent(string source, IAccount account, AccountChangedEventTypeContract eventType,
             AccountBalanceChangeContract balanceChangeContract = null);
+
+        Task SendNegativeProtectionMessage(string correlationId, string causationId, string clientId, string accountId,
+            decimal amount);
     }
 }

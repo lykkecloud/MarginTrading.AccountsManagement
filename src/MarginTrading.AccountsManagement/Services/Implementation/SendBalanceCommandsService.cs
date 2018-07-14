@@ -12,12 +12,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 {
     public class SendBalanceCommandsService : ISendBalanceCommandsService
     {
-        private readonly ICqrsEngine _cqrsEngine;
+        public ICqrsEngine _cqrsEngine { get; set; }//property injection.. to workaround circular dependency
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
 
-        public SendBalanceCommandsService(ICqrsEngine cqrsEngine, CqrsContextNamesSettings cqrsContextNamesSettings)
+        public SendBalanceCommandsService(CqrsContextNamesSettings cqrsContextNamesSettings)
         {
-            _cqrsEngine = cqrsEngine;
             _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
 
