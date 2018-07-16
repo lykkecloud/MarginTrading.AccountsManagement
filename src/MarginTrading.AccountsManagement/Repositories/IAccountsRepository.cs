@@ -11,6 +11,8 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task AddAsync(IAccount account);
         
         Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null);
+        
+        Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search, int skip = 0, int take = 0);
 
         [ItemCanBeNull]
         Task<IAccount> GetAsync(string clientId, string accountId);

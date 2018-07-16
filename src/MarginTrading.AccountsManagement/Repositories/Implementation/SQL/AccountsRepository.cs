@@ -95,6 +95,44 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
+        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search, int skip = 0, int take = 0)
+        {
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = "%" + search + "%";
+            }
+            
+            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            {
+                var whereClause = "WHERE 1=1"
+                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search");
+
+                List<AccountEntity> accounts;
+                var totalCount = 0;
+                if (skip == 0)
+                {
+                    accounts = (await conn.QueryAsync<AccountEntity>(
+                        $"SELECT * FROM {TableName} {whereClause}",
+                        new {search})).ToList();
+                }
+                else
+                {
+                    var paginationClause = skip == 0 ? "" : $" ORDER BY [Id] OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
+                    var gridReader = await conn.QueryMultipleAsync(
+                        $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName}");
+                    accounts = (await gridReader.ReadAsync<AccountEntity>()).ToList();
+                    totalCount = await gridReader.ReadSingleAsync<int>();
+                }
+
+                return new PaginatedResponse<IAccount>(
+                    contents: accounts, 
+                    start: skip, 
+                    size: accounts.Count, 
+                    totalSize: skip == 0 ? accounts.Count : totalCount
+                );
+            }
+        }
+
         public async Task<IAccount> GetAsync(string clientId, string accountId)
         {
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))

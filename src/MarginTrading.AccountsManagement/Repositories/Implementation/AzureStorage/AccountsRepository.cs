@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AzureStorage;
 using Common.Log;
+using Lykke.AzureStorage.Tables.Paging;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
@@ -39,13 +41,38 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         {
             var filter = string.IsNullOrEmpty(search)
                 ? null
-                : new Func<AccountEntity, bool>(accont => accont.Id.Contains(search));
+                : new Func<AccountEntity, bool>(account => account.Id.Contains(search));
 
             var accounts = string.IsNullOrEmpty(clientId)
                 ? await _tableStorage.GetDataAsync(filter)
                 : await _tableStorage.GetDataAsync(AccountEntity.GeneratePartitionKey(clientId), filter);
 
             return accounts.ToList();
+        }
+
+        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search, int skip, int take)
+        {
+            var data = (await _tableStorage.ExecuteQueryWithPaginationAsync(
+                new TableQuery<AccountEntity>()
+                {
+                    FilterString = TableQuery.GenerateFilterCondition("Id", QueryComparisons.Equal, search),//this condition might be not ok
+                    TakeCount = take,
+                },
+                new PagingInfo
+                {
+                    ElementCount = take, 
+                    CurrentPage = skip / take
+                })).ToList();
+            //var data = await _tableStorage.GetDataAsync()
+            /*//TODO refactor before using azure impl
+            var data = await GetAllAsync(clientId: null, search: search);
+            */
+            return new PaginatedResponse<IAccount>(
+                contents: data.OrderBy(x => x.Id).Skip(skip).Take(take).ToList(),
+                start: skip,
+                size: take,
+                totalSize: data.Count
+            );
         }
 
         public async Task<IAccount> GetAsync(string clientId, string accountId)

@@ -42,6 +42,22 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
+        /// Gets all accounts, optionally paginated. Both skip and take must be set or unset.
+        /// </summary>
+        [HttpGet]
+        [Route("byPages")]
+        public Task<PaginatedResponseContract<AccountContract>> ListByPages([FromQuery] string search = null, 
+            [FromQuery] int skip = 0, [FromQuery] int take = 0)
+        {
+            if ((skip == 0 && take != 0) || (skip != 0 && take == 0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Both skip and take must be set or unset");
+            }
+            
+            return Convert(_accountManagementService.ListByPagesAsync(search, skip, take));
+        }
+
+        /// <summary>
         /// Gets all accounts by <paramref name="clientId"/>
         /// </summary>
         [HttpGet]
@@ -215,6 +231,17 @@ namespace MarginTrading.AccountsManagement.Controllers
                 request.TradingConditionId.RequiredNotNullOrWhiteSpace(nameof(request.TradingConditionId)),
                 request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId)));
             return Convert(account);
+        }
+
+        private async Task<PaginatedResponseContract<AccountContract>> Convert(Task<PaginatedResponse<IAccount>> accounts)
+        {
+            var data = await accounts;
+            return new PaginatedResponseContract<AccountContract>(
+                contents: data.Contents.Select(Convert).ToList(),
+                start: data.Start,
+                size: data.Size,
+                totalSize: data.TotalSize
+            );
         }
 
         private async Task<List<AccountContract>> Convert(Task<IReadOnlyList<IAccount>> accounts)
