@@ -50,12 +50,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return accounts.ToList();
         }
 
-        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search, int skip, int take)
+        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null)
         {
-            var data = (await _tableStorage.ExecuteQueryWithPaginationAsync(
+            /*var data = (await _tableStorage.ExecuteQueryWithPaginationAsync(
                 new TableQuery<AccountEntity>()
                 {
-                    FilterString = TableQuery.GenerateFilterCondition("Id", QueryComparisons.Equal, search),//this condition might be not ok
+                    //this condition might be not ok
+                    FilterString = TableQuery.GenerateFilterCondition("Id", QueryComparisons.Equal, search),
                     TakeCount = take,
                 },
                 new PagingInfo
@@ -63,14 +64,14 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                     ElementCount = take, 
                     CurrentPage = skip / take
                 })).ToList();
-            //var data = await _tableStorage.GetDataAsync()
-            /*//TODO refactor before using azure impl
-            var data = await GetAllAsync(clientId: null, search: search);
             */
+            //TODO refactor before using azure impl
+            var data = await GetAllAsync(clientId: null, search: search);
+            
             return new PaginatedResponse<IAccount>(
-                contents: data.OrderBy(x => x.Id).Skip(skip).Take(take).ToList(),
-                start: skip,
-                size: take,
+                contents: take.HasValue ? data.OrderBy(x => x.Id).Skip(skip.Value).Take(take.Value).ToList() : data,
+                start: skip ?? 0,
+                size: take ?? data.Count,
                 totalSize: data.Count
             );
         }

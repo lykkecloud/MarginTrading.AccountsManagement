@@ -95,7 +95,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search, int skip = 0, int take = 0)
+        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null)
         {
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -109,7 +109,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                 List<AccountEntity> accounts;
                 var totalCount = 0;
-                if (skip == 0)
+                if (!take.HasValue)
                 {
                     accounts = (await conn.QueryAsync<AccountEntity>(
                         $"SELECT * FROM {TableName} {whereClause}",
@@ -117,18 +117,19 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 }
                 else
                 {
-                    var paginationClause = skip == 0 ? "" : $" ORDER BY [Id] OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
+                    var paginationClause = $" ORDER BY [Id] OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
                     var gridReader = await conn.QueryMultipleAsync(
-                        $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName}");
+                        $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName}",
+                        new {search});
                     accounts = (await gridReader.ReadAsync<AccountEntity>()).ToList();
                     totalCount = await gridReader.ReadSingleAsync<int>();
                 }
 
                 return new PaginatedResponse<IAccount>(
                     contents: accounts, 
-                    start: skip, 
+                    start: skip ?? 0, 
                     size: accounts.Count, 
-                    totalSize: skip == 0 ? accounts.Count : totalCount
+                    totalSize: !take.HasValue ? accounts.Count : totalCount
                 );
             }
         }

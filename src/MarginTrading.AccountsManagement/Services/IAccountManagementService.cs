@@ -31,7 +31,7 @@ namespace MarginTrading.AccountsManagement.Services
         
         Task<IReadOnlyList<IAccount>> ListAsync(string search);
 
-        Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search, int skip = 0, int take = 0);
+        Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search, int? skip = null, int? take = null);
         
         Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId);
         

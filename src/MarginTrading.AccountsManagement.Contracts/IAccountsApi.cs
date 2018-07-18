@@ -22,9 +22,9 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// <summary>
         /// Gets all accounts, optionally paginated. Both skip and take must be set or unset.
         /// </summary>
-        [Get("/api/accounts/byPages")]
-        Task<PaginatedResponseContract<AccountContract>> ListByPages([Query] string search = null, 
-            [Query] int skip = 0, [Query] int take = 0);
+        [Get("/api/accounts/by-pages")]
+        Task<PaginatedResponseContract<AccountContract>> ListByPages([Query, CanBeNull] string search = null,
+            [Query, CanBeNull] int? skip = null, [Query, CanBeNull] int? take = null);
 
         /// <summary>
         /// Gets all accounts by <paramref name="clientId"/>

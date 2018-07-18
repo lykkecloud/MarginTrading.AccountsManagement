@@ -45,13 +45,18 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// Gets all accounts, optionally paginated. Both skip and take must be set or unset.
         /// </summary>
         [HttpGet]
-        [Route("byPages")]
-        public Task<PaginatedResponseContract<AccountContract>> ListByPages([FromQuery] string search = null, 
-            [FromQuery] int skip = 0, [FromQuery] int take = 0)
+        [Route("by-pages")]
+        public Task<PaginatedResponseContract<AccountContract>> ListByPages([FromQuery] string search = null,
+            [FromQuery] int? skip = null, [FromQuery] int? take = null)
         {
-            if ((skip == 0 && take != 0) || (skip != 0 && take == 0))
+            if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
             {
                 throw new ArgumentOutOfRangeException(nameof(skip), "Both skip and take must be set or unset");
+            }
+
+            if (take.HasValue && (take <= 0 || skip < 0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
             
             return Convert(_accountManagementService.ListByPagesAsync(search, skip, take));
