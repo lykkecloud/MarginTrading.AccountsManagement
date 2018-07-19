@@ -191,6 +191,24 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
+        /// Get account statistics for the current trading day
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [HttpGet("stat/{accountId}")]
+        public async Task<AccountStatContract> GetStat(string accountId)
+        {
+            if (string.IsNullOrWhiteSpace(accountId))
+            {
+                throw new ArgumentNullException(nameof(accountId), "Account must be set.");
+            }
+
+            var stat = await _accountManagementService.GetStat(accountId);
+
+            return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
+        }
+
+        /// <summary>
         /// Creates default accounts for client by trading condition id.
         /// </summary>
         [HttpPost]
