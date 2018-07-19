@@ -189,6 +189,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var sortedHistory = accountHistory.OrderByDescending(x => x.ChangeTimestamp).ToList();
             var firstEvent = sortedHistory.LastOrDefault();
+            var account = await _accountsRepository.GetAsync(accountId);
+            
+            if (account == null)
+                return null;
+            
             return new AccountStat(
                 accountId: accountId,
                 created: _systemClock.UtcNow.UtcDateTime,
@@ -207,8 +212,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     AccountBalanceChangeReasonType.Withdraw,
                     AccountBalanceChangeReasonType.Commission,
                 }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
-                accountBalance: sortedHistory.FirstOrDefault()?.Balance ?? 0,
-                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? 0
+                accountBalance: account.Balance,
+                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance
             );
         }
 

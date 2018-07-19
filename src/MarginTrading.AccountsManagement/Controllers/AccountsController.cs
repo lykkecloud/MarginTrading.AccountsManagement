@@ -204,8 +204,8 @@ namespace MarginTrading.AccountsManagement.Controllers
             }
 
             var stat = await _accountManagementService.GetStat(accountId);
-            
-            return _convertService.Convert<AccountStat, AccountStatContract>(stat);
+
+            return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }
 
         /// <summary>
