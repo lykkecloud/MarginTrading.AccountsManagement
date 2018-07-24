@@ -69,7 +69,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             var data = await GetAllAsync(clientId: null, search: search);
             
             return new PaginatedResponse<IAccount>(
-                contents: take.HasValue ? data.OrderBy(x => x.Id).Skip(skip.Value).Take(take.Value).ToList() : data,
+                contents: take.HasValue ? data.OrderBy(x => x.Id).Skip(skip ?? 0).Take(PaginationHelper.GetTake(take)).ToList() : data,
                 start: skip ?? 0,
                 size: take ?? data.Count,
                 totalSize: data.Count

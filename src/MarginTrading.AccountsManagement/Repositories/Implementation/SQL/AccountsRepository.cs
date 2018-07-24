@@ -107,23 +107,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 var whereClause = "WHERE 1=1"
                                   + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search");
 
-                List<AccountEntity> accounts;
-                var totalCount = 0;
-                if (!take.HasValue)
-                {
-                    accounts = (await conn.QueryAsync<AccountEntity>(
-                        $"SELECT * FROM {TableName} {whereClause}",
-                        new {search})).ToList();
-                }
-                else
-                {
-                    var paginationClause = $" ORDER BY [Id] OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
-                    var gridReader = await conn.QueryMultipleAsync(
-                        $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName}",
-                        new {search});
-                    accounts = (await gridReader.ReadAsync<AccountEntity>()).ToList();
-                    totalCount = await gridReader.ReadSingleAsync<int>();
-                }
+                var paginationClause = $" ORDER BY [Id] OFFSET {skip ?? 0} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
+                var gridReader = await conn.QueryMultipleAsync(
+                    $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName} {whereClause}",
+                    new {search});
+                var accounts = (await gridReader.ReadAsync<AccountEntity>()).ToList();
+                var totalCount = await gridReader.ReadSingleAsync<int>();
 
                 return new PaginatedResponse<IAccount>(
                     contents: accounts, 
