@@ -77,8 +77,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             _executionInfoRepository.Save(executionInfo);
 
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
-                _systemClock.UtcNow.UtcDateTime, command.ClientId, command.AccountId, command.Amount, command.Comment, 
-                command.AuditLog));
+                _systemClock.UtcNow.UtcDateTime));
         }
 
         /// <summary>
