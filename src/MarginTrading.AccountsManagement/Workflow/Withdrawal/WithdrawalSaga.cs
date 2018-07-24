@@ -40,21 +40,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private async Task Handle(WithdrawalStartedInternalEvent e, ICommandSender sender)
         {
-            var executionInfo = await _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: e.OperationId,
-                factory: () => new OperationExecutionInfo<DepositData>(
-                    operationName: OperationName,
-                    id: e.OperationId,
-                    data: new DepositData
-                    {
-                        ClientId = e.ClientId,
-                        AccountId = e.AccountId,
-                        Amount = e.Amount,
-                        AuditLog = e.AuditLog,
-                        State = State.FreezingAmount,
-                        Comment = e.Comment, 
-                    }));
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(
+                OperationName,
+                e.OperationId
+              );
 
             _chaosKitty.Meow(e.OperationId);
 
