@@ -12,6 +12,8 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task AddAsync(IAccount account);
         
         Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null);
+        
+        Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null);
 
         [ItemCanBeNull]
         [Obsolete]//TODO remove from everywhere.. in a separate ticket

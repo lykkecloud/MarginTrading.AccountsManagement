@@ -95,6 +95,34 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
+        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null)
+        {
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = "%" + search + "%";
+            }
+            
+            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            {
+                var whereClause = "WHERE 1=1"
+                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search");
+
+                var paginationClause = $" ORDER BY [Id] OFFSET {skip ?? 0} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
+                var gridReader = await conn.QueryMultipleAsync(
+                    $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName} {whereClause}",
+                    new {search});
+                var accounts = (await gridReader.ReadAsync<AccountEntity>()).ToList();
+                var totalCount = await gridReader.ReadSingleAsync<int>();
+
+                return new PaginatedResponse<IAccount>(
+                    contents: accounts, 
+                    start: skip ?? 0, 
+                    size: accounts.Count, 
+                    totalSize: !take.HasValue ? accounts.Count : totalCount
+                );
+            }
+        }
+
         public async Task<IAccount> GetAsync(string clientId, string accountId)
         {
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
