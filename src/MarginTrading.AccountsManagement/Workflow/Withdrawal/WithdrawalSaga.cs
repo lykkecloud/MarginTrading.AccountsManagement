@@ -245,7 +245,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             return true;
         }
 
-        private class DepositData
+        public class DepositData
         {
             public string ClientId { get; set; }
             public string AccountId { get; set; }
@@ -258,7 +258,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             public string FailReason { get; set; }
         }
 
-        private enum State
+        public enum State
         {
             FreezingAmount = 1,
             UpdatingBalance = 2,
