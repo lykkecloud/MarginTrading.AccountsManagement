@@ -55,7 +55,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                         AccountId = command.AccountId,
                         Amount = command.AmountDelta,
                         AuditLog = command.AuditLog,
-                        State = WithdrawalSaga.State.Created,
+                        State = WithdrawalSaga.State.UpdatingBalance,
                         Comment = command.Comment
                     }));
             IAccount account = null;

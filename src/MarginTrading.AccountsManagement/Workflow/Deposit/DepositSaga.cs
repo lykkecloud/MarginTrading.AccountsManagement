@@ -10,6 +10,7 @@ using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
+using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 
 namespace MarginTrading.AccountsManagement.Workflow.Deposit
 {
@@ -34,28 +35,22 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private async Task Handle(DepositStartedInternalEvent e, ICommandSender sender)
         {
-            var executionInfo = await _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: e.OperationId,
-                factory: () => new OperationExecutionInfo<WithdrawalData>(
-                    operationName: OperationName,
-                    id: e.OperationId,
-                    data: new WithdrawalData
-                    {
-                        ClientId = e.ClientId,
-                        AccountId = e.AccountId,
-                        Amount = e.Amount,
-                        AuditLog = e.AuditLog,
-                        State = State.FreezingAmount,
-                        Comment = e.Comment,
-                    }));
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositSaga.WithdrawalData>(
+                OperationName,
+                e.OperationId
+            );
 
             _chaosKitty.Meow(e.OperationId);
 
-            if (executionInfo.Data.State == State.FreezingAmount)
+            if (SwitchState(executionInfo.Data, State.Created, State.FreezingAmount))
+            {
                 sender.SendCommand(
-                    new FreezeAmountForDepositInternalCommand(e.OperationId, e.ClientId, e.AccountId, e.Amount),
+                    new FreezeAmountForDepositInternalCommand(e.OperationId, executionInfo.Data.ClientId,
+                        executionInfo.Data.AccountId, executionInfo.Data.Amount),
                     _contextNames.AccountsManagement);
+                await _executionInfoRepository.Save(executionInfo);
+            }
+                
         }
 
         /// <summary>
@@ -95,9 +90,13 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.OperationId);
             if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
             {
-                executionInfo.Data.FailReason = e.Reason;
+                string reason = "";
+                if (executionInfo != null && executionInfo.Data != null && executionInfo.Data.FailReason != null)
+                {
+                    reason = executionInfo.Data.FailReason;
+                }
                 sender.SendCommand(
-                    new FailDepositInternalCommand(e.OperationId, "Failed to freeze amount for deposit: " + e.Reason),
+                    new FailDepositInternalCommand(e.OperationId, "Failed to freeze amount for deposit: " + reason),
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
@@ -174,7 +173,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             return true;
         }
 
-        private class WithdrawalData
+        public class WithdrawalData
         {
             public string ClientId { get; set; }
             public string AccountId { get; set; }
@@ -187,8 +186,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             public string FailReason { get; set; }
         }
 
-        private enum State
+        public enum State
         {
+            Created = 0,
             FreezingAmount = 1,
             UpdatingBalance = 2,
             Succeeded = 3,
