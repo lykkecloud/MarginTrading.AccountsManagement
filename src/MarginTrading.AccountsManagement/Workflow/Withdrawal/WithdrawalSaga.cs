@@ -40,23 +40,27 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private async Task Handle(WithdrawalStartedInternalEvent e, ICommandSender sender)
         {
+
             var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(
                 OperationName,
                 e.OperationId
               );
 
             _chaosKitty.Meow(e.OperationId);
-
-            if (executionInfo.Data.State == State.FreezingAmount)
+            if (SwitchState(executionInfo.Data, State.Created, State.FreezingAmount))
+            {
                 sender.SendCommand(
                     new FreezeAmountForWithdrawalCommand(
                         operationId: executionInfo.Id,
-                        eventTimestamp: _systemClock.UtcNow.UtcDateTime, 
+                        eventTimestamp: _systemClock.UtcNow.UtcDateTime,
                         clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
                         amount: executionInfo.Data.Amount,
                         reason: executionInfo.Data.FailReason),
                     _contextNames.TradingEngine);
+
+                await _executionInfoRepository.Save(executionInfo);
+            }
         }
 
         /// <summary>
@@ -183,8 +187,14 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private async Task Handle(WithdrawalStartFailedInternalEvent e, ICommandSender sender)
         {
+            var executionInfo = await _executionInfoRepository.GetAsync<DepositData>(OperationName, e.OperationId);
+            string reason = "";
+            if (executionInfo != null && executionInfo.Data != null && executionInfo.Data.FailReason != null)
+            {
+                reason = executionInfo.Data.FailReason;
+            }
             //there's no operation state at that point, so just failing the process.
-            sender.SendCommand(new FailWithdrawalInternalCommand(e.OperationId, e.Reason), 
+            sender.SendCommand(new FailWithdrawalInternalCommand(e.OperationId, reason), 
                 _contextNames.AccountsManagement);
         }
 
@@ -249,6 +259,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 
         public enum State
         {
+            Created = 0,
             FreezingAmount = 1,
             UpdatingBalance = 2,
             UnfreezingAmount = 3,

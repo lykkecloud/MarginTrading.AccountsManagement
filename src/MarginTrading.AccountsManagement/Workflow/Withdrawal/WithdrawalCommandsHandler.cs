@@ -37,45 +37,30 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(WithdrawCommand command, IEventPublisher publisher)
         {
-            
-            var account = _accountsRepository.GetAsync(command.ClientId, command.AccountId).GetAwaiter().GetResult();
-            if (account == null || account.Balance < command.Amount)
-            {
-                var executionInfoForFailedEvent =
-                    new OperationExecutionInfo<WithdrawalSaga.DepositData>(OperationName, command.OperationId,
-                        new WithdrawalSaga.DepositData()
-                        {
-                            ClientId = command.ClientId,
-                            AccountId = command.AccountId,
-                            Amount = command.Amount,
-                            AuditLog = command.AuditLog,
-                            Comment = command.Comment,
-                            State = WithdrawalSaga.State.Failed
-
-                        });
-
-                _executionInfoRepository.Save(executionInfoForFailedEvent);
-
-                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
-                    _systemClock.UtcNow.UtcDateTime, command.ClientId, command.AccountId, command.Amount,
-                    "Not enough balance for withdrawal"));
-                return;
-            }
-            var executionInfo =
-                new OperationExecutionInfo<WithdrawalSaga.DepositData>(OperationName, command.OperationId,
-                    new WithdrawalSaga.DepositData()
+            var executionInfo =  _executionInfoRepository.GetOrAddAsync(
+                operationName: OperationName,
+                operationId: command.OperationId,
+                factory: () => new OperationExecutionInfo<WithdrawalSaga.DepositData>(
+                    operationName: OperationName,
+                    id: command.OperationId,
+                    data: new WithdrawalSaga.DepositData
                     {
                         ClientId = command.ClientId,
                         AccountId = command.AccountId,
                         Amount = command.Amount,
                         AuditLog = command.AuditLog,
-                        Comment = command.Comment,
-                        State = WithdrawalSaga.State.FreezingAmount
+                        State = WithdrawalSaga.State.Created,
+                        Comment = command.Comment
+                    }));
 
-                    });
-
-            _executionInfoRepository.Save(executionInfo);
-
+            var account = _accountsRepository.GetAsync(command.ClientId, command.AccountId).GetAwaiter().GetResult();
+            if (account == null || account.Balance < command.Amount)
+            {
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime));
+                return;
+            }
+           
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
         }
@@ -86,6 +71,18 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(FailWithdrawalInternalCommand command, IEventPublisher publisher)
         {
+            var executionInfo = _executionInfoRepository.GetOrAddAsync(
+                operationName: OperationName,
+                operationId: command.OperationId,
+                factory: () => new OperationExecutionInfo<WithdrawalSaga.DepositData>(
+                    operationName: OperationName,
+                    id: command.OperationId,
+                    data: new WithdrawalSaga.DepositData
+                    {
+                        State = WithdrawalSaga.State.Failed,
+                        FailReason = command.Reason
+                    }));
+
             publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime, 
                 command.Reason));
         }
@@ -96,6 +93,20 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(CompleteWithdrawalInternalCommand command, IEventPublisher publisher)
         {
+            var executionInfo = _executionInfoRepository.GetOrAddAsync(
+                operationName: OperationName,
+                operationId: command.OperationId,
+                factory: () => new OperationExecutionInfo<WithdrawalSaga.DepositData>(
+                    operationName: OperationName,
+                    id: command.OperationId,
+                    data: new WithdrawalSaga.DepositData
+                    {
+                        ClientId = command.ClientId,
+                        AccountId = command.AccountId,
+                        Amount = command.Amount,
+                        State = WithdrawalSaga.State.Succeeded
+                    }));
+
             publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime, 
                 command.ClientId, command.AccountId, command.Amount));
         }
