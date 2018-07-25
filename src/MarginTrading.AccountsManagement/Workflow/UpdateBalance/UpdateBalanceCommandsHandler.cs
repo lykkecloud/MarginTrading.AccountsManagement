@@ -11,6 +11,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
+using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
@@ -21,8 +22,10 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private readonly IChaosKitty _chaosKitty;
         private readonly ISystemClock _systemClock;
         private readonly IConvertService _convertService;
+        private readonly IOperationExecutionInfoRepository _executionInfoRepository;
 
-        public UpdateBalanceCommandsHandler(IAccountsRepository accountsRepository,
+        public UpdateBalanceCommandsHandler(IOperationExecutionInfoRepository executionInfoRepository,
+            IAccountsRepository accountsRepository,
             IChaosKitty chaosKitty, 
             ISystemClock systemClock,
             IConvertService convertService)
@@ -40,6 +43,21 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
             IEventPublisher publisher)
         {
+            var executionInfo = _executionInfoRepository.GetOrAddAsync(
+                operationName: Enum.GetName(typeof(AccountBalanceChangeReasonType), command.ChangeReasonType),
+                operationId: command.OperationId,
+                factory: () => new OperationExecutionInfo<WithdrawalSaga.DepositData>(
+                    operationName: Enum.GetName(typeof(AccountBalanceChangeReasonType), command.ChangeReasonType),
+                    id: command.OperationId,
+                    data: new WithdrawalSaga.DepositData
+                    {
+                        ClientId = command.ClientId,
+                        AccountId = command.AccountId,
+                        Amount = command.AmountDelta,
+                        AuditLog = command.AuditLog,
+                        State = WithdrawalSaga.State.Created,
+                        Comment = command.Comment
+                    }));
             IAccount account = null;
             try
             {
