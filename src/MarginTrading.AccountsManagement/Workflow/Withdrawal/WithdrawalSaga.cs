@@ -77,7 +77,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         operationId: e.OperationId,
                         clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
-                        amountDelta: -executionInfo.Data.Amount,
+                        amountDelta: executionInfo.Data.Amount,
                         comment: "Funds withdrawal " + e.OperationId,
                         auditLog: executionInfo.Data.AuditLog,
                         source: OperationName,
