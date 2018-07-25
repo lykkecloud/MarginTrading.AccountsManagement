@@ -34,6 +34,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             _chaosKitty = chaosKitty;
             _systemClock = systemClock;
             _convertService = convertService;
+            _executionInfoRepository = executionInfoRepository;
         }
 
         /// <summary>
@@ -58,6 +59,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                         State = WithdrawalSaga.State.UpdatingBalance,
                         Comment = command.Comment
                     }));
+
             IAccount account = null;
             try
             {
