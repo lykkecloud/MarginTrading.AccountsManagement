@@ -77,7 +77,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(FailWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            _chaosKitty.Meow(command.OperationId);
             publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
         }
 
@@ -87,7 +86,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(CompleteWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            _chaosKitty.Meow(command.OperationId);
             publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
         }
     }
