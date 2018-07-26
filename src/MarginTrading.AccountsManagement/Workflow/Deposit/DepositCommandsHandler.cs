@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -18,11 +19,13 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         private readonly ISystemClock _systemClock;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private const string OperationName = "Withdraw";
+        private readonly IChaosKitty _chaosKitty;
 
-        public DepositCommandsHandler(ISystemClock systemClock, IOperationExecutionInfoRepository executionInfoRepository)
+        public DepositCommandsHandler(ISystemClock systemClock, IOperationExecutionInfoRepository executionInfoRepository, IChaosKitty chaosKitty)
         {
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
+            _chaosKitty = chaosKitty;
         }
 
         /// <summary>
@@ -34,20 +37,20 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             var executionInfo = _executionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: c.OperationId,
-                factory: () => new OperationExecutionInfo<DepositSaga.WithdrawalData>(
+                factory: () => new OperationExecutionInfo<WithdrawalDepositData>(
                     operationName: OperationName,
                     id: c.OperationId,
-                    data: new DepositSaga.WithdrawalData 
+                    data: new WithdrawalDepositData 
                     {
                         ClientId = c.ClientId,
                         AccountId = c.AccountId,
                         Amount = c.Amount,
                         AuditLog = c.AuditLog,
-                        State = DepositSaga.State.Created,
+                        State = State.Created,
                         Comment = c.Comment
                     }));
-
             publisher.PublishEvent(new DepositStartedInternalEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
+            _chaosKitty.Meow(c.OperationId);
         }
 
         /// <summary>
@@ -56,21 +59,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(FreezeAmountForDepositInternalCommand c, IEventPublisher publisher)
         {
-            var executionInfo = _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: c.OperationId,
-                factory: () => new OperationExecutionInfo<DepositSaga.WithdrawalData>(
-                    operationName: OperationName,
-                    id: c.OperationId,
-                    data: new DepositSaga.WithdrawalData
-                    {
-                        ClientId = c.ClientId,
-                        AccountId = c.AccountId,
-                        Amount = c.Amount,
-                        State = DepositSaga.State.FreezingAmount
-                    })); 
             // todo: Now it always succeeds. Will be used for deposit limiting.
             publisher.PublishEvent(new AmountForDepositFrozenInternalEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
+            _chaosKitty.Meow(c.OperationId);
         }
 
         /// <summary>
@@ -79,18 +70,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(FailDepositInternalCommand c, IEventPublisher publisher)
         {
-            var executionInfo = _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: c.OperationId,
-                factory: () => new OperationExecutionInfo<DepositSaga.WithdrawalData>(
-                    operationName: OperationName,
-                    id: c.OperationId,
-                    data: new DepositSaga.WithdrawalData
-                    {
-                        State = DepositSaga.State.Failed,
-                        FailReason = c.Reason
-                    })); 
             publisher.PublishEvent(new DepositFailedEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
+            _chaosKitty.Meow(c.OperationId);
         }
 
         /// <summary>
@@ -99,21 +80,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(CompleteDepositInternalCommand c, IEventPublisher publisher)
         {
-            var executionInfo = _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: c.OperationId,
-                factory: () => new OperationExecutionInfo<DepositSaga.WithdrawalData>(
-                    operationName: OperationName,
-                    id: c.OperationId,
-                    data: new DepositSaga.WithdrawalData
-                    {
-                        ClientId = c.ClientId,
-                        AccountId = c.AccountId,
-                        Amount = c.Amount,
-                        State = DepositSaga.State.Succeeded
-                    }));
-            publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime, c.ClientId, 
-                c.AccountId, c.Amount));
+            publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
+            _chaosKitty.Meow(c.OperationId);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using AutoMapper;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -21,14 +22,16 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private const string OperationName = "Withdraw";
+        private readonly IChaosKitty _chaosKitty;
 
         public WithdrawalCommandsHandler(IOperationExecutionInfoRepository executionInfoRepository, 
         ISystemClock systemClock,
-        IAccountsRepository accountsRepository)
+        IAccountsRepository accountsRepository, IChaosKitty chaosKitty)
         {
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
+            _chaosKitty = chaosKitty;
         }
 
         /// <summary>
@@ -40,29 +43,31 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             var executionInfo =  _executionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<WithdrawalSaga.DepositData>(
+                factory: () => new OperationExecutionInfo<WithdrawalDepositData>(
                     operationName: OperationName,
                     id: command.OperationId,
-                    data: new WithdrawalSaga.DepositData
+                    data: new WithdrawalDepositData
                     {
                         ClientId = command.ClientId,
                         AccountId = command.AccountId,
                         Amount = command.Amount,
                         AuditLog = command.AuditLog,
-                        State = WithdrawalSaga.State.Created,
+                        State = State.Created,
                         Comment = command.Comment
                     }));
-
+            
             var account = _accountsRepository.GetAsync(command.ClientId, command.AccountId).GetAwaiter().GetResult();
             if (account == null || account.Balance < command.Amount)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime));
+                _chaosKitty.Meow(command.OperationId);
                 return;
             }
            
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
+            _chaosKitty.Meow(command.OperationId);
         }
 
         /// <summary>
@@ -71,20 +76,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(FailWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            var executionInfo = _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<WithdrawalSaga.DepositData>(
-                    operationName: OperationName,
-                    id: command.OperationId,
-                    data: new WithdrawalSaga.DepositData
-                    {
-                        State = WithdrawalSaga.State.Failed,
-                        FailReason = command.Reason
-                    }));
-
-            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime, 
-                command.Reason));
+            
+            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
+            _chaosKitty.Meow(command.OperationId);
         }
 
         /// <summary>
@@ -93,22 +87,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(CompleteWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            var executionInfo = _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<WithdrawalSaga.DepositData>(
-                    operationName: OperationName,
-                    id: command.OperationId,
-                    data: new WithdrawalSaga.DepositData
-                    {
-                        ClientId = command.ClientId,
-                        AccountId = command.AccountId,
-                        Amount = command.Amount,
-                        State = WithdrawalSaga.State.Succeeded
-                    }));
-
-            publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime, 
-                command.ClientId, command.AccountId, command.Amount));
+            publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
+            _chaosKitty.Meow(command.OperationId);
         }
     }
 }

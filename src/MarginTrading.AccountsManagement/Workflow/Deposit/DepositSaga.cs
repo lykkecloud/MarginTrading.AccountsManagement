@@ -35,19 +35,20 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private async Task Handle(DepositStartedInternalEvent e, ICommandSender sender)
         {
-            var executionInfo = await _executionInfoRepository.GetAsync<DepositSaga.WithdrawalData>(
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(
                 OperationName,
                 e.OperationId
             );
 
-            _chaosKitty.Meow(e.OperationId);
+            if (executionInfo == null)
+                return; 
 
             if (SwitchState(executionInfo.Data, State.Created, State.FreezingAmount))
             {
                 sender.SendCommand(
-                    new FreezeAmountForDepositInternalCommand(e.OperationId, executionInfo.Data.ClientId,
-                        executionInfo.Data.AccountId, executionInfo.Data.Amount),
+                    new FreezeAmountForDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
+                _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
             }
                 
@@ -59,7 +60,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private async Task Handle(AmountForDepositFrozenInternalEvent e, ICommandSender sender)
         {
-            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.OperationId);
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.OperationId);
+
+            if (executionInfo == null)
+                return;
+
             if (SwitchState(executionInfo.Data, State.FreezingAmount, State.UpdatingBalance))
             {
                 sender.SendCommand(
@@ -87,7 +92,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private async Task Handle(AmountForDepositFreezeFailedInternalEvent e, ICommandSender sender)
         {
-            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.OperationId);
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.OperationId);
+
+            if (executionInfo == null)
+                return;
+
             if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
             {
                 string reason = "";
@@ -96,7 +105,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                     reason = executionInfo.Data.FailReason;
                 }
                 sender.SendCommand(
-                    new FailDepositInternalCommand(e.OperationId, "Failed to freeze amount for deposit: " + reason),
+                    new FailDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
@@ -112,15 +121,16 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (e.Source != OperationName)
                 return;
 
-            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.BalanceChange.Id);
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.BalanceChange.Id);
+
+            if (executionInfo == null)
+                return;
+
             if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Succeeded))
             {
                 sender.SendCommand(
                     new CompleteDepositInternalCommand(
-                        operationId: e.BalanceChange.Id,
-                        clientId: executionInfo.Data.ClientId,
-                        accountId: executionInfo.Data.AccountId,
-                        amount: executionInfo.Data.Amount),
+                        operationId: e.BalanceChange.Id),
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.BalanceChange.Id);
                 await _executionInfoRepository.Save(executionInfo);
@@ -136,7 +146,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (e.Source != OperationName)
                 return;
             
-            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalData>(OperationName, e.OperationId);
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.OperationId);
 
             if (executionInfo == null)
                 return;
@@ -145,7 +155,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
-                    new FailDepositInternalCommand(e.OperationId, "Failed to change account balance: " + e.Reason),
+                    new FailDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
@@ -153,7 +163,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         }
         
         
-        private static bool SwitchState(WithdrawalData data, State expectedState, State nextState)
+        private static bool SwitchState(WithdrawalDepositData data, State expectedState, State nextState)
         {
             if (data.State < expectedState)
             {
@@ -173,26 +183,5 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             return true;
         }
 
-        public class WithdrawalData
-        {
-            public string ClientId { get; set; }
-            public string AccountId { get; set; }
-            public decimal Amount { get; set; }
-            public string AuditLog { get; set; }
-            public State State { get; set; }
-            public string Comment { get; set; }
-
-            [CanBeNull]
-            public string FailReason { get; set; }
-        }
-
-        public enum State
-        {
-            Created = 0,
-            FreezingAmount = 1,
-            UpdatingBalance = 2,
-            Succeeded = 3,
-            Failed = 4,
-        }
     }
 }

@@ -44,22 +44,6 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private async Task<CommandHandlingResult> Handle(UpdateBalanceInternalCommand command,
             IEventPublisher publisher)
         {
-            var executionInfo = _executionInfoRepository.GetOrAddAsync(
-                operationName: Enum.GetName(typeof(AccountBalanceChangeReasonType), command.ChangeReasonType),
-                operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<WithdrawalSaga.DepositData>(
-                    operationName: Enum.GetName(typeof(AccountBalanceChangeReasonType), command.ChangeReasonType),
-                    id: command.OperationId,
-                    data: new WithdrawalSaga.DepositData
-                    {
-                        ClientId = command.ClientId,
-                        AccountId = command.AccountId,
-                        Amount = command.AmountDelta,
-                        AuditLog = command.AuditLog,
-                        State = WithdrawalSaga.State.UpdatingBalance,
-                        Comment = command.Comment
-                    }));
-
             IAccount account = null;
             try
             {

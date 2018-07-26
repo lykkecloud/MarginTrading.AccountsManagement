@@ -11,8 +11,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Events
     [MessagePackObject]
     public class WithdrawalStartedInternalEvent : BaseEvent
     {
- 
-
         public WithdrawalStartedInternalEvent(string operationId, DateTime eventTimestamp)
             : base(operationId, eventTimestamp)
         {
