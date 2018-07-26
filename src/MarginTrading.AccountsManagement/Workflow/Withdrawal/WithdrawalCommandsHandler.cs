@@ -59,15 +59,16 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             var account = _accountsRepository.GetAsync(command.ClientId, command.AccountId).GetAwaiter().GetResult();
             if (account == null || account.Balance < command.Amount)
             {
+                _chaosKitty.Meow(command.OperationId);
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime));
-                _chaosKitty.Meow(command.OperationId);
                 return;
             }
-           
+
+            _chaosKitty.Meow(command.OperationId);
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
-            _chaosKitty.Meow(command.OperationId);
+            
         }
 
         /// <summary>
@@ -76,9 +77,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(FailWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            
-            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
             _chaosKitty.Meow(command.OperationId);
+            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
         }
 
         /// <summary>
@@ -87,8 +87,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private void Handle(CompleteWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
             _chaosKitty.Meow(command.OperationId);
+            publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
         }
     }
 }

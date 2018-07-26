@@ -49,8 +49,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                         State = State.Created,
                         Comment = c.Comment
                     }));
-            publisher.PublishEvent(new DepositStartedInternalEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
+
             _chaosKitty.Meow(c.OperationId);
+
+            publisher.PublishEvent(new DepositStartedInternalEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
+            
         }
 
         /// <summary>
@@ -59,9 +62,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(FreezeAmountForDepositInternalCommand c, IEventPublisher publisher)
         {
+            _chaosKitty.Meow(c.OperationId);
             // todo: Now it always succeeds. Will be used for deposit limiting.
             publisher.PublishEvent(new AmountForDepositFrozenInternalEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
-            _chaosKitty.Meow(c.OperationId);
         }
 
         /// <summary>
@@ -70,8 +73,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(FailDepositInternalCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(new DepositFailedEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
             _chaosKitty.Meow(c.OperationId);
+            publisher.PublishEvent(new DepositFailedEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
         }
 
         /// <summary>
@@ -80,8 +83,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         [UsedImplicitly]
         private void Handle(CompleteDepositInternalCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
             _chaosKitty.Meow(c.OperationId);
+            publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
         }
     }
 }
