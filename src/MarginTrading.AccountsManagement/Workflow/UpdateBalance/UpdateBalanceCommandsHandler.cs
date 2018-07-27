@@ -62,7 +62,10 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 return CommandHandlingResult.Ok(); //means no retries required
             }
 
-            await _negativeProtectionService.CheckAsync(command.EventSourceId, command.OperationId, account);
+            await _negativeProtectionService.CheckAsync(
+                correlationId: command.EventSourceId ?? Guid.NewGuid().ToString("N"),//if comes through API 
+                causationId: command.OperationId, 
+                account);
             
             _chaosKitty.Meow(command.OperationId);
 
