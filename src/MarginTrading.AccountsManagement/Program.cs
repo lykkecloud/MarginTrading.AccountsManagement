@@ -22,7 +22,7 @@ namespace MarginTrading.AccountsManagement
             void RunHost() =>
                 new WebHostBuilder()
                     .UseKestrel()
-                    .UseUrls("http://*:5007")
+                    .UseUrls("http://*:5020")
                     .UseContentRoot(Directory.GetCurrentDirectory())
                     .UseStartup<Startup>()
                     .UseApplicationInsights()
