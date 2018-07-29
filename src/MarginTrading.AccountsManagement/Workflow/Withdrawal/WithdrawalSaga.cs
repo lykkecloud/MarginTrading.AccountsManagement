@@ -58,7 +58,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
                         amount: executionInfo.Data.Amount,
-                        reason: executionInfo.Data.FailReason),
+                        reason: executionInfo.Data.Comment),
                     _contextNames.TradingEngine);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
