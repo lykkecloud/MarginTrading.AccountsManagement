@@ -18,6 +18,13 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         [Get("/api/accounts/")]
         Task<List<AccountContract>> List([Query] string search = null);
+        
+        /// <summary>
+        /// Gets all accounts, optionally paginated. Both skip and take must be set or unset.
+        /// </summary>
+        [Get("/api/accounts/by-pages")]
+        Task<PaginatedResponseContract<AccountContract>> ListByPages([Query, CanBeNull] string search = null,
+            [Query, CanBeNull] int? skip = null, [Query, CanBeNull] int? take = null);
 
         /// <summary>
         /// Gets all accounts by <paramref name="clientId"/>
@@ -84,5 +91,13 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// <returns></returns>
         [Post("/api/accounts/{clientId}/{accountId}/reset")]
         Task<AccountContract> Reset(string clientId, string accountId);
+
+        /// <summary>
+        /// Get account statistics for the current trading day
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [Get("/api/accounts/stat/{accountId}")]
+        Task<AccountStatContract> GetStat(string accountId);
     }
 }

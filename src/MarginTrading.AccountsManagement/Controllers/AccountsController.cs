@@ -42,6 +42,27 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
+        /// Gets all accounts, optionally paginated. Both skip and take must be set or unset.
+        /// </summary>
+        [HttpGet]
+        [Route("by-pages")]
+        public Task<PaginatedResponseContract<AccountContract>> ListByPages([FromQuery] string search = null,
+            [FromQuery] int? skip = null, [FromQuery] int? take = null)
+        {
+            if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Both skip and take must be set or unset");
+            }
+
+            if (take.HasValue && (take <= 0 || skip < 0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
+            }
+            
+            return Convert(_accountManagementService.ListByPagesAsync(search, skip, take));
+        }
+
+        /// <summary>
         /// Gets all accounts by <paramref name="clientId"/>
         /// </summary>
         [HttpGet]
@@ -191,6 +212,24 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
+        /// Get account statistics for the current trading day
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [HttpGet("stat/{accountId}")]
+        public async Task<AccountStatContract> GetStat(string accountId)
+        {
+            if (string.IsNullOrWhiteSpace(accountId))
+            {
+                throw new ArgumentNullException(nameof(accountId), "Account must be set.");
+            }
+
+            var stat = await _accountManagementService.GetStat(accountId);
+
+            return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
+        }
+
+        /// <summary>
         /// Creates default accounts for client by trading condition id.
         /// </summary>
         [HttpPost]
@@ -215,6 +254,17 @@ namespace MarginTrading.AccountsManagement.Controllers
                 request.TradingConditionId.RequiredNotNullOrWhiteSpace(nameof(request.TradingConditionId)),
                 request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId)));
             return Convert(account);
+        }
+
+        private async Task<PaginatedResponseContract<AccountContract>> Convert(Task<PaginatedResponse<IAccount>> accounts)
+        {
+            var data = await accounts;
+            return new PaginatedResponseContract<AccountContract>(
+                contents: data.Contents.Select(Convert).ToList(),
+                start: data.Start,
+                size: data.Size,
+                totalSize: data.TotalSize
+            );
         }
 
         private async Task<List<AccountContract>> Convert(Task<IReadOnlyList<IAccount>> accounts)

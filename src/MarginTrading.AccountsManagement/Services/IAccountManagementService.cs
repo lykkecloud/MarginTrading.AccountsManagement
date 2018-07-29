@@ -30,11 +30,15 @@ namespace MarginTrading.AccountsManagement.Services
         #region Get
         
         Task<IReadOnlyList<IAccount>> ListAsync(string search);
+
+        Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search, int? skip = null, int? take = null);
         
         Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId);
         
         [ItemCanBeNull]
         Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId);
+
+        Task<AccountStat> GetStat(string accountId);
         
         #endregion
         
@@ -48,6 +52,5 @@ namespace MarginTrading.AccountsManagement.Services
         Task<IAccount> ResetAccountAsync(string clientId, string accountId);
         
         #endregion
-        
     }
 }

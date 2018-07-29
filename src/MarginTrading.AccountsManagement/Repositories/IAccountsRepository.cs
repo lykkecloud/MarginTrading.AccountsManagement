@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -11,9 +12,15 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task AddAsync(IAccount account);
         
         Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null);
+        
+        Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null);
 
         [ItemCanBeNull]
+        [Obsolete]//TODO remove from everywhere.. in a separate ticket
         Task<IAccount> GetAsync(string clientId, string accountId);
+        
+        [ItemCanBeNull]
+        Task<IAccount> GetAsync(string accountId);
 
         /// <summary>
         /// Updates the account if the operation has not yet been executed. 
