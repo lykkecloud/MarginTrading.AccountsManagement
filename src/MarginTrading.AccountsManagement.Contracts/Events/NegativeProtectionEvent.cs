@@ -35,10 +35,13 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         
         [Key(6)]
         public decimal Amount { get; }
+        
+        [Key(7)]
+        public bool IsAutoCompensated { get; }
 
         public NegativeProtectionEvent([NotNull] string id, [NotNull] string correlationId,
             [NotNull] string causationId, DateTime eventTimestamp, [NotNull] string clientId,
-            [NotNull] string accountId, decimal amount)
+            [NotNull] string accountId, decimal amount, bool isAutoCompensated)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             CorrelationId = correlationId ?? throw new ArgumentNullException(nameof(correlationId));
@@ -47,6 +50,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
+            IsAutoCompensated = isAutoCompensated;
         }
     }
 }

@@ -10,8 +10,5 @@ namespace MarginTrading.AccountsManagement.Services
     {
         void SendAccountChangedEvent(string source, IAccount account, AccountChangedEventTypeContract eventType,
             AccountBalanceChangeContract balanceChangeContract = null);
-
-        Task SendNegativeProtectionMessage(string correlationId, string causationId, string clientId, string accountId,
-            decimal amount);
     }
 }

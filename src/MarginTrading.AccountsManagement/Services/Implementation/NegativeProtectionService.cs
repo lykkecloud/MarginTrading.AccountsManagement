@@ -11,26 +11,23 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
     public class NegativeProtectionService : INegativeProtectionService
     {
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
-        private readonly IEventSender _eventSender;
         private readonly ISystemClock _systemClock;
         private readonly bool _negativeProtectionAutoCompensation;
         
         public NegativeProtectionService(
             ISendBalanceCommandsService sendBalanceCommandsService,
-            IEventSender eventSender,
             ISystemClock systemClock,
             AccountManagementSettings accountManagementSettings)
         {
             _sendBalanceCommandsService = sendBalanceCommandsService;
-            _eventSender = eventSender;
             _systemClock = systemClock;
             _negativeProtectionAutoCompensation = accountManagementSettings.NegativeProtectionAutoCompensation;
         }
         
-        public async Task CheckAsync(string correlationId, string causationId, IAccount account)
+        public async Task<bool> CheckAsync(string correlationId, string causationId, IAccount account)
         {
             if (account == null || account.Balance >= 0)
-                return;
+                return false;
             
             //idempotency is satisfied at source sagas
 
@@ -51,13 +48,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 );
             }
 
-            await _eventSender.SendNegativeProtectionMessage(
-                correlationId: correlationId,
-                causationId: causationId,
-                clientId: account.ClientId,
-                accountId: account.Id,
-                amount: Math.Abs(account.Balance)
-            );
+            return true;
         }
     }
 }

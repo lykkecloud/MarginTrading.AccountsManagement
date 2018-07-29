@@ -17,6 +17,6 @@ namespace MarginTrading.AccountsManagement.Services
         /// <param name="causationId"></param>
         /// <param name="account"></param>
         /// <returns></returns>
-        Task CheckAsync(string correlationId, string causationId, IAccount account);
+        Task<bool> CheckAsync(string correlationId, string causationId, IAccount account);
     }
 }

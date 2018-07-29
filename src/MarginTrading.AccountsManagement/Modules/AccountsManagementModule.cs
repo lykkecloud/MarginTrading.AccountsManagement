@@ -37,11 +37,7 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
             builder.RegisterInstance(_log).As<ILog>().SingleInstance();
             
-            builder.RegisterType<EventSender>().As<IEventSender>()
-                .WithParameter(new NamedParameter("negativeProtectionSettings", _settings.Nested(x => 
-                    x.MarginTradingAccountManagement.RabbitMq.NegativeProtection)))
-                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
-                .SingleInstance();
+            builder.RegisterType<EventSender>().As<IEventSender>().SingleInstance();
             builder.RegisterChaosKitty(_settings.CurrentValue.MarginTradingAccountManagement.ChaosKitty);
 
             RegisterServices(builder);

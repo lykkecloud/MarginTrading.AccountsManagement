@@ -16,6 +16,8 @@ using MarginTrading.AccountsManagement.Workflow.ClosePosition;
 using MarginTrading.AccountsManagement.Workflow.Deposit;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
+using MarginTrading.AccountsManagement.Workflow.NegativeProtection;
+using MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
@@ -89,6 +91,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 RegisterWithdrawalSaga(),
                 RegisterDepositSaga(),
                 RegisterClosePositionSaga(),
+                RegisterNegativeProtectionSaga(),
                 RegisterContext());
         }
 
@@ -100,6 +103,7 @@ namespace MarginTrading.AccountsManagement.Modules
             RegisterWithdrawalCommandHandler(contextRegistration);
             RegisterDepositCommandHandler(contextRegistration);
             RegisterUpdateBalanceCommandHandler(contextRegistration);
+            RegisterNegativeProtectionCommandsHandler(contextRegistration);
             return contextRegistration;
         }
 
@@ -247,6 +251,31 @@ namespace MarginTrading.AccountsManagement.Modules
                 .PublishingCommands(
                     typeof(UpdateBalanceInternalCommand))
                 .To(_contextNames.AccountsManagement)
+                .With(DefaultPipeline);
+        }
+
+        private IRegistration RegisterNegativeProtectionSaga()
+        {
+            return RegisterSaga<NegativeProtectionSaga>()
+                .ListeningEvents(
+                    typeof(AccountChangedEvent))
+                .From(_contextNames.AccountsManagement)
+                .On(DefaultRoute)
+                .PublishingCommands(
+                    typeof(NotifyNegativeProtectionInternalCommand))
+                .To(_contextNames.AccountsManagement)
+                .With(DefaultPipeline);
+        }
+
+        private static void RegisterNegativeProtectionCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(NotifyNegativeProtectionInternalCommand))
+                .On(DefaultRoute)
+                .WithCommandsHandler<NegativeProtectionCommandsHandler>()
+                .PublishingEvents(
+                    typeof(NegativeProtectionEvent))
                 .With(DefaultPipeline);
         }
 
