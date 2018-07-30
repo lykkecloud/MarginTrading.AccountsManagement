@@ -1,8 +1,11 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using System.Threading.Tasks;
+using Common;
+using JetBrains.Annotations;
 using Lykke.Cqrs;
+using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
-using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Settings;
@@ -19,9 +22,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly CqrsContextNamesSettings _contextNames;
 
         public EventSender(
+            IRabbitMqService rabbitMqService,
             IConvertService convertService,
             ISystemClock systemClock,
-            ICqrsEngine cqrsEngine, CqrsContextNamesSettings contextNames)
+            ICqrsEngine cqrsEngine,
+            CqrsContextNamesSettings contextNames)
         {
             _convertService = convertService;
             _systemClock = systemClock;
