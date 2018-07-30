@@ -99,11 +99,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
 
             if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
             {
-                string reason = "";
-                if (executionInfo != null && executionInfo.Data != null && executionInfo.Data.FailReason != null)
-                {
-                    reason = executionInfo.Data.FailReason;
-                }
+         
                 sender.SendCommand(
                     new FailDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);

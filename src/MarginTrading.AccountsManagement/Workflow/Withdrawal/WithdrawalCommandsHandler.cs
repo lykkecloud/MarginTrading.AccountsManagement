@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using AutoMapper;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
@@ -38,9 +39,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         /// Handles the command to begin the withdrawal
         /// </summary>
         [UsedImplicitly]
-        private void Handle(WithdrawCommand command, IEventPublisher publisher)
+        private async Task Handle(WithdrawCommand command, IEventPublisher publisher)
         {
-            var executionInfo =  _executionInfoRepository.GetOrAddAsync(
+            await _executionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: command.OperationId,
                 factory: () => new OperationExecutionInfo<WithdrawalDepositData>(
@@ -56,7 +57,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         Comment = command.Comment
                     }));
             
-            var account = _accountsRepository.GetAsync(command.ClientId, command.AccountId).GetAwaiter().GetResult();
+            var account = _accountsRepository.GetAsync(command.AccountId).GetAwaiter().GetResult();
             if (account == null || account.Balance < command.Amount)
             {
                 _chaosKitty.Meow(command.OperationId);

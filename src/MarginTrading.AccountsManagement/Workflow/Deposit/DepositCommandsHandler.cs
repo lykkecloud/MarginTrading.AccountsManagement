@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
@@ -32,9 +33,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         /// Handles the command to begin deposit
         /// </summary>
         [UsedImplicitly]
-        private void Handle(DepositCommand c, IEventPublisher publisher)
+        private async Task Handle(DepositCommand c, IEventPublisher publisher)
         {
-            var executionInfo = _executionInfoRepository.GetOrAddAsync(
+            await _executionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: c.OperationId,
                 factory: () => new OperationExecutionInfo<WithdrawalDepositData>(
