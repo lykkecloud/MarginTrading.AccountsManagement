@@ -202,7 +202,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 try
                 {
                     var account = await conn.QuerySingleOrDefaultAsync<AccountEntity>(
-                        $"SELECT * FROM {TableName} WHERE Id = @accountId", new {accountId}, transaction);
+                        $"SELECT * FROM {TableName} WITH (UPDLOCK) WHERE Id = @accountId", new {accountId}, transaction);
 
                     if (account == null)
                     {
