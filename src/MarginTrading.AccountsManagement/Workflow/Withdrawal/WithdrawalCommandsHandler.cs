@@ -56,8 +56,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         State = State.Created,
                         Comment = command.Comment
                     }));
-            
-            var account = _accountsRepository.GetAsync(command.AccountId).GetAwaiter().GetResult();
+
+            var account = await _accountsRepository.GetAsync(command.AccountId);
             if (account == null || account.Balance < command.Amount)
             {
                 _chaosKitty.Meow(command.OperationId);
