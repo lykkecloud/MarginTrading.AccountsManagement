@@ -10,6 +10,7 @@ using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using Microsoft.Extensions.Internal;
@@ -18,6 +19,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
 {
     internal class UpdateBalanceCommandsHandler
     {
+        private readonly INegativeProtectionService _negativeProtectionService;
         private readonly IAccountsRepository _accountsRepository;
         private readonly IChaosKitty _chaosKitty;
         private readonly ISystemClock _systemClock;
@@ -25,11 +27,13 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
 
         public UpdateBalanceCommandsHandler(IOperationExecutionInfoRepository executionInfoRepository,
+            INegativeProtectionService negativeProtectionService,
             IAccountsRepository accountsRepository,
             IChaosKitty chaosKitty, 
             ISystemClock systemClock,
             IConvertService convertService)
         {
+            _negativeProtectionService = negativeProtectionService;
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
             _systemClock = systemClock;
@@ -60,7 +64,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                     _systemClock.UtcNow.UtcDateTime, ex.Message, command.Source));
                 return CommandHandlingResult.Ok(); //means no retries required
             }
-
+            
             _chaosKitty.Meow(command.OperationId);
 
             var change = new AccountBalanceChangeContract(

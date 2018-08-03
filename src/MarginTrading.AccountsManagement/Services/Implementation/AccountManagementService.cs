@@ -163,6 +163,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return _accountsRepository.GetAllAsync(search: search);
         }
 
+        public Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search = null, int? skip = null, int? take = null)
+        {
+            return _accountsRepository.GetByPagesAsync(search, skip, take);
+        }
+
         public Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId)
         {
             return _accountsRepository.GetAllAsync(clientId: clientId);
