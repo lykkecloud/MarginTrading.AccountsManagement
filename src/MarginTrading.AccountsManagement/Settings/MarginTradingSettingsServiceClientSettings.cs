@@ -2,9 +2,12 @@
 
 namespace MarginTrading.AccountsManagement.Settings
 {
-    public class MarginTradingSettingsServiceClientSettings
+    public class ClientSettings
     {
         [HttpCheck("/api/isalive")]
         public string ServiceUrl { get; set; }
+        
+        [Optional]
+        public string ApiKey { get; set; }
     }
 }
