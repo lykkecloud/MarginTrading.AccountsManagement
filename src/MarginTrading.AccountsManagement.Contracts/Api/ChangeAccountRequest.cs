@@ -7,5 +7,6 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         [CanBeNull] 
         public string TradingConditionId { get; set; }
         public bool? IsDisabled { get; set; }
+        public bool? IsWithdrawalDisabled { get; set; }
     }
 }

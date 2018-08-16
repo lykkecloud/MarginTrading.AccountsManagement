@@ -124,6 +124,14 @@ namespace MarginTrading.AccountsManagement.Controllers
                     request.IsDisabled.Value);
             }
 
+            if (request.IsWithdrawalDisabled.HasValue)
+            {
+                result = await _accountManagementService.SetWithdrawalDisabledAsync(
+                    clientId,
+                    accountId,
+                    request.IsWithdrawalDisabled.Value);
+            }
+
             if (!string.IsNullOrEmpty(request.TradingConditionId))
             {
                 result = await _accountManagementService.SetTradingConditionAsync(

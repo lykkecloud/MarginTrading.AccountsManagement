@@ -67,6 +67,14 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             }
 
             _chaosKitty.Meow(command.OperationId);
+
+            if (account.IsWithdrawalDisabled)
+            {
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime));
+                return;
+            }
+            
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
             
