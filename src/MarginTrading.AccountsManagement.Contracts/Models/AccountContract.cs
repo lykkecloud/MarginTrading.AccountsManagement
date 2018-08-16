@@ -30,16 +30,16 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
 
         [Key(7)]
         public bool IsDisabled { get; }
-        
-        [Key(8)]
-        public bool IsWithdrawalDisabled { get; }
 
-        [Key(9)]
+        [Key(8)]
         public DateTime ModificationTimestamp { get; }
+        
+        [Key(9)]
+        public bool IsWithdrawalDisabled { get; }
 
         public AccountContract([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
             [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
-            bool isDisabled, bool isWithdrawalDisabled, DateTime modificationTimestamp)
+            bool isDisabled, DateTime modificationTimestamp, bool isWithdrawalDisabled)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
@@ -49,8 +49,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             WithdrawTransferLimit = withdrawTransferLimit;
             LegalEntity = legalEntity ?? throw new ArgumentNullException(nameof(legalEntity));
             IsDisabled = isDisabled;
-            IsWithdrawalDisabled = isWithdrawalDisabled;
             ModificationTimestamp = modificationTimestamp;
+            IsWithdrawalDisabled = isWithdrawalDisabled;
         }
     }
 }
