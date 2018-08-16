@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using AutoMapper;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
@@ -28,14 +29,22 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         /// Handles the command to begin the withdrawal
         /// </summary>
         [UsedImplicitly]
-        private void Handle(WithdrawCommand command, IEventPublisher publisher)
+        private async Task Handle(WithdrawCommand command, IEventPublisher publisher)
         {
-            var account = _accountsRepository.GetAsync(command.ClientId, command.AccountId).GetAwaiter().GetResult();
+            var account = await _accountsRepository.GetAsync(command.AccountId);
             if (account == null || account.Balance < command.Amount)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime, command.ClientId, command.AccountId, command.Amount,
                     "Not enough balance for withdrawal"));
+                return;
+            }
+
+            if (account.IsWithdrawalDisabled)
+            {
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime, command.ClientId, command.AccountId, command.Amount,
+                    $"Withdrawal is disabled"));
                 return;
             }
             

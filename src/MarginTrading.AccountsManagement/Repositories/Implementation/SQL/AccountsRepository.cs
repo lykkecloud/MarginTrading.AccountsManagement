@@ -31,6 +31,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[WithdrawTransferLimit] decimal (24, 12) NOT NULL, " +
                                                  "[LegalEntity] [nvarchar] (64) NOT NULL, " +
                                                  "[IsDisabled] [bit] NOT NULL, " +
+                                                 "[IsWithdrawalDisabled] [bit] NOT NULL, " +
                                                  "[ModificationTimestamp] [DateTime] NOT NULL," +
                                                  "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL" +
                                                  ");";
@@ -187,6 +188,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public async Task<IAccount> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
             return await GetAccountAndUpdate(accountId, account => { account.IsDisabled = isDisabled; });
+        }
+
+        public async Task<IAccount> ChangeIsWithdrawalDisabledAsync(string clientId, string accountId, bool isDisabled)
+        {
+            return await GetAccountAndUpdate(accountId, account => { account.IsWithdrawalDisabled = isDisabled; });
         }
 
         private async Task<IAccount> GetAccountAndUpdate(string accountId, Action<AccountEntity> handler)

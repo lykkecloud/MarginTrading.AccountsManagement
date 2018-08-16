@@ -62,6 +62,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             }
         }
 
+        private bool _isWithdrawalDisabled;
+        public bool IsWithdrawalDisabled
+        {
+            get => _isWithdrawalDisabled;
+            set
+            {
+                _isWithdrawalDisabled = value;
+                MarkValueTypePropertyAsDirty(nameof(IsDisabled));
+            }
+        }
+
         public DateTime ModificationTimestamp { get; set; }
 
         [JsonValueSerializer]
