@@ -4,7 +4,7 @@ namespace MarginTrading.AccountsManagement.Settings
 {
     public class ClientSettings
     {
-        [HttpCheck("/api/isalive")]
+        //[HttpCheck("/api/isalive")]
         public string ServiceUrl { get; set; }
         
         [Optional]
