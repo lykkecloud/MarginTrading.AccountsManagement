@@ -41,9 +41,9 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
             var correlationId = evt.Source ?? Guid.NewGuid().ToString("N"); //if comes through API;
             var causationId = evt.BalanceChange.Id;
             if (!await _negativeProtectionService.CheckAsync(
-                    correlationId: correlationId,
-                    causationId: causationId,
-                    account))
+                correlationId: correlationId,
+                causationId: causationId,
+                account: account))
                 return;
 
             sender.SendCommand(

@@ -19,7 +19,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
     {
         private readonly ISystemClock _systemClock;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
-        private const string OperationName = "Withdraw";
+        private const string OperationName = "Deposit";
         private readonly IChaosKitty _chaosKitty;
 
         public DepositCommandsHandler(ISystemClock systemClock, IOperationExecutionInfoRepository executionInfoRepository, IChaosKitty chaosKitty)
@@ -80,9 +80,18 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         /// Handles the command to complete deposit
         /// </summary>
         [UsedImplicitly]
-        private void Handle(CompleteDepositInternalCommand c, IEventPublisher publisher)
+        private async Task Handle(CompleteDepositInternalCommand c, IEventPublisher publisher)
         {
-            publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(
+                OperationName,
+                c.OperationId
+            );
+
+            if (executionInfo == null)
+                return;
+
+            publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime,
+                executionInfo.Data.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
         }
     }
 }
