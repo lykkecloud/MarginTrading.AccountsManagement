@@ -63,7 +63,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
                 {
                     var operationInfo = await conn.QueryFirstOrDefaultAsync<OperationExecutionInfoEntity>(
-                        $"SELECT * FROM {TableName} WHERE Id = @operationId", new {operationId});
+                        $"SELECT * FROM {TableName} WHERE Id = @operationId AND OperationName = @operationName",
+                        new {operationId, operationName});
 
                     if (operationInfo == null)
                     {
@@ -90,7 +91,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
                 var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
-                    $"SELECT * FROM {TableName} WHERE Id = @id", new { id });
+                    $"SELECT * FROM {TableName} WHERE Id = @id AND OperationName = @operationName",
+                    new {id, operationName});
 
                 return operationInfo == null ? null : Convert<TData>(operationInfo);
             }
