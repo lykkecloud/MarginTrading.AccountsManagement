@@ -84,18 +84,36 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         /// Handles the command to fail the withdrawal
         /// </summary>
         [UsedImplicitly]
-        private void Handle(FailWithdrawalInternalCommand command, IEventPublisher publisher)
+        private async Task Handle(FailWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(
+                OperationName,
+                command.OperationId
+            );
+
+            if (executionInfo == null)
+                return;
+
+            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime,
+                executionInfo.Data.FailReason));
         }
 
         /// <summary>
         /// Handles the command to complete the withdrawal
         /// </summary>
         [UsedImplicitly]
-        private void Handle(CompleteWithdrawalInternalCommand command, IEventPublisher publisher)
+        private async Task Handle(CompleteWithdrawalInternalCommand command, IEventPublisher publisher)
         {
-            publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime));
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(
+                OperationName,
+                command.OperationId
+            );
+
+            if (executionInfo == null)
+                return;
+
+            publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime,
+                executionInfo.Data.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
         }
     }
 }
