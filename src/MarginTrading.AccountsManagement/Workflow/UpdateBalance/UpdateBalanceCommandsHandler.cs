@@ -107,8 +107,8 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 source: $"{command.ReasonType.ToString()} command",
                 changeReasonType: command.ReasonType.ToType<AccountBalanceChangeReasonType>(),
                 eventSourceId: command.EventSourceId,
-                assetPairId: string.Empty,
-                tradingDay: DateTime.UtcNow
+                assetPairId: command.AssetPairId,
+                tradingDay: command.TradingDay
             ), publisher);
         }
 
