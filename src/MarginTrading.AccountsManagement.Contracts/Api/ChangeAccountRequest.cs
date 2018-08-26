@@ -2,6 +2,9 @@
 
 namespace MarginTrading.AccountsManagement.Contracts.Api
 {
+    /// <summary>
+    /// Account modification parameters. Only one parameter may be changed in a request.
+    /// </summary>
     public class ChangeAccountRequest
     {
         [CanBeNull] 
