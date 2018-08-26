@@ -102,7 +102,7 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         /// <summary>
         /// Changes an account.
-        /// If the field is set, it will be changed, otherwise it will be ignored.
+        /// Only one parameter may be changed in a request.
         /// </summary>
         [HttpPatch]
         [Route("{clientId}/{accountId}")]
@@ -111,9 +111,11 @@ namespace MarginTrading.AccountsManagement.Controllers
         {
             IAccount result = null;
 
-            if (!request.IsDisabled.HasValue && string.IsNullOrEmpty(request.TradingConditionId))
+            if ((request.IsDisabled.HasValue ? 1 : 0) +
+                (request.IsWithdrawalDisabled.HasValue ? 1 : 0) +
+                (!string.IsNullOrEmpty(request.TradingConditionId) ? 1 : 0) != 1)
             {
-                throw new ArgumentOutOfRangeException(nameof(request), "At least one parameter should be set");
+                throw new ArgumentOutOfRangeException(nameof(request), "Exactly one parameter should be set");
             }
 
             if (request.IsDisabled.HasValue)

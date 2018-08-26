@@ -183,7 +183,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId)
         {
-            return _accountsRepository.GetAsync(clientId, accountId);
+            return _accountsRepository.GetAsync(accountId);
         }
 
         public async Task<AccountStat> GetStat(string accountId)
@@ -238,7 +238,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     $"No trading condition {tradingConditionId} exists");
             }
 
-            var account = await _accountsRepository.GetAsync(clientId, accountId);
+            var account = await _accountsRepository.GetAsync(accountId);
 
             if (account == null)
                 throw new ArgumentOutOfRangeException(
@@ -251,7 +251,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 throw new NotSupportedException(
                     $"Account for client [{clientId}] with id [{accountId}] has LegalEntity " +
-                    $"[{account.LegalEntity}], but trading condition wiht id [{tradingConditionId}] has " +
+                    $"[{account.LegalEntity}], but trading condition with id [{tradingConditionId}] has " +
                     $"LegalEntity [{newLegalEntity}]");
             }
 
@@ -264,6 +264,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public async Task<IAccount> SetDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
+            var ordersTask = _ordersApi.ListAsync(accountId);
+            var positionsTask = _positionsApi.ListAsync(accountId);
+            var orders = await ordersTask;
+            var positions = await positionsTask;
+
+            if (orders.Any() || positions.Any())
+            {
+                throw new ValidationException($"Account disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
+            }
+
             var account = await _accountsRepository.ChangeIsDisabledAsync(clientId, accountId, isDisabled);
             _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account, 
                 AccountChangedEventTypeContract.Updated);
@@ -272,16 +282,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public async Task<IAccount> SetWithdrawalDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
-            var ordersTask = _ordersApi.ListAsync(accountId);
-            var positionsTask = _positionsApi.ListAsync(accountId);
-            var orders = await ordersTask;
-            var positions = await positionsTask;
-
-            if (orders.Any() || positions.Any())
-            {
-                throw new ValidationException($"Withdrawal disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
-            }
-
             var account = await _accountsRepository.ChangeIsWithdrawalDisabledAsync(clientId, accountId, isDisabled);
             
             _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account, 
@@ -297,7 +297,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new NotSupportedException("Account reset is not supported");
             }
 
-            var account = await _accountsRepository.GetAsync(clientId, accountId);
+            var account = await _accountsRepository.GetAsync(accountId);
 
             if (account == null)
                 throw new ArgumentOutOfRangeException(
