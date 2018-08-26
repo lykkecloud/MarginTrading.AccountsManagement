@@ -10,13 +10,12 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     [MessagePackObject]
     public class WithdrawalFailedEvent : BaseEvent
     {
-        [Key(2)]
-        public string Reason { get; }
+        [Key(2)] public string Reason { get; }
 
-        public WithdrawalFailedEvent([NotNull] string operationId, DateTime eventTimestamp, [NotNull] string reason)
+        public WithdrawalFailedEvent([NotNull] string operationId, DateTime eventTimestamp, string reason)
             : base(operationId, eventTimestamp)
         {
-            Reason = reason ?? throw new ArgumentNullException(nameof(reason));
+            Reason = reason;
         }
     }
 }

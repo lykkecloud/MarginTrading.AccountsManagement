@@ -8,14 +8,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit.Events
     [MessagePackObject]
     internal class AmountForDepositFreezeFailedInternalEvent: BaseEvent
     {
-        [Key(2)]
-        public string Reason { get; }
-
         public AmountForDepositFreezeFailedInternalEvent([NotNull] string operationId, DateTime eventTimestamp, 
             [NotNull] string reason)
             : base(operationId, eventTimestamp)
         {
-            Reason = reason ?? throw new ArgumentNullException(nameof(reason));
         }
     }
 }

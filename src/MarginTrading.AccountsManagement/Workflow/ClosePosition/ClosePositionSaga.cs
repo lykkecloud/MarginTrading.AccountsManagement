@@ -34,7 +34,7 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
                     source: nameof(ClosePositionSaga),
                     changeReasonType: AccountBalanceChangeReasonType.RealizedPnL,
                     eventSourceId: evt.PositionId,
-                    assetPairId: string.Empty, //TODO pass through ClosePositionSaga from MT Core https://lykke-snow.atlassian.net/browse/MTC-200
+                    assetPairId: evt.AssetPairId,
                     tradingDay: DateTime.UtcNow),
                 _contextNames.AccountsManagement);
         }

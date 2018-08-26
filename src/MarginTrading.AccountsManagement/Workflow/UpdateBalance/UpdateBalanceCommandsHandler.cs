@@ -12,6 +12,7 @@ using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
+using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
@@ -23,8 +24,9 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private readonly IChaosKitty _chaosKitty;
         private readonly ISystemClock _systemClock;
         private readonly IConvertService _convertService;
+        private readonly IOperationExecutionInfoRepository _executionInfoRepository;
 
-        public UpdateBalanceCommandsHandler(
+        public UpdateBalanceCommandsHandler(IOperationExecutionInfoRepository executionInfoRepository,
             INegativeProtectionService negativeProtectionService,
             IAccountsRepository accountsRepository,
             IChaosKitty chaosKitty, 
@@ -36,6 +38,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             _chaosKitty = chaosKitty;
             _systemClock = systemClock;
             _convertService = convertService;
+            _executionInfoRepository = executionInfoRepository;
         }
 
         /// <summary>
