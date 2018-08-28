@@ -76,10 +76,18 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [CanBeNull]
         [Key(8)]
         public string AssetPairId { get; }
+        
+        /// <summary>
+        /// Current trading day. If not passed current DateTime.Day is used.
+        /// </summary>
+        [Key(9)]
+        public DateTime TradingDay { get; }
 
+        /// <inheritdoc />
         public ChangeBalanceCommand([NotNull] string operationId, [CanBeNull] string clientId, [NotNull] string accountId,
             decimal amount, AccountBalanceChangeReasonTypeContract reasonType, [NotNull] string reason,
-            [CanBeNull] string auditLog, [CanBeNull] string eventSourceId, [CanBeNull] string assetPairId)
+            [CanBeNull] string auditLog, [CanBeNull] string eventSourceId, [CanBeNull] string assetPairId, 
+            DateTime tradingDay)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             ClientId = clientId;
@@ -90,6 +98,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
             AuditLog = auditLog;
             EventSourceId = eventSourceId;
             AssetPairId = assetPairId;
+            TradingDay = tradingDay == default ? DateTime.UtcNow : tradingDay;
         }
     }
 }

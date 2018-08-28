@@ -6,6 +6,8 @@ namespace MarginTrading.AccountsManagement.Settings
     internal class AppSettings
     {
         public AccountManagementSettings MarginTradingAccountManagement { get; set; }
-        public MarginTradingSettingsServiceClientSettings MarginTradingSettingsServiceClient { get; set; }
+        
+        public ClientSettings MarginTradingSettingsServiceClient { get; set; }
+        public ClientSettings MtBackendServiceClient { get; set; }
     }
 }

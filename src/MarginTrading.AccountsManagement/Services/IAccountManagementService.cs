@@ -45,12 +45,12 @@ namespace MarginTrading.AccountsManagement.Services
         
         #region Modify
         
-        Task<IAccount> SetTradingConditionAsync(string clientId, string accountId, string tradingConditionId);
+        Task<IAccount> UpdateAccountAsync(string clientId, string accountId,
+            string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled);
         
-        Task<IAccount> SetDisabledAsync(string clientId, string accountId, bool isDisabled);
-
         Task<IAccount> ResetAccountAsync(string clientId, string accountId);
         
         #endregion
+
     }
 }

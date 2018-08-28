@@ -49,7 +49,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                         AuditLog = c.AuditLog,
                         State = State.Created,
                         Comment = c.Comment
-                    }));
+                    },
+                    lastModified: _systemClock.UtcNow.UtcDateTime));
 
             _chaosKitty.Meow(c.OperationId);
 

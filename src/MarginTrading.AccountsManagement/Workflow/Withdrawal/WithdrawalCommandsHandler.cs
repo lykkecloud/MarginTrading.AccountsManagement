@@ -62,7 +62,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         AuditLog = command.AuditLog,
                         State = State.Created,
                         Comment = command.Comment
-                    }));
+                    },
+                    lastModified: _systemClock.UtcNow.UtcDateTime));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
             var accountStat = await _accountManagementService.GetStat(command.AccountId);
@@ -75,11 +76,18 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         : "Account balance is not enough"));
                 return;
             }
+
+            if (account.IsWithdrawalDisabled)
+            {
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime, "Withdrawal is disabled"));
+                return;
+            }
             
             _chaosKitty.Meow(command.OperationId);
+          
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
-            
         }
 
         /// <summary>
@@ -96,8 +104,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
-            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime,
-                executionInfo.Data.FailReason));
+            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId,
+                _systemClock.UtcNow.UtcDateTime, command.Reason));
         }
 
         /// <summary>

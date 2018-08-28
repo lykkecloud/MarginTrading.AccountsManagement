@@ -9,6 +9,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -16,13 +17,16 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 {
     internal class OperationExecutionInfoRepository : IOperationExecutionInfoRepository
     {
+        private readonly ISystemClock _systemClock;
         private readonly INoSQLTableStorage<OperationExecutionInfoEntity> _tableStorage;
         private readonly ILog _log;
         private readonly bool _enableOperationsLogs;
 
         public OperationExecutionInfoRepository(IReloadingManager<AccountManagementSettings> settings,
-            IAzureTableStorageFactoryService azureTableStorageFactoryService, ILog log)
+            IAzureTableStorageFactoryService azureTableStorageFactoryService, ILog log, 
+            ISystemClock systemClock)
         {
+            _systemClock = systemClock;
             _enableOperationsLogs = settings.CurrentValue.EnableOperationsLogs;
             _tableStorage = azureTableStorageFactoryService.Create<OperationExecutionInfoEntity>(
                 settings.Nested(s => s.Db.ConnectionString),
@@ -55,7 +59,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
-            await _tableStorage.ReplaceAsync(Convert(executionInfo));
+            var entity = Convert(executionInfo);
+            entity.LastModified = _systemClock.UtcNow.UtcDateTime;
+            await _tableStorage.ReplaceAsync(entity);
         }
 
         private static IOperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
@@ -66,7 +72,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 id: entity.Id,
                 data: entity.Data is string dataStr
                     ? JsonConvert.DeserializeObject<TData>(dataStr)
-                    : ((JToken) entity.Data).ToObject<TData>());
+                    : ((JToken) entity.Data).ToObject<TData>(),
+                lastModified: entity.LastModified);
         }
 
         private static OperationExecutionInfoEntity Convert<TData>(IOperationExecutionInfo<TData> model)
@@ -77,6 +84,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 Id = model.Id,
                 OperationName = model.OperationName,
                 Data = model.Data.ToJson(),
+                LastModified = model.LastModified
             };
         }
     }
