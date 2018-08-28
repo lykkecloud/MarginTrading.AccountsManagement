@@ -161,6 +161,18 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return account;
         }
 
+        public async Task<IAccount> ChangeIsWithdrawalDisabledAsync(string clientId, string accountId, bool isDisabled)
+        {
+            var account = await _tableStorage.MergeAsync(AccountEntity.GeneratePartitionKey(clientId),
+                AccountEntity.GenerateRowKey(accountId), a =>
+                {
+                    a.IsWithdrawalDisabled = isDisabled;
+                    return a;
+                });
+            
+            return account;
+        }
+
         private Account Convert(AccountEntity entity)
         {
             return _convertService.Convert<AccountEntity, Account>(

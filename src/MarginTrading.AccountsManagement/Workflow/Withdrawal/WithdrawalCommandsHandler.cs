@@ -76,10 +76,17 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 return;
             }
             
+            if (account.IsWithdrawalDisabled)
+            {
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime, "Withdrawal is disabled"));
+                return;
+            }
+            
             _chaosKitty.Meow(command.OperationId);
+          
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
-            
         }
 
         /// <summary>

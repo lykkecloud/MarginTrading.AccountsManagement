@@ -35,5 +35,7 @@ namespace MarginTrading.AccountsManagement.Repositories
             string tradingConditionId);
 
         Task<IAccount> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled);
+        
+        Task<IAccount> ChangeIsWithdrawalDisabledAsync(string clientId, string accountId, bool isDisabled);
     }
 }

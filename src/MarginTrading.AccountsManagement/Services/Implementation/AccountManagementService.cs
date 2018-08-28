@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
@@ -11,6 +12,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.Backend.Contracts;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.Extensions.Internal;
 
@@ -22,6 +24,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IAccountsRepository _accountsRepository;
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly ITradingConditionsService _tradingConditionsService;
+        private readonly IOrdersApi _ordersApi;
+        private readonly IPositionsApi _positionsApi;
         private readonly AccountManagementSettings _settings;
         private readonly IEventSender _eventSender;
         private readonly ILog _log;
@@ -29,7 +33,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             IAccountBalanceChangesRepository accountBalanceChangesRepository,
-            ITradingConditionsService tradingConditionsService, 
+            ITradingConditionsService tradingConditionsService,
+            IOrdersApi ordersApi,
+            IPositionsApi positionsApi,
             AccountManagementSettings settings,
             IEventSender eventSender, 
             ILog log,
@@ -38,6 +44,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _accountsRepository = accountsRepository;
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _tradingConditionsService = tradingConditionsService;
+            _ordersApi = ordersApi;
+            _positionsApi = positionsApi;
             _settings = settings;
             _eventSender = eventSender;
             _log = log;
@@ -175,7 +183,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId)
         {
-            return _accountsRepository.GetAsync(clientId, accountId);
+            return _accountsRepository.GetAsync(accountId);
         }
 
         public async Task<AccountStat> GetStat(string accountId)
@@ -230,7 +238,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     $"No trading condition {tradingConditionId} exists");
             }
 
-            var account = await _accountsRepository.GetAsync(clientId, accountId);
+            var account = await _accountsRepository.GetAsync(accountId);
 
             if (account == null)
                 throw new ArgumentOutOfRangeException(
@@ -243,7 +251,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 throw new NotSupportedException(
                     $"Account for client [{clientId}] with id [{accountId}] has LegalEntity " +
-                    $"[{account.LegalEntity}], but trading condition wiht id [{tradingConditionId}] has " +
+                    $"[{account.LegalEntity}], but trading condition with id [{tradingConditionId}] has " +
                     $"LegalEntity [{newLegalEntity}]");
             }
 
@@ -256,9 +264,29 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public async Task<IAccount> SetDisabledAsync(string clientId, string accountId, bool isDisabled)
         {
+            var ordersTask = _ordersApi.ListAsync(accountId);
+            var positionsTask = _positionsApi.ListAsync(accountId);
+            var orders = await ordersTask;
+            var positions = await positionsTask;
+
+            if (orders.Any() || positions.Any())
+            {
+                throw new ValidationException($"Account disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
+            }
+
             var account = await _accountsRepository.ChangeIsDisabledAsync(clientId, accountId, isDisabled);
             _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account, 
                 AccountChangedEventTypeContract.Updated);
+            return account;
+        }
+
+        public async Task<IAccount> SetWithdrawalDisabledAsync(string clientId, string accountId, bool isDisabled)
+        {
+            var account = await _accountsRepository.ChangeIsWithdrawalDisabledAsync(clientId, accountId, isDisabled);
+            
+            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account, 
+                AccountChangedEventTypeContract.Updated);
+            
             return account;
         }
 
@@ -269,7 +297,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new NotSupportedException("Account reset is not supported");
             }
 
-            var account = await _accountsRepository.GetAsync(clientId, accountId);
+            var account = await _accountsRepository.GetAsync(accountId);
 
             if (account == null)
                 throw new ArgumentOutOfRangeException(
@@ -290,11 +318,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
                 : accountId;
 
-            IAccount account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, 
+            IAccount account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, false,
                 DateTime.UtcNow);
 
             await _accountsRepository.AddAsync(account);
-            account = await _accountsRepository.GetAsync(account.ClientId, accountId);
+            account = await _accountsRepository.GetAsync(accountId);
 
             _eventSender.SendAccountChangedEvent(nameof(CreateAccount), account, 
                 AccountChangedEventTypeContract.Created);
