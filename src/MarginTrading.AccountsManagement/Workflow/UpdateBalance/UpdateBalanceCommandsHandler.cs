@@ -81,7 +81,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 legalEntity: account.LegalEntity,
                 auditLog: command.AuditLog,
                 instrument: command.AssetPairId,
-                tradingDate: command.TradingDay);//TODO pass from API call
+                tradingDate: command.TradingDay);
 
             var convertedAccount = Convert(account);
 

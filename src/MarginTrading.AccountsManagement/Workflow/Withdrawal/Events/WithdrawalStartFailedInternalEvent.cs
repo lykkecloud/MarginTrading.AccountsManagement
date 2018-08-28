@@ -8,12 +8,13 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Events
     [MessagePackObject]
     public class WithdrawalStartFailedInternalEvent : BaseEvent
     {
-  
-
-        public WithdrawalStartFailedInternalEvent([NotNull] string operationId, DateTime eventTimestamp)
+        [Key(2)]
+        public string Reason { get; }
+        
+        public WithdrawalStartFailedInternalEvent([NotNull] string operationId, DateTime eventTimestamp, string reason)
             : base(operationId, eventTimestamp)
         {
-          
+            Reason = reason;
         }
     }
 }

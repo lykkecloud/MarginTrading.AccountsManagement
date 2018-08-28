@@ -10,6 +10,7 @@ using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
 using Microsoft.Extensions.Internal;
@@ -20,16 +21,22 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
     internal class WithdrawalCommandsHandler
     {
         private readonly ISystemClock _systemClock;
+        private readonly IAccountManagementService _accountManagementService;
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
-        private const string OperationName = "Withdraw";
         private readonly IChaosKitty _chaosKitty;
+        
+        private const string OperationName = "Withdraw";
 
-        public WithdrawalCommandsHandler(IOperationExecutionInfoRepository executionInfoRepository, 
-        ISystemClock systemClock,
-        IAccountsRepository accountsRepository, IChaosKitty chaosKitty)
+        public WithdrawalCommandsHandler(
+            ISystemClock systemClock,
+            IAccountManagementService accountManagementService,
+            IAccountsRepository accountsRepository,
+            IOperationExecutionInfoRepository executionInfoRepository,
+            IChaosKitty chaosKitty)
         {
             _systemClock = systemClock;
+            _accountManagementService = accountManagementService;
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
@@ -58,14 +65,17 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     }));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
-            if (account == null || account.Balance < command.Amount)
+            var accountStat = await _accountManagementService.GetStat(command.AccountId);
+            if (account == null || account.Balance - accountStat.RealisedPnl < command.Amount)
             {
                 _chaosKitty.Meow(command.OperationId);
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
-                    _systemClock.UtcNow.UtcDateTime));
+                    _systemClock.UtcNow.UtcDateTime, account == null
+                        ? $"Account {command.AccountId} not found."
+                        : "Account balance is not enough"));
                 return;
             }
-
+            
             _chaosKitty.Meow(command.OperationId);
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
