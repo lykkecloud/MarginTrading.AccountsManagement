@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using JetBrains.Annotations;
@@ -21,7 +22,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
     internal class WithdrawalCommandsHandler
     {
         private readonly ISystemClock _systemClock;
-        private readonly IAccountManagementService _accountManagementService;
+        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
@@ -30,13 +31,13 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 
         public WithdrawalCommandsHandler(
             ISystemClock systemClock,
-            IAccountManagementService accountManagementService,
+            IAccountBalanceChangesRepository accountBalanceChangesRepository,
             IAccountsRepository accountsRepository,
             IOperationExecutionInfoRepository executionInfoRepository,
             IChaosKitty chaosKitty)
         {
             _systemClock = systemClock;
-            _accountManagementService = accountManagementService;
+            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
@@ -66,8 +67,13 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     lastModified: _systemClock.UtcNow.UtcDateTime));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
-            var accountStat = await _accountManagementService.GetStat(command.AccountId);
-            if (account == null || account.Balance - accountStat.RealisedPnl < command.Amount)
+            var realisedDailyPnl = (await _accountBalanceChangesRepository.GetAsync(
+                accountId: command.AccountId,
+                //TODO rethink the way trading day's start & end are selected 
+                from: _systemClock.UtcNow.UtcDateTime.Date
+            )).Where(x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL).Sum(x => x.ChangeAmount);
+            
+            if (account == null || account.Balance - realisedDailyPnl < command.Amount)
             {
                 _chaosKitty.Meow(command.OperationId);
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
