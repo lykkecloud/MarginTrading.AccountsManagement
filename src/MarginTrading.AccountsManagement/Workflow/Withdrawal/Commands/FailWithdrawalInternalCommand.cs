@@ -9,11 +9,15 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands
     {
         [Key(0)]
         public string OperationId { get; }
+        
+        [Key(1)]
+        public string Reason { get; }
        
 
-        public FailWithdrawalInternalCommand([NotNull] string operationId)
+        public FailWithdrawalInternalCommand([NotNull] string operationId, string reason)
         {
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
+            Reason = reason;
         }
     }
 }
