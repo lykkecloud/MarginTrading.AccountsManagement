@@ -63,7 +63,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         AuditLog = command.AuditLog,
                         State = State.Created,
                         Comment = command.Comment
-                    }));
+                    },
+                    lastModified: _systemClock.UtcNow.UtcDateTime));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
             var realisedDailyPnl = (await _accountBalanceChangesRepository.GetAsync(
