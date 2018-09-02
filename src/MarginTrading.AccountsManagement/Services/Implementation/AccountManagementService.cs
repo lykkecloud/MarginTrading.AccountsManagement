@@ -332,7 +332,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         private async Task ValidateIfDisableIsAvailableAsync(string accountId, bool? isDisabled)
         {
-            if (isDisabled == null)
+            if (isDisabled == null || isDisabled == false)
                 return;
             
             var ordersTask = _ordersApi.ListAsync(accountId);
