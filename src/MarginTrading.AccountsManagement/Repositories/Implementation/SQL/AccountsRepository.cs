@@ -161,6 +161,24 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             });
         }
 
+        public async Task<IAccount> UpdateAccountAsync(string clientId, string accountId, string tradingConditionId, bool? isDisabled,
+            bool? isWithdrawalDisabled)
+        {
+            return await GetAccountAndUpdate(accountId, a =>
+            {
+                if (!string.IsNullOrEmpty(tradingConditionId))
+                    a.TradingConditionId = tradingConditionId;
+
+                if (isDisabled.HasValue)
+                    a.IsDisabled = isDisabled.Value;
+
+                if (isWithdrawalDisabled.HasValue)
+                    a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
+            });
+        }
+        
+        #region Private Methods
+
         private bool TryUpdateOperationsList(string operationId, AccountEntity a)
         {
             var lastExecutedOperations = _convertService.Convert<List<string>>(a.LastExecutedOperations);
@@ -177,22 +195,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             a.LastExecutedOperations = _convertService.Convert<string>(lastExecutedOperations);
             
             return true;
-        }
-
-        public async Task<IAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
-            string tradingConditionId)
-        {
-            return await GetAccountAndUpdate(accountId, account => { account.TradingConditionId = tradingConditionId; });
-        }
-
-        public async Task<IAccount> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled)
-        {
-            return await GetAccountAndUpdate(accountId, account => { account.IsDisabled = isDisabled; });
-        }
-
-        public async Task<IAccount> ChangeIsWithdrawalDisabledAsync(string clientId, string accountId, bool isDisabled)
-        {
-            return await GetAccountAndUpdate(accountId, account => { account.IsWithdrawalDisabled = isDisabled; });
         }
 
         private async Task<IAccount> GetAccountAndUpdate(string accountId, Action<AccountEntity> handler)
@@ -232,18 +234,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        private Account Convert(AccountEntity entity)
-        {
-            return _convertService.Convert<AccountEntity, Account>(
-                entity,
-                o => o.ConfigureMap(MemberList.Destination).ForCtorParam(
-                    "modificationTimestamp",
-                    m => m.MapFrom(e => e.ModificationTimestamp)));
-        }
-
         private AccountEntity Convert(IAccount account)
         {
             return _convertService.Convert<IAccount, AccountEntity>(account);
         }
+        
+        #endregion
     }
 }

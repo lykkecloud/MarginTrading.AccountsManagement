@@ -135,51 +135,26 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             
             return true;
         }
-
-        public async Task<IAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
-            string tradingConditionId)
+        
+        public async Task<IAccount> UpdateAccountAsync(string clientId, string accountId,
+            string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled)
         {
             var account = await _tableStorage.MergeAsync(AccountEntity.GeneratePartitionKey(clientId),
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
-                    a.TradingConditionId = tradingConditionId;
+                    if (!string.IsNullOrEmpty(tradingConditionId))
+                        a.TradingConditionId = tradingConditionId;
+
+                    if (isDisabled.HasValue)
+                        a.IsDisabled = isDisabled.Value;
+
+                    if (isWithdrawalDisabled.HasValue)
+                        a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
+                        
                     return a;
                 });
             
             return account;
-        }
-
-        public async Task<IAccount> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled)
-        {
-            var account = await _tableStorage.MergeAsync(AccountEntity.GeneratePartitionKey(clientId),
-                AccountEntity.GenerateRowKey(accountId), a =>
-                {
-                    a.IsDisabled = isDisabled;
-                    return a;
-                });
-            
-            return account;
-        }
-
-        public async Task<IAccount> ChangeIsWithdrawalDisabledAsync(string clientId, string accountId, bool isDisabled)
-        {
-            var account = await _tableStorage.MergeAsync(AccountEntity.GeneratePartitionKey(clientId),
-                AccountEntity.GenerateRowKey(accountId), a =>
-                {
-                    a.IsWithdrawalDisabled = isDisabled;
-                    return a;
-                });
-            
-            return account;
-        }
-
-        private Account Convert(AccountEntity entity)
-        {
-            return _convertService.Convert<AccountEntity, Account>(
-                entity,
-                o => o.ConfigureMap(MemberList.Destination).ForCtorParam(
-                    "modificationTimestamp",
-                    m => m.MapFrom(e => e.Timestamp)));
         }
 
         private AccountEntity Convert(IAccount account)

@@ -69,8 +69,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (account.IsWithdrawalDisabled)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
-                    _systemClock.UtcNow.UtcDateTime, command.ClientId, command.AccountId, command.Amount,
-                    $"Withdrawal is disabled"));
+                    _systemClock.UtcNow.UtcDateTime /*,$"Withdrawal is disabled"*/));
                 return;
             }
             
