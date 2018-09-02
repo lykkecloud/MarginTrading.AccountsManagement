@@ -82,7 +82,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         : "Account balance is not enough"));
                 return;
             }
-            
+
             if (account.IsWithdrawalDisabled)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
@@ -110,8 +110,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
-            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime,
-                executionInfo.Data.FailReason));
+            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId,
+                _systemClock.UtcNow.UtcDateTime, command.Reason));
         }
 
         /// <summary>

@@ -114,7 +114,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
-                    new FailWithdrawalInternalCommand(e.OperationId), 
+                    new FailWithdrawalInternalCommand(e.OperationId, e.Reason), 
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
@@ -184,10 +184,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.UnfreezingAmount, State.Succeeded))
+            if (SwitchState(executionInfo.Data, State.UnfreezingAmount, State.Failed))
             {
                 sender.SendCommand(
-                    new FailWithdrawalInternalCommand(e.OperationId), 
+                    new FailWithdrawalInternalCommand(e.OperationId, executionInfo.Data.FailReason), 
                     _contextNames.AccountsManagement);
                 _chaosKitty.Meow(e.OperationId);
                 await _executionInfoRepository.Save(executionInfo);
@@ -201,9 +201,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private Task Handle(WithdrawalStartFailedInternalEvent e, ICommandSender sender)
         {
             //there's no operation state at that point, so just failing the process.
-            sender.SendCommand(new FailWithdrawalInternalCommand(e.OperationId), 
+            sender.SendCommand(new FailWithdrawalInternalCommand(e.OperationId, e.Reason), 
                 _contextNames.AccountsManagement);
-            _chaosKitty.Meow(e.OperationId);
             
             return Task.CompletedTask;
         }
@@ -215,8 +214,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private async Task Handle(WithdrawalFailedEvent e, ICommandSender sender)
         {
             var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.OperationId);
+            
             if (executionInfo != null && SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
             {
+                executionInfo.Data.FailReason = e.Reason;
                 await _executionInfoRepository.Save(executionInfo);
             }
         }

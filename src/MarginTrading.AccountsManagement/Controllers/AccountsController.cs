@@ -102,7 +102,6 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         /// <summary>
         /// Changes an account.
-        /// Only one parameter may be changed in a request.
         /// </summary>
         [HttpPatch]
         [Route("{clientId}/{accountId}")]
