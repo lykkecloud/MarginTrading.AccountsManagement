@@ -229,65 +229,20 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Modify
 
-        public async Task<IAccount> SetTradingConditionAsync(string clientId, string accountId,
-            string tradingConditionId)
+        public async Task<IAccount> UpdateAccountAsync(string clientId, string accountId,
+            string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled)
         {
-            if (!await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
-            {
-                throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
-                    $"No trading condition {tradingConditionId} exists");
-            }
+            await ValidateTradingConditionAsync(accountId, tradingConditionId);
 
-            var account = await _accountsRepository.GetAsync(accountId);
-
-            if (account == null)
-                throw new ArgumentOutOfRangeException(
-                    $"Account for client [{clientId}] with id [{accountId}] does not exist");
-
-            var currentLegalEntity = account.LegalEntity;
-            var newLegalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
-
-            if (currentLegalEntity != newLegalEntity)
-            {
-                throw new NotSupportedException(
-                    $"Account for client [{clientId}] with id [{accountId}] has LegalEntity " +
-                    $"[{account.LegalEntity}], but trading condition with id [{tradingConditionId}] has " +
-                    $"LegalEntity [{newLegalEntity}]");
-            }
-
+            await ValidateIfDisableIsAvailableAsync(accountId, isDisabled);
+            
             var result =
-                await _accountsRepository.UpdateTradingConditionIdAsync(clientId, accountId, tradingConditionId);
-            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), result, 
+                await _accountsRepository.UpdateAccountAsync(clientId, accountId, tradingConditionId, isDisabled,
+                    isWithdrawalDisabled);
+            _eventSender.SendAccountChangedEvent(nameof(UpdateAccountAsync), result, 
                 AccountChangedEventTypeContract.Updated);
             return result;
-        }
 
-        public async Task<IAccount> SetDisabledAsync(string clientId, string accountId, bool isDisabled)
-        {
-            var ordersTask = _ordersApi.ListAsync(accountId);
-            var positionsTask = _positionsApi.ListAsync(accountId);
-            var orders = await ordersTask;
-            var positions = await positionsTask;
-
-            if (orders.Any() || positions.Any())
-            {
-                throw new ValidationException($"Account disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
-            }
-
-            var account = await _accountsRepository.ChangeIsDisabledAsync(clientId, accountId, isDisabled);
-            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account, 
-                AccountChangedEventTypeContract.Updated);
-            return account;
-        }
-
-        public async Task<IAccount> SetWithdrawalDisabledAsync(string clientId, string accountId, bool isDisabled)
-        {
-            var account = await _accountsRepository.ChangeIsWithdrawalDisabledAsync(clientId, accountId, isDisabled);
-            
-            _eventSender.SendAccountChangedEvent(nameof(SetTradingConditionAsync), account, 
-                AccountChangedEventTypeContract.Updated);
-            
-            return account;
         }
 
         public async Task<IAccount> ResetAccountAsync(string clientId, string accountId)
@@ -343,6 +298,52 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _eventSender.SendAccountChangedEvent(nameof(UpdateBalanceAsync), account, 
                 AccountChangedEventTypeContract.BalanceUpdated);
             return account;
+        }
+        
+        private async Task ValidateTradingConditionAsync(string accountId,
+            string tradingConditionId)
+        {
+            if (string.IsNullOrEmpty(tradingConditionId))
+                return;
+            
+            if (!await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
+            {
+                throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
+                    $"No trading condition {tradingConditionId} exists");
+            }
+
+            var account = await _accountsRepository.GetAsync(accountId);
+
+            if (account == null)
+                throw new ArgumentOutOfRangeException(
+                    $"Account with id [{accountId}] does not exist");
+
+            var currentLegalEntity = account.LegalEntity;
+            var newLegalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
+
+            if (currentLegalEntity != newLegalEntity)
+            {
+                throw new NotSupportedException(
+                    $"Account with id [{accountId}] has LegalEntity " +
+                    $"[{account.LegalEntity}], but trading condition with id [{tradingConditionId}] has " +
+                    $"LegalEntity [{newLegalEntity}]");
+            }
+        }
+
+        private async Task ValidateIfDisableIsAvailableAsync(string accountId, bool? isDisabled)
+        {
+            if (isDisabled == null)
+                return;
+            
+            var ordersTask = _ordersApi.ListAsync(accountId);
+            var positionsTask = _positionsApi.ListAsync(accountId);
+            var orders = await ordersTask;
+            var positions = await positionsTask;
+
+            if (orders.Any() || positions.Any())
+            {
+                throw new ValidationException($"Account disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
+            }
         }
 
         #endregion

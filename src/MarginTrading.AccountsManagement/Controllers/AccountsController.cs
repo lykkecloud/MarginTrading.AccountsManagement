@@ -107,40 +107,23 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpPatch]
         [Route("{clientId}/{accountId}")]
         public async Task<AccountContract> Change([NotNull] string clientId, [NotNull] string accountId,
-            [FromBody][NotNull] ChangeAccountRequest request)
+            [FromBody] [NotNull] ChangeAccountRequest request)
         {
             IAccount result = null;
 
-            if ((request.IsDisabled.HasValue ? 1 : 0) +
-                (request.IsWithdrawalDisabled.HasValue ? 1 : 0) +
-                (!string.IsNullOrEmpty(request.TradingConditionId) ? 1 : 0) != 1)
+            if (request.IsDisabled == null &&
+                request.IsWithdrawalDisabled == null &&
+                string.IsNullOrEmpty(request.TradingConditionId))
             {
-                throw new ArgumentOutOfRangeException(nameof(request), "Exactly one parameter should be set");
+                return await GetByClientAndId(clientId, accountId);
             }
 
-            if (request.IsDisabled.HasValue)
-            {
-                result = await _accountManagementService.SetDisabledAsync(
-                    clientId,
-                    accountId,
-                    request.IsDisabled.Value);
-            }
-
-            if (request.IsWithdrawalDisabled.HasValue)
-            {
-                result = await _accountManagementService.SetWithdrawalDisabledAsync(
-                    clientId,
-                    accountId,
-                    request.IsWithdrawalDisabled.Value);
-            }
-
-            if (!string.IsNullOrEmpty(request.TradingConditionId))
-            {
-                result = await _accountManagementService.SetTradingConditionAsync(
-                    clientId,
-                    accountId,
-                    request.TradingConditionId);
-            }
+            result = await _accountManagementService.UpdateAccountAsync(
+                clientId,
+                accountId,
+                request.TradingConditionId,
+                request.IsDisabled,
+                request.IsWithdrawalDisabled);
 
             return Convert(result);
         }

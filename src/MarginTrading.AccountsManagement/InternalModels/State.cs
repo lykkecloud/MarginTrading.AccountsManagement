@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MarginTrading.AccountsManagement.InternalModels
+﻿namespace MarginTrading.AccountsManagement.InternalModels
 {
     public enum State
     {
