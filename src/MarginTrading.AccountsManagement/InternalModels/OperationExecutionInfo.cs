@@ -9,15 +9,17 @@ namespace MarginTrading.AccountsManagement.InternalModels
     {
         public string OperationName { get; }
         public string Id { get; }
+        public DateTime LastModified { get; }
 
         public T Data { get; }
 
         public OperationExecutionInfo([NotNull] string operationName, [NotNull] string id, 
-            [NotNull] T data)
+            [NotNull] T data, DateTime lastModified)
         {
             OperationName = operationName ?? throw new ArgumentNullException(nameof(operationName));
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Data = data ?? throw new ArgumentNullException(nameof(data));
+            LastModified = lastModified;
         }
     }
 }

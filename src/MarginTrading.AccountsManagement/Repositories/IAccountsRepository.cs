@@ -31,9 +31,7 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task<IAccount> UpdateBalanceAsync(string operationId, [CanBeNull] string clientId, string accountId, 
             decimal amountDelta, bool changeLimit);
 
-        Task<IAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
-            string tradingConditionId);
-
-        Task<IAccount> ChangeIsDisabledAsync(string clientId, string accountId, bool isDisabled);
+        Task<IAccount> UpdateAccountAsync(string clientId, string accountId,
+            string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled);
     }
 }

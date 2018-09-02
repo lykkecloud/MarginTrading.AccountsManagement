@@ -102,35 +102,27 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         /// <summary>
         /// Changes an account.
-        /// If the field is set, it will be changed, otherwise it will be ignored.
         /// </summary>
         [HttpPatch]
         [Route("{clientId}/{accountId}")]
         public async Task<AccountContract> Change([NotNull] string clientId, [NotNull] string accountId,
-            [FromBody][NotNull] ChangeAccountRequest request)
+            [FromBody] [NotNull] ChangeAccountRequest request)
         {
             IAccount result = null;
 
-            if (!request.IsDisabled.HasValue && string.IsNullOrEmpty(request.TradingConditionId))
+            if (request.IsDisabled == null &&
+                request.IsWithdrawalDisabled == null &&
+                string.IsNullOrEmpty(request.TradingConditionId))
             {
-                throw new ArgumentOutOfRangeException(nameof(request), "At least one parameter should be set");
+                return await GetByClientAndId(clientId, accountId);
             }
 
-            if (request.IsDisabled.HasValue)
-            {
-                result = await _accountManagementService.SetDisabledAsync(
-                    clientId,
-                    accountId,
-                    request.IsDisabled.Value);
-            }
-
-            if (!string.IsNullOrEmpty(request.TradingConditionId))
-            {
-                result = await _accountManagementService.SetTradingConditionAsync(
-                    clientId,
-                    accountId,
-                    request.TradingConditionId);
-            }
+            result = await _accountManagementService.UpdateAccountAsync(
+                clientId,
+                accountId,
+                request.TradingConditionId,
+                request.IsDisabled,
+                request.IsWithdrawalDisabled);
 
             return Convert(result);
         }

@@ -55,7 +55,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         AuditLog = command.AuditLog,
                         State = State.Created,
                         Comment = command.Comment
-                    }));
+                    },
+                    lastModified: _systemClock.UtcNow.UtcDateTime));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
             if (account == null || account.Balance < command.Amount)
@@ -66,10 +67,17 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 return;
             }
 
+            if (account.IsWithdrawalDisabled)
+            {
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime /*,$"Withdrawal is disabled"*/));
+                return;
+            }
+            
             _chaosKitty.Meow(command.OperationId);
+          
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
-            
         }
 
         /// <summary>
