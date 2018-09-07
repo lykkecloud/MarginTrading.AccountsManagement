@@ -167,7 +167,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
                 amountDelta: request.AmountDelta.RequiredGreaterThan(default(decimal), nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
+                reason: request.Reason,
                 auditLog: request.AdditionalInfo);
         }
 
@@ -186,7 +186,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
                 amountDelta: request.AmountDelta.RequiredGreaterThan(default(decimal), nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
+                reason: request.Reason,
                 auditLog: request.AdditionalInfo);
         }
 
