@@ -35,7 +35,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         }
 
         public void SendAccountChangedEvent(string source, IAccount account, AccountChangedEventTypeContract eventType,
-            AccountBalanceChangeContract balanceChangeContract = null)
+            string operationId, AccountBalanceChangeContract balanceChangeContract = null)
         {
             _cqrsEngine.PublishEvent(
                 new AccountChangedEvent(
@@ -43,7 +43,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     source,
                     _convertService.Convert<IAccount, AccountContract>(account),
                     eventType,
-                    balanceChangeContract),
+                    balanceChangeContract,
+                    operationId),
                 _contextNames.AccountsManagement);
         }
     }
