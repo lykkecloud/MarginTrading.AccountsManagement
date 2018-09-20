@@ -6,5 +6,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
     {
         [NotNull]
         public string TradingConditionId { get; set; }
+
+        [NotNull]
+        public string ClientId { get; set; }
     }
 }

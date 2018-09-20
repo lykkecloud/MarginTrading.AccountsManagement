@@ -181,7 +181,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return _accountsRepository.GetAllAsync(clientId: clientId);
         }
 
-        public Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId)
+        public Task<IAccount> GetByIdAsync(string accountId)
         {
             return _accountsRepository.GetAsync(accountId);
         }
@@ -229,23 +229,22 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Modify
 
-        public async Task<IAccount> UpdateAccountAsync(string clientId, string accountId,
+        public async Task<IAccount> UpdateAccountAsync(string accountId,
             string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled)
         {
             await ValidateTradingConditionAsync(accountId, tradingConditionId);
 
             await ValidateIfDisableIsAvailableAsync(accountId, isDisabled);
-            
-            var result =
-                await _accountsRepository.UpdateAccountAsync(clientId, accountId, tradingConditionId, isDisabled,
-                    isWithdrawalDisabled);
+
+            var result = await _accountsRepository.UpdateAccountAsync(accountId, tradingConditionId, isDisabled,
+                isWithdrawalDisabled);
             _eventSender.SendAccountChangedEvent(nameof(UpdateAccountAsync), result,
                 AccountChangedEventTypeContract.Updated, Guid.NewGuid().ToString("N"));
             return result;
 
         }
 
-        public async Task<IAccount> ResetAccountAsync(string clientId, string accountId)
+        public async Task<IAccount> ResetAccountAsync(string accountId)
         {
             if (_settings.Behavior?.BalanceResetIsEnabled != true)
             {
@@ -256,9 +255,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             if (account == null)
                 throw new ArgumentOutOfRangeException(
-                    $"Account for client [{clientId}] with id [{accountId}] does not exist");
+                    $"Account with id [{accountId}] does not exist");
 
-            return await UpdateBalanceAsync(Guid.NewGuid().ToString(), clientId, accountId, _settings.Behavior.DefaultBalance - account.Balance);
+            return await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, _settings.Behavior.DefaultBalance - account.Balance);
         }
 
         #endregion
@@ -284,17 +283,17 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             if (_settings.Behavior?.DefaultBalance != null)
             {
-                account = await UpdateBalanceAsync(Guid.NewGuid().ToString(), account.ClientId, account.Id, _settings.Behavior.DefaultBalance);
+                account = await UpdateBalanceAsync(Guid.NewGuid().ToString(), account.Id, _settings.Behavior.DefaultBalance);
             }
 
             return account;
         }
 
-        private async Task<IAccount> UpdateBalanceAsync(string operationId, string clientId, string accountId,
+        private async Task<IAccount> UpdateBalanceAsync(string operationId, string accountId,
             decimal amountDelta, bool changeTransferLimit = false)
         {
             // todo: move to workflow command handler
-            var account = await _accountsRepository.UpdateBalanceAsync(operationId, clientId, accountId, amountDelta, changeTransferLimit);
+            var account = await _accountsRepository.UpdateBalanceAsync(operationId, accountId, amountDelta, changeTransferLimit);
             _eventSender.SendAccountChangedEvent(nameof(UpdateBalanceAsync), account,
                 AccountChangedEventTypeContract.BalanceUpdated, operationId);
             return account;

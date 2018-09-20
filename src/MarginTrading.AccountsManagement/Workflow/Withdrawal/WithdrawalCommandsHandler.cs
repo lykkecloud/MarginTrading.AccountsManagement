@@ -8,6 +8,7 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Infrastructure;
+using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
@@ -57,7 +58,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     id: command.OperationId,
                     data: new WithdrawalDepositData
                     {
-                        ClientId = command.ClientId,
                         AccountId = command.AccountId,
                         Amount = command.Amount,
                         AuditLog = command.AuditLog,
@@ -128,8 +128,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
+            var account = await _accountsRepository.GetAsync(executionInfo.Data.AccountId);
+
             publisher.PublishEvent(new WithdrawalSucceededEvent(command.OperationId, _systemClock.UtcNow.UtcDateTime,
-                executionInfo.Data.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
+                account?.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
         }
     }
 }

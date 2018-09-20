@@ -13,6 +13,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [Key(0)]
         public string OperationId { get; }
 
+        /// <summary>
+        /// Property is not used internally. It is here only to not to break the contract.
+        /// </summary>
+        [CanBeNull]
         [Key(1)]
         public string ClientId { get; }
 
@@ -28,14 +32,14 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [Key(5)]
         public string AuditLog { get; }
 
-        public WithdrawCommand([NotNull] string operationId, [NotNull] string clientId, [NotNull] string accountId, 
+        public WithdrawCommand([NotNull] string operationId, [CanBeNull] string clientId, [NotNull] string accountId, 
             decimal amount, [NotNull] string comment, [CanBeNull] string auditLog)
         {
             if (amount <= 0)
                 throw new ArgumentOutOfRangeException(nameof(amount), amount, "");
 
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            ClientId = clientId;
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
             Comment = comment;
