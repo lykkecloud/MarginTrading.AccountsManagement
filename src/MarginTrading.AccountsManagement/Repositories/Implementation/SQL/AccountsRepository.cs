@@ -124,27 +124,21 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<IAccount> GetAsync(string clientId, string accountId)
+        public async Task<IAccount> GetAsync(string accountId)
         {
             using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
             {
                 var whereClause = "WHERE 1=1 "
-                                  + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND Id = @accountId")
-                                  + (string.IsNullOrWhiteSpace(clientId) ? "" : " AND ClientId = @clientId");
+                                  + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND Id = @accountId");
                 var accounts = await conn.QueryAsync<AccountEntity>(
                     $"SELECT * FROM {TableName} {whereClause}", 
-                    new { clientId, accountId });
+                    new { accountId });
                 
                 return accounts.FirstOrDefault();
             }
         }
 
-        public async Task<IAccount> GetAsync(string accountId)
-        {
-            return await GetAsync(null, accountId);
-        }
-
-        public async Task<IAccount> UpdateBalanceAsync(string operationId, string clientId, string accountId,
+        public async Task<IAccount> UpdateBalanceAsync(string operationId, string accountId,
             decimal amountDelta, bool changeLimit)
         {
             return await GetAccountAndUpdate(accountId, account =>
@@ -161,7 +155,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             });
         }
 
-        public async Task<IAccount> UpdateAccountAsync(string clientId, string accountId, string tradingConditionId, bool? isDisabled,
+        public async Task<IAccount> UpdateAccountAsync(string accountId, string tradingConditionId, bool? isDisabled,
             bool? isWithdrawalDisabled)
         {
             return await GetAccountAndUpdate(accountId, a =>

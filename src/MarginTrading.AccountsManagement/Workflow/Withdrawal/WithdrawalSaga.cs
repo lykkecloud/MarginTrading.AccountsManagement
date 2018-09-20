@@ -55,7 +55,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     new FreezeAmountForWithdrawalCommand(
                         operationId: executionInfo.Id,
                         eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                        clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
                         amount: executionInfo.Data.Amount,
                         reason: executionInfo.Data.Comment),
@@ -81,7 +80,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
                         operationId: e.OperationId,
-                        clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
                         amountDelta: -executionInfo.Data.Amount,
                         comment: "Funds withdrawal " + executionInfo.Data.Comment,

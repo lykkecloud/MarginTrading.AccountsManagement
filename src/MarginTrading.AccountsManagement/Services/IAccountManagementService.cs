@@ -36,7 +36,7 @@ namespace MarginTrading.AccountsManagement.Services
         Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId);
         
         [ItemCanBeNull]
-        Task<IAccount> GetByClientAndIdAsync(string clientId, string accountId);
+        Task<IAccount> GetByIdAsync(string accountId);
 
         Task<AccountStat> GetStat(string accountId);
         
@@ -45,10 +45,10 @@ namespace MarginTrading.AccountsManagement.Services
         
         #region Modify
         
-        Task<IAccount> UpdateAccountAsync(string clientId, string accountId,
+        Task<IAccount> UpdateAccountAsync(string accountId,
             string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled);
         
-        Task<IAccount> ResetAccountAsync(string clientId, string accountId);
+        Task<IAccount> ResetAccountAsync(string accountId);
         
         #endregion
 

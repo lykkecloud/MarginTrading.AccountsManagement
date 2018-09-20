@@ -19,13 +19,19 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
     {
         private readonly ISystemClock _systemClock;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
+        private readonly IAccountsRepository _accountsRepository;
         private const string OperationName = "Deposit";
         private readonly IChaosKitty _chaosKitty;
 
-        public DepositCommandsHandler(ISystemClock systemClock, IOperationExecutionInfoRepository executionInfoRepository, IChaosKitty chaosKitty)
+        public DepositCommandsHandler(
+            ISystemClock systemClock, 
+            IOperationExecutionInfoRepository executionInfoRepository,
+            IAccountsRepository accountsRepository,
+            IChaosKitty chaosKitty)
         {
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
+            _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
         }
 
@@ -43,7 +49,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                     id: c.OperationId,
                     data: new WithdrawalDepositData 
                     {
-                        ClientId = c.ClientId,
                         AccountId = c.AccountId,
                         Amount = c.Amount,
                         AuditLog = c.AuditLog,
@@ -91,8 +96,10 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
 
+            var account = await _accountsRepository.GetAsync(executionInfo.Data.AccountId);
+
             publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime,
-                executionInfo.Data.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
+                account?.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
         }
     }
 }

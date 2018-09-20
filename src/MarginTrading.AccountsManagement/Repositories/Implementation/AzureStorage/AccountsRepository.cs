@@ -76,14 +76,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             );
         }
 
-        public async Task<IAccount> GetAsync(string clientId, string accountId)
-        {
-            var account = await _tableStorage.GetDataAsync(AccountEntity.GeneratePartitionKey(clientId),
-                AccountEntity.GenerateRowKey(accountId));
-
-            return account;
-        }
-
         public async Task<IAccount> GetAsync(string accountId)
         {
             var account = (await _tableStorage.GetDataAsync(x => x.RowKey == accountId)).SingleOrDefault();
@@ -91,16 +83,14 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return account;
         }
 
-        public async Task<IAccount> UpdateBalanceAsync(string operationId, string clientId, string accountId,
+        public async Task<IAccount> UpdateBalanceAsync(string operationId, string accountId,
             decimal amountDelta, bool changeLimit)
         {
             AccountEntity account = null;
 
-            if (string.IsNullOrWhiteSpace(clientId))
-            {
-                clientId = (await _tableStorage.GetDataAsync(x => x.RowKey == AccountEntity.GenerateRowKey(accountId)))
-                    .Single().ClientId;
-            }
+            var clientId = (await _tableStorage.GetDataAsync(x => x.RowKey == AccountEntity.GenerateRowKey(accountId)))
+                .Single().ClientId;
+            
             
             await _tableStorage.InsertOrModifyAsync(AccountEntity.GeneratePartitionKey(clientId),
                 AccountEntity.GenerateRowKey(accountId), 
@@ -136,10 +126,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return true;
         }
         
-        public async Task<IAccount> UpdateAccountAsync(string clientId, string accountId,
+        public async Task<IAccount> UpdateAccountAsync(string accountId,
             string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled)
         {
-            var account = await _tableStorage.MergeAsync(AccountEntity.GeneratePartitionKey(clientId),
+            var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;
+            
+            var account = await _tableStorage.MergeAsync(pk,
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
                     if (!string.IsNullOrEmpty(tradingConditionId))

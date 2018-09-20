@@ -25,7 +25,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         public string OperationId { get; }
 
         /// <summary>
-        /// Client Id. If null is passed clientId will be taken from repository by AccountId.
+        /// Property is not used internally. It is here only to not to break the contract.
         /// </summary>
         [CanBeNull]
         [Key(1)]

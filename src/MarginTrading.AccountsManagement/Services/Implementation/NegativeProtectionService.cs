@@ -33,9 +33,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             if (_negativeProtectionAutoCompensation)
             {
-                await _sendBalanceCommandsService.ChargeManuallyAsync(
-                    clientId: account.ClientId,
-                    accountId: account.Id,
+                await _sendBalanceCommandsService.ChargeManuallyAsync(accountId: account.Id,
                     amountDelta: Math.Abs(account.Balance),
                     operationId: $"{causationId}-negative-protection",
                     reason: "Negative protection",
