@@ -2,13 +2,14 @@
 using AzureStorage.Tables;
 using Common.Log;
 using Lykke.Logs;
+using Lykke.Logs.MsSql;
+using Lykke.Logs.MsSql.Repositories;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
 using AzureRepos = MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.AzureRepositories;
 using SqlRepos = MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.SqlRepositories;
 using MarginTrading.AccountsManagement.BrokerBase;
-using MarginTrading.AccountsManagement.BrokerBase.Repositories;
 using MarginTrading.AccountsManagement.BrokerBase.Services;
 using MarginTrading.AccountsManagement.BrokerBase.Settings;
 using Microsoft.AspNetCore.Hosting;
@@ -59,7 +60,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
             
             if (settings.CurrentValue.MtBackend.MarginTradingSettings.Db.StorageMode == StorageMode.SqlServer.ToString())
             {
-                var sqlLogger = new LogToSql(new SqlRepos.LogRepository(LogTableName,
+                var sqlLogger = new LogToSql(new SqlLogRepository(LogTableName,
                     settings.CurrentValue.MtBackend.MarginTradingSettings.Db.HistorySqlConnString));
 
                 aggregateLogger.AddLog(sqlLogger);
