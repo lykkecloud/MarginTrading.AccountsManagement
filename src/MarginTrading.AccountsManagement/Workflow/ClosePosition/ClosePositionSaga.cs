@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
@@ -10,22 +11,28 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
 {
     internal class ClosePositionSaga
     {
+        private readonly IChaosKitty _chaosKitty;
         private readonly CqrsContextNamesSettings _contextNames;
 
-        public ClosePositionSaga(CqrsContextNamesSettings contextNames)
+        public ClosePositionSaga(
+            IChaosKitty chaosKitty,
+            CqrsContextNamesSettings contextNames)
         {
+            _chaosKitty = chaosKitty;
             _contextNames = contextNames;
         }
 
         /// <summary>
-        /// The position is closed => udpate the balance
+        /// The position is closed => update the balance
         /// </summary>
         [UsedImplicitly]
         private void Handle(PositionClosedEvent evt, ICommandSender sender)
         {
+            var operationId = evt.PositionId + "-update-balance";
+            
             sender.SendCommand(
                 new UpdateBalanceInternalCommand(
-                    operationId: evt.PositionId + "-update-balance",
+                    operationId: operationId,
                     accountId: evt.AccountId,
                     amountDelta: evt.BalanceDelta,
                     comment: $"Balance changed on position close (id = {evt.PositionId})",
@@ -36,6 +43,8 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
                     assetPairId: evt.AssetPairId,
                     tradingDay: DateTime.UtcNow),
                 _contextNames.AccountsManagement);
+            
+            _chaosKitty.Meow(operationId);
         }
     }
 }

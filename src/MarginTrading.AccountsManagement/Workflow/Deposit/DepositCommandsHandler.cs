@@ -100,6 +100,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
 
             publisher.PublishEvent(new DepositSucceededEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime,
                 account?.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
+            
+            _chaosKitty.Meow(c.OperationId);
         }
     }
 }

@@ -48,10 +48,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 sender.SendCommand(
                     new FreezeAmountForDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
-                
         }
 
         /// <summary>
@@ -80,7 +81,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                         assetPairId: string.Empty,
                         tradingDay: DateTime.UtcNow),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -98,11 +101,12 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
 
             if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
             {
-         
                 sender.SendCommand(
                     new FailDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -127,7 +131,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                     new CompleteDepositInternalCommand(
                         operationId: e.BalanceChange.Id),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.BalanceChange.Id);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -152,7 +158,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 sender.SendCommand(
                     new FailDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
