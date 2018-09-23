@@ -14,6 +14,8 @@ using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
+using Lykke.Logs.MsSql;
+using Lykke.Logs.MsSql.Repositories;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -195,7 +197,7 @@ namespace MarginTrading.AccountsManagement
 
             if (settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.SqlServer.ToString())
             {
-                var sqlLogger = new LogToSql(new LogRepository("AccountManagementLog",
+                var sqlLogger = new LogToSql(new SqlLogRepository("AccountManagementLog",
                     settings.CurrentValue.MarginTradingAccountManagement.Db.SqlConnectionString));
 
                 aggregateLogger.AddLog(sqlLogger);
