@@ -40,11 +40,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         [UsedImplicitly]
         private async Task Handle(WithdrawalStartedInternalEvent e, ICommandSender sender)
         {
-
-            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(
-                OperationName,
-                e.OperationId
-              );
+            var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.OperationId);
 
             if (executionInfo == null)
                 return;
@@ -60,7 +56,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         amount: executionInfo.Data.Amount,
                         reason: executionInfo.Data.Comment),
                     _contextNames.TradingEngine);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -116,7 +114,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 sender.SendCommand(
                     new FailWithdrawalInternalCommand(e.OperationId, e.Reason), 
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -130,7 +130,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (e.Source != OperationName)
                 return;
             
-
             var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.BalanceChange.Id);
 
             if (executionInfo == null)
@@ -142,7 +141,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     new CompleteWithdrawalInternalCommand(
                         operationId: e.BalanceChange.Id), 
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.BalanceChange.Id);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -168,7 +169,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     new UnfreezeMarginOnFailWithdrawalCommand(
                         operationId: e.OperationId), 
                     _contextNames.TradingEngine);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -189,7 +192,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 sender.SendCommand(
                     new FailWithdrawalInternalCommand(e.OperationId, executionInfo.Data.FailReason), 
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             } 
         }
@@ -218,6 +223,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo != null && SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
             {
                 executionInfo.Data.FailReason = e.Reason;
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }

@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Settings;
@@ -7,13 +9,17 @@ using MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands;
 
 namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
 {
+    [UsedImplicitly]
     internal class NegativeProtectionCommandsHandler
     {
+        private readonly IChaosKitty _chaosKitty;
         private readonly AccountManagementSettings _accountManagementSettings;
 
         public NegativeProtectionCommandsHandler(
+            IChaosKitty chaosKitty,
             AccountManagementSettings accountManagementSettings)
         {
+            _chaosKitty = chaosKitty;
             _accountManagementSettings = accountManagementSettings;
         }
 
@@ -31,6 +37,8 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
                 amount: command.Amount,
                 isAutoCompensated: _accountManagementSettings.NegativeProtectionAutoCompensation
             ));
+            
+            _chaosKitty.Meow(command.CausationId);
         }
     }
 }
