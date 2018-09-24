@@ -61,8 +61,6 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
                     amount: Math.Abs(evt.BalanceChange.Balance)
                 ),
                 _contextNames.AccountsManagement);
-            
-            _chaosKitty.Meow(causationId);
         }
     }
 }
