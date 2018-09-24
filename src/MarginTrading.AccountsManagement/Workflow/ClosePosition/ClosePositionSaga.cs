@@ -43,8 +43,6 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
                     assetPairId: evt.AssetPairId,
                     tradingDay: DateTime.UtcNow),
                 _contextNames.AccountsManagement);
-            
-            _chaosKitty.Meow(operationId);
         }
     }
 }

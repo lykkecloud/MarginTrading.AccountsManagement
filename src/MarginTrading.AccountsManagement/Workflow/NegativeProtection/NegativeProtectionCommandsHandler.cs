@@ -23,6 +23,7 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
             _accountManagementSettings = accountManagementSettings;
         }
 
+        [UsedImplicitly]
         public void Handle(NotifyNegativeProtectionInternalCommand command, IEventPublisher publisher)
         {
             //skipping idempotency violation check
@@ -37,8 +38,6 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
                 amount: command.Amount,
                 isAutoCompensated: _accountManagementSettings.NegativeProtectionAutoCompensation
             ));
-            
-            _chaosKitty.Meow(command.CausationId);
         }
     }
 }
