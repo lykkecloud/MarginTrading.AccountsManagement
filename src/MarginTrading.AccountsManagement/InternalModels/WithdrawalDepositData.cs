@@ -12,7 +12,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public string AccountId { get; set; }
         public decimal Amount { get; set; }
         public string AuditLog { get; set; }
-        public State State { get; set; }
+        public WithdrawalState State { get; set; }
         public string Comment { get; set; }
 
         [CanBeNull]
