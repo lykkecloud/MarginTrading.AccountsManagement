@@ -12,7 +12,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
     {
         public string StorageMode { get; set; }
         public string HistoryConnString { get; set; }
-        public string HistorySqlConnString { get; set; }
+        public string LogsConnString { get; set; }
     }
     
     public class RabbitMqQueues

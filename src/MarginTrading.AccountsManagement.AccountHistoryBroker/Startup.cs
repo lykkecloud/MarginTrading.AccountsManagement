@@ -61,19 +61,19 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
             if (settings.CurrentValue.MtBackend.MarginTradingSettings.Db.StorageMode == StorageMode.SqlServer.ToString())
             {
                 var sqlLogger = new LogToSql(new SqlLogRepository(LogTableName,
-                    settings.CurrentValue.MtBackend.MarginTradingSettings.Db.HistorySqlConnString));
+                    settings.CurrentValue.MtBackend.MarginTradingSettings.Db.LogsConnString));
 
                 aggregateLogger.AddLog(sqlLogger);
             } 
             else if (settings.CurrentValue.MtBackend.MarginTradingSettings.Db.StorageMode == StorageMode.Azure.ToString())
             {
-                // Creating azure storage logger, which logs own messages to concole log
-                var dbLogConnectionString = settings.CurrentValue.MtBrokersLogs?.DbConnString;
+                // Creating azure storage logger, which logs own messages to console log
+                var dbLogConnectionString = settings.CurrentValue.MtBackend.MarginTradingSettings.Db.LogsConnString;
                 if (!string.IsNullOrEmpty(dbLogConnectionString) &&
                     !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
                 {
                     var logToAzureStorage = services.UseLogToAzureStorage(
-                        settings.Nested(s => s.MtBrokersLogs.DbConnString),
+                        settings.Nested(s => s.MtBackend.MarginTradingSettings.Db.LogsConnString),
                         null,
                         ApplicationName + "Log",
                         aggregateLogger);

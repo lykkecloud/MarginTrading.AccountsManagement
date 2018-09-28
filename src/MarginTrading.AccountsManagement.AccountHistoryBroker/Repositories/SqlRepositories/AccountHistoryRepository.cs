@@ -36,8 +36,6 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
         private static Type DataType => typeof(IAccountHistory);
         private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
         private static readonly string GetFields = string.Join(",", DataType.GetProperties().Select(x => "@" + x.Name));
-        private static readonly string GetUpdateClause = string.Join(",",
-            DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
         private readonly Settings _settings;
         private readonly ILog _log;
@@ -49,7 +47,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             _settings = settings;
             _convertService = convertService;
             
-            using (var conn = new SqlConnection(_settings.Db.HistorySqlConnString))
+            using (var conn = new SqlConnection(_settings.Db.HistoryConnString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
@@ -64,7 +62,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
         {
             var entity = _convertService.Convert<AccountHistoryEntity>(obj);
             
-            using (var conn = new SqlConnection(_settings.Db.HistorySqlConnString))
+            using (var conn = new SqlConnection(_settings.Db.HistoryConnString))
             {
                 try
                 {
