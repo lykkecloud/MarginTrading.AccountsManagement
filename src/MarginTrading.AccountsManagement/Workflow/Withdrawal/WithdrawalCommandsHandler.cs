@@ -61,7 +61,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         AccountId = command.AccountId,
                         Amount = command.Amount,
                         AuditLog = command.AuditLog,
-                        State = State.Created,
+                        State = WithdrawalState.Created,
                         Comment = command.Comment
                     },
                     lastModified: _systemClock.UtcNow.UtcDateTime));

@@ -45,7 +45,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.Created, State.FreezingAmount))
+            if (SwitchState(executionInfo.Data, WithdrawalState.Created, WithdrawalState.FreezingAmount))
             {
                 sender.SendCommand(
                     new FreezeAmountForWithdrawalCommand(
@@ -73,7 +73,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.FreezingAmount, State.UpdatingBalance))
+            if (SwitchState(executionInfo.Data, WithdrawalState.FreezingAmount, WithdrawalState.UpdatingBalance))
             {
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
@@ -106,7 +106,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
+            if (SwitchState(executionInfo.Data, WithdrawalState.FreezingAmount, WithdrawalState.Failed))
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
@@ -133,7 +133,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Succeeded))
+            if (SwitchState(executionInfo.Data, WithdrawalState.UpdatingBalance, WithdrawalState.Succeeded))
             {
                 sender.SendCommand(
                     new CompleteWithdrawalInternalCommand(
@@ -160,7 +160,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
             
-            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.UnfreezingAmount))
+            if (SwitchState(executionInfo.Data, WithdrawalState.UpdatingBalance, WithdrawalState.UnfreezingAmount))
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
@@ -185,7 +185,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.UnfreezingAmount, State.Failed))
+            if (SwitchState(executionInfo.Data, WithdrawalState.UnfreezingAmount, WithdrawalState.Failed))
             {
                 sender.SendCommand(
                     new FailWithdrawalInternalCommand(e.OperationId, executionInfo.Data.FailReason), 
@@ -218,7 +218,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         {
             var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.OperationId);
             
-            if (executionInfo != null && SwitchState(executionInfo.Data, executionInfo.Data.State, State.Failed))
+            if (executionInfo != null && SwitchState(executionInfo.Data, executionInfo.Data.State, WithdrawalState.Failed))
             {
                 executionInfo.Data.FailReason = e.Reason;
                 
@@ -233,13 +233,13 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private async Task Handle(WithdrawalSucceededEvent e, ICommandSender sender)
         {
             var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.OperationId);
-            if (executionInfo != null && SwitchState(executionInfo.Data, executionInfo.Data.State, State.Succeeded))
+            if (executionInfo != null && SwitchState(executionInfo.Data, executionInfo.Data.State, WithdrawalState.Succeeded))
             {
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
 
-        private static bool SwitchState(WithdrawalDepositData data, State expectedState, State nextState)
+        private static bool SwitchState(WithdrawalDepositData data, WithdrawalState expectedState, WithdrawalState nextState)
         {
             if (data.State < expectedState)
             {

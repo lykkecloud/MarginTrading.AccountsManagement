@@ -43,7 +43,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return; 
 
-            if (SwitchState(executionInfo.Data, State.Created, State.FreezingAmount))
+            if (SwitchState(executionInfo.Data, WithdrawalState.Created, WithdrawalState.FreezingAmount))
             {
                 sender.SendCommand(
                     new FreezeAmountForDepositInternalCommand(e.OperationId),
@@ -66,7 +66,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.FreezingAmount, State.UpdatingBalance))
+            if (SwitchState(executionInfo.Data, WithdrawalState.FreezingAmount, WithdrawalState.UpdatingBalance))
             {
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
@@ -99,7 +99,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
+            if (SwitchState(executionInfo.Data, WithdrawalState.FreezingAmount, WithdrawalState.Failed))
             {
                 sender.SendCommand(
                     new FailDepositInternalCommand(e.OperationId),
@@ -125,7 +125,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Succeeded))
+            if (SwitchState(executionInfo.Data, WithdrawalState.UpdatingBalance, WithdrawalState.Succeeded))
             {
                 sender.SendCommand(
                     new CompleteDepositInternalCommand(
@@ -152,7 +152,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
             
-            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Failed))
+            if (SwitchState(executionInfo.Data, WithdrawalState.UpdatingBalance, WithdrawalState.Failed))
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
@@ -166,7 +166,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         }
         
         
-        private static bool SwitchState(WithdrawalDepositData data, State expectedState, State nextState)
+        private static bool SwitchState(WithdrawalDepositData data, WithdrawalState expectedState, WithdrawalState nextState)
         {
             if (data.State < expectedState)
             {
