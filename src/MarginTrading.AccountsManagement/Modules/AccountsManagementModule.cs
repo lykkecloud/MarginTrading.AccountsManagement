@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using Common.Log;
 using Lykke.Common.Chaos;
+using Lykke.Logs.MsSql.Interfaces;
+using Lykke.Logs.MsSql.Repositories;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
@@ -48,9 +50,8 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             if (_settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.SqlServer.ToString())
             {
-                builder.RegisterType<SqlRepos.LogRepository>().As<ILogRepository>().SingleInstance();
+                builder.RegisterType<SqlLogRepository>().As<ILogRepository>().SingleInstance();
                 
-
                 builder.RegisterType<SqlRepos.AccountBalanceChangesRepository>()
                     .As<IAccountBalanceChangesRepository>().SingleInstance();
                 builder.RegisterType<SqlRepos.AccountsRepository>()

@@ -14,10 +14,6 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null);
         
         Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null);
-
-        [ItemCanBeNull]
-        [Obsolete]//TODO remove from everywhere.. in a separate ticket
-        Task<IAccount> GetAsync(string clientId, string accountId);
         
         [ItemCanBeNull]
         Task<IAccount> GetAsync(string accountId);
@@ -28,10 +24,10 @@ namespace MarginTrading.AccountsManagement.Repositories
         /// <returns>
         /// Account after update
         /// </returns>
-        Task<IAccount> UpdateBalanceAsync(string operationId, [CanBeNull] string clientId, string accountId, 
+        Task<IAccount> UpdateBalanceAsync(string operationId, string accountId,
             decimal amountDelta, bool changeLimit);
 
-        Task<IAccount> UpdateAccountAsync(string clientId, string accountId,
+        Task<IAccount> UpdateAccountAsync(string accountId,
             string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled);
     }
 }

@@ -4,9 +4,9 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
 {
     public class AmountForWithdrawalFrozenEvent : AccountBalanceBaseMessage
     {
-        public AmountForWithdrawalFrozenEvent(string operationId, DateTime eventTimestamp, string clientId, 
+        public AmountForWithdrawalFrozenEvent(string operationId, DateTime eventTimestamp, 
             string accountId, decimal amount, string reason)
-            : base(operationId, eventTimestamp, clientId, accountId, amount, reason)
+            : base(operationId, eventTimestamp, accountId, amount, reason)
         {
         }
     }
