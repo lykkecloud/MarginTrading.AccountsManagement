@@ -17,10 +17,10 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
     {
         private const string TableName = "AccountHistory";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
-                                                 "[Oid] [bigint] NOT NULL IDENTITY (1,1) PRIMARY KEY," +
+                                                 "[Oid] [bigint] NOT NULL IDENTITY (1,1) PRIMARY KEY, " +
                                                  "[Id] [nvarchar] (64) NOT NULL UNIQUE, " +
-                                                 "[AccountId] [nvarchar] (64) NOT NULL," +
-                                                 "[ChangeTimestamp] [datetime] NOT NULL," +
+                                                 "[AccountId] [nvarchar] (64) NOT NULL, " +
+                                                 "[ChangeTimestamp] [datetime] NOT NULL, " +
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
                                                  "[ChangeAmount] decimal (24, 12) NOT NULL, " +
                                                  "[Balance] decimal (24, 12) NOT NULL, " +
@@ -31,7 +31,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[LegalEntity] [nvarchar] (64) NULL, " +
                                                  "[AuditLog] [nvarchar] (MAX) NULL, " +
                                                  "[Instrument] [nvarchar] (64) NULL, " +
-                                                 "[TradingDate] [datetime] NULL" +
+                                                 "[TradingDate] [datetime] NULL, " +
+                                                 "INDEX IX_{0}_Base (Id, AccountId, ChangeTimestamp, EventSourceId)" +
                                                  ");";
         
         private static Type DataType => typeof(IAccountBalanceChange);
