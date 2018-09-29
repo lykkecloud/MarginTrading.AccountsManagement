@@ -33,7 +33,6 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
             sender.SendCommand(
                 new UpdateBalanceInternalCommand(
                     operationId: operationId,
-                    clientId: evt.ClientId,
                     accountId: evt.AccountId,
                     amountDelta: evt.BalanceDelta,
                     comment: $"Balance changed on position close (id = {evt.PositionId})",

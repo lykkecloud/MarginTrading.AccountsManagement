@@ -66,7 +66,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 {
                     account = await _accountsRepository.UpdateBalanceAsync(
                         operationId: command.OperationId,
-                        clientId: command.ClientId,accountId: command.AccountId,
+                        accountId: command.AccountId,
                         amountDelta: command.AmountDelta,
                         changeLimit: false);
                 }
@@ -115,7 +115,6 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         {
             await Handle(new UpdateBalanceInternalCommand(
                 operationId: command.OperationId,
-                clientId: command.ClientId,
                 accountId: command.AccountId,
                 amountDelta: command.Amount,
                 comment: command.Reason,

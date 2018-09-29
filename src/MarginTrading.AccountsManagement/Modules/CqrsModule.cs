@@ -111,7 +111,7 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             return Register.DefaultRouting
                 .PublishingCommands(
-                    typeof(UpdateBalanceInternalCommand), 
+                    typeof(UpdateBalanceInternalCommand),
                     typeof(WithdrawCommand),
                     typeof(DepositCommand))
                 .To(_contextNames.AccountsManagement)
@@ -142,15 +142,14 @@ namespace MarginTrading.AccountsManagement.Modules
                 .From(_contextNames.TradingEngine)
                 .On(DefaultRoute)
                 .PublishingCommands(
-                    typeof(UpdateBalanceInternalCommand), 
-                    typeof(FailWithdrawalInternalCommand), 
+                    typeof(UpdateBalanceInternalCommand),
                     typeof(FailWithdrawalInternalCommand))
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
             
             sagaRegistration
                 .ListeningEvents(
-                    typeof(WithdrawalFailedEvent), 
+                    typeof(WithdrawalFailedEvent),
                     typeof(WithdrawalSucceededEvent))
                 .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute);
