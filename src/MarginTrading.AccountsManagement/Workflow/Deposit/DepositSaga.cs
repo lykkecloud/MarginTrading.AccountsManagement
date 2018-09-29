@@ -70,7 +70,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
                         operationId: e.OperationId,
-                        clientId: executionInfo.Data.ClientId,
                         accountId: executionInfo.Data.AccountId,
                         amountDelta: executionInfo.Data.Amount,
                         comment: "Funds deposit " + executionInfo.Data.Comment,

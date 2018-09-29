@@ -36,7 +36,7 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
             if (evt.EventType != AccountChangedEventTypeContract.BalanceUpdated || evt.BalanceChange == null)
                 return;
             
-            var account = await _accountsRepository.GetAsync(evt.Account.ClientId, evt.Account.Id);
+            var account = await _accountsRepository.GetAsync(evt.Account.Id);
 
             var correlationId = evt.Source ?? Guid.NewGuid().ToString("N"); //if comes through API;
             var causationId = evt.BalanceChange.Id;

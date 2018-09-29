@@ -20,14 +20,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
 
-        public Task<string> ChargeManuallyAsync(string clientId, string accountId, decimal amountDelta,
-            [CanBeNull] string operationId, string reason, string source, string auditLog, AccountBalanceChangeReasonType type, string eventSourceId, string assetPairId, DateTime tradingDay)
+        public Task<string> ChargeManuallyAsync(string accountId, decimal amountDelta,
+            [CanBeNull] string operationId, string reason, string source, string auditLog,
+            AccountBalanceChangeReasonType type, string eventSourceId, string assetPairId, DateTime tradingDay)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
                 new UpdateBalanceInternalCommand(
                     operationId: operationId,
-                    clientId: clientId,
                     accountId: accountId,
                     amountDelta: amountDelta,
                     comment: reason,
@@ -42,14 +42,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return Task.FromResult(operationId);
         }
 
-        public Task<string> WithdrawAsync(string clientId, string accountId, decimal amountDelta,
+        public Task<string> WithdrawAsync(string accountId, decimal amountDelta,
             [CanBeNull] string operationId, string reason, string auditLog)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
                 new WithdrawCommand(
                     operationId: operationId,
-                    clientId: clientId,
+                    clientId: null,
                     accountId: accountId,
                     amount: amountDelta,
                     comment: reason,
@@ -59,14 +59,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return Task.FromResult(operationId);
         }
 
-        public Task<string> DepositAsync(string clientId, string accountId, decimal amountDelta,
+        public Task<string> DepositAsync(string accountId, decimal amountDelta,
             [CanBeNull] string operationId, string reason, string auditLog)
         {
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
                 new DepositCommand(
                     operationId: operationId,
-                    clientId: clientId,
+                    clientId: null,
                     accountId: accountId,
                     amount: amountDelta,
                     comment: reason,

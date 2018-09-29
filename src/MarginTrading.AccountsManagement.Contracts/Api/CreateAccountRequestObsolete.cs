@@ -2,10 +2,8 @@
 
 namespace MarginTrading.AccountsManagement.Contracts.Api
 {
-    public class CreateAccountRequest
+    public class CreateAccountRequestObsolete
     {
-        [NotNull]
-        public string ClientId { get; set; }
         [NotNull]
         public string AccountId { get; set; }
         [NotNull]

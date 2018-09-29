@@ -8,7 +8,6 @@ namespace MarginTrading.AccountsManagement.InternalModels
 {
     public class WithdrawalDepositData
     {
-        public string ClientId { get; set; }
         public string AccountId { get; set; }
         public decimal Amount { get; set; }
         public string AuditLog { get; set; }

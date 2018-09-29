@@ -68,8 +68,8 @@ namespace MarginTrading.AccountsManagement.TestClient
         {
             var client = clientGenerator.Generate<IAccountsApi>();
             await client.List().Dump();
-            var account = await client
-                .Create("client1", new CreateAccountRequest {TradingConditionId = "tc1", BaseAssetId = "ba1"}).Dump();
+            var account = await client.Create(new CreateAccountRequest
+                {ClientId = "client1", TradingConditionId = "tc1", BaseAssetId = "ba1"}).Dump();
             await client.GetByClientAndId("client1", account.Id).Dump();
             await client.Change("client1", account.Id,
                 new ChangeAccountRequest {IsDisabled = true, TradingConditionId = "tc2"}).Dump();
