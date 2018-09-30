@@ -2,6 +2,7 @@
 using Common.Log;
 using Lykke.MarginTrading.BrokerBase;
 using Lykke.MarginTrading.BrokerBase.Settings;
+using Lykke.SlackNotifications;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
@@ -15,9 +16,14 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         private readonly Settings _settings;
         private readonly IConvertService _convertService;
 
-        public Application(IAccountHistoryRepository accountHistoryRepository, ILog logger,
-            Settings settings, CurrentApplicationInfo applicationInfo, IConvertService convertService)
-            : base(logger, null, applicationInfo)
+        public Application(
+            IAccountHistoryRepository accountHistoryRepository, 
+            ILog logger,
+            Settings settings, 
+            CurrentApplicationInfo applicationInfo, 
+            IConvertService convertService, 
+            ISlackNotificationsSender slackNotificationsSender)
+            : base(logger, slackNotificationsSender, applicationInfo)
         {
             _accountHistoryRepository = accountHistoryRepository;
             _settings = settings;
