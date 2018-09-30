@@ -11,8 +11,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
     public class Db
     {
         public string StorageMode { get; set; }
-        public string HistoryConnString { get; set; }
-        public string LogsConnString { get; set; }
+        public string ConnString { get; set; }
     }
     
     public class RabbitMqQueues
