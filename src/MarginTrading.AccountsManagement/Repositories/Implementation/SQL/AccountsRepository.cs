@@ -57,7 +57,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             _log = log;
             _settings = settings;
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
@@ -70,7 +70,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public async Task AddAsync(IAccount account)
         {
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 await conn.ExecuteAsync(
                     $"insert into {TableName} ({GetColumns}) values ({GetFields})", Convert(account));
@@ -84,7 +84,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 search = "%" + search + "%";
             }
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var whereClause = "WHERE 1=1" +
                                   (string.IsNullOrWhiteSpace(clientId) ? "" : " AND ClientId = @clientId")
@@ -104,7 +104,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 search = "%" + search + "%";
             }
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var whereClause = "WHERE 1=1"
                                   + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search");
@@ -127,7 +127,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public async Task<IAccount> GetAsync(string accountId)
         {
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var whereClause = "WHERE 1=1 "
                                   + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND Id = @accountId");
@@ -194,7 +194,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         private async Task<IAccount> GetAccountAndUpdate(string accountId, Action<AccountEntity> handler)
         {
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 if (conn.State == ConnectionState.Closed)
                     await conn.OpenAsync();

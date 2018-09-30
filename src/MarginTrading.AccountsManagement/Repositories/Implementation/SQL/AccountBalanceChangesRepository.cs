@@ -51,7 +51,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             _log = log;
             _settings = settings;
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
@@ -69,7 +69,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                        + (from != null ? " AND ChangeTimestamp > @from" : "")
                                        + (to != null ? " AND ChangeTimestamp < @to" : "");
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
                     $"SELECT * FROM {TableName} {whereClause}", new { accountId, from, to });
@@ -83,7 +83,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             var whereClause = "WHERE AccountId=@accountId "
                 + (string.IsNullOrWhiteSpace(eventSourceId) ? "" : "AND EventSourceId=@eventSourceId");
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
                     $"SELECT * FROM {TableName} {whereClause}", 
@@ -97,7 +97,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             var entity = _convertService.Convert<AccountBalanceChangeEntity>(change);
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 try
                 {

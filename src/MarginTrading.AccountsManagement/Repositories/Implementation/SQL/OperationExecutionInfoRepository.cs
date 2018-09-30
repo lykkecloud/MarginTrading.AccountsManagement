@@ -44,7 +44,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             _settings = settings;
             _systemClock = systemClock;
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
@@ -60,7 +60,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             try
             {
-                using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+                using (var conn = new SqlConnection(_settings.Db.ConnectionString))
                 {
                     var operationInfo = await conn.QueryFirstOrDefaultAsync<OperationExecutionInfoEntity>(
                         $"SELECT * FROM {TableName} WHERE Id=@operationId and OperationName=@operationName",
@@ -88,7 +88,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
         {
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
                     $"SELECT * FROM {TableName} WHERE Id = @id and OperationName=@operationName",
@@ -103,7 +103,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             var entity = Convert(executionInfo);
             entity.LastModified = _systemClock.UtcNow.UtcDateTime;
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 try
                 {
