@@ -1,4 +1,4 @@
-﻿using MarginTrading.AccountsManagement.BrokerBase;
+﻿using Lykke.MarginTrading.BrokerBase;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 {

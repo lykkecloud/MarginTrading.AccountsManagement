@@ -4,7 +4,7 @@ using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
-using MarginTrading.AccountsManagement.BrokerBase.Services;
+using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.AzureRepositories
 {

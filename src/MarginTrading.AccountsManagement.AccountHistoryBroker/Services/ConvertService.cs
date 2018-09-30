@@ -1,30 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using AutoMapper;
 using JetBrains.Annotations;
-using MoreLinq;
+using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using Newtonsoft.Json;
 
-namespace MarginTrading.AccountsManagement.BrokerBase.Services
+namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Services
 {
     [UsedImplicitly]
-    public class ConvertService : IConvertService
+    internal class ConvertService : IConvertService
     {
-        public ConvertService(Action<IMapperConfigurationExpression> mapperConfig = null)
-        {
-            _mapper = CreateMapper(mapperConfig);
-        }
-        
-        private readonly IMapper _mapper;
+        private readonly IMapper _mapper = CreateMapper();
 
-        private static IMapper CreateMapper(Action<IMapperConfigurationExpression> mapperConfig = null)
+        private static IMapper CreateMapper()
         {
             return new MapperConfiguration(cfg =>
             {
                 // todo: add some global configurations here?
-                mapperConfig?.Invoke(cfg);
+                cfg.CreateMap<AccountBalanceChangeReasonType, string>().ConvertUsing(x => x.ToString());
             }).CreateMapper();
         }
 

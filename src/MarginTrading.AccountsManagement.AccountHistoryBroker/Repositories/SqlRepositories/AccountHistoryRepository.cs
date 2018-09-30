@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
+using Lykke.Logs.MsSql.Extensions;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
-using MarginTrading.AccountsManagement.BrokerBase;
-using MarginTrading.AccountsManagement.BrokerBase.Services;
+using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.SqlRepositories
 {
