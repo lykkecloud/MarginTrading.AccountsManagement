@@ -43,15 +43,16 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return; 
 
-            if (SwitchState(executionInfo.Data, State.Created, State.FreezingAmount))
+            if (SwitchState(executionInfo.Data, WithdrawalState.Created, WithdrawalState.FreezingAmount))
             {
                 sender.SendCommand(
                     new FreezeAmountForDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
-                
         }
 
         /// <summary>
@@ -65,7 +66,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.FreezingAmount, State.UpdatingBalance))
+            if (SwitchState(executionInfo.Data, WithdrawalState.FreezingAmount, WithdrawalState.UpdatingBalance))
             {
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
@@ -80,7 +81,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                         assetPairId: string.Empty,
                         tradingDay: DateTime.UtcNow),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -96,13 +99,14 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.FreezingAmount, State.Failed))
+            if (SwitchState(executionInfo.Data, WithdrawalState.FreezingAmount, WithdrawalState.Failed))
             {
-         
                 sender.SendCommand(
                     new FailDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -121,13 +125,15 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
 
-            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Succeeded))
+            if (SwitchState(executionInfo.Data, WithdrawalState.UpdatingBalance, WithdrawalState.Succeeded))
             {
                 sender.SendCommand(
                     new CompleteDepositInternalCommand(
                         operationId: e.BalanceChange.Id),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.BalanceChange.Id);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
@@ -146,19 +152,21 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             if (executionInfo == null)
                 return;
             
-            if (SwitchState(executionInfo.Data, State.UpdatingBalance, State.Failed))
+            if (SwitchState(executionInfo.Data, WithdrawalState.UpdatingBalance, WithdrawalState.Failed))
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
                     new FailDepositInternalCommand(e.OperationId),
                     _contextNames.AccountsManagement);
+                
                 _chaosKitty.Meow(e.OperationId);
+                
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
         
         
-        private static bool SwitchState(WithdrawalDepositData data, State expectedState, State nextState)
+        private static bool SwitchState(WithdrawalDepositData data, WithdrawalState expectedState, WithdrawalState nextState)
         {
             if (data.State < expectedState)
             {

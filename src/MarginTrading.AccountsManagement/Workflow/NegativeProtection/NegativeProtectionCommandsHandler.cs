@@ -1,5 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Settings;
@@ -7,16 +9,21 @@ using MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands;
 
 namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
 {
+    [UsedImplicitly]
     internal class NegativeProtectionCommandsHandler
     {
+        private readonly IChaosKitty _chaosKitty;
         private readonly AccountManagementSettings _accountManagementSettings;
 
         public NegativeProtectionCommandsHandler(
+            IChaosKitty chaosKitty,
             AccountManagementSettings accountManagementSettings)
         {
+            _chaosKitty = chaosKitty;
             _accountManagementSettings = accountManagementSettings;
         }
 
+        [UsedImplicitly]
         public void Handle(NotifyNegativeProtectionInternalCommand command, IEventPublisher publisher)
         {
             //skipping idempotency violation check

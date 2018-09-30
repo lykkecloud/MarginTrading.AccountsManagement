@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -18,16 +19,19 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
         private readonly INegativeProtectionService _negativeProtectionService;
         private readonly IAccountsRepository _accountsRepository;
         private readonly ISystemClock _systemClock;
+        private readonly IChaosKitty _chaosKitty;
 
         public NegativeProtectionSaga(CqrsContextNamesSettings contextNames,
             INegativeProtectionService negativeProtectionService,
             IAccountsRepository accountsRepository,
-            ISystemClock systemClock)
+            ISystemClock systemClock,
+            IChaosKitty chaosKitty)
         {
             _contextNames = contextNames;
             _negativeProtectionService = negativeProtectionService;
             _accountsRepository = accountsRepository;
             _systemClock = systemClock;
+            _chaosKitty = chaosKitty;
         }
 
         [UsedImplicitly]

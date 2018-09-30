@@ -61,7 +61,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         AccountId = command.AccountId,
                         Amount = command.Amount,
                         AuditLog = command.AuditLog,
-                        State = State.Created,
+                        State = WithdrawalState.Created,
                         Comment = command.Comment
                     },
                     lastModified: _systemClock.UtcNow.UtcDateTime));
@@ -75,11 +75,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             
             if (account == null || account.Balance - realisedDailyPnl < command.Amount)
             {
-                _chaosKitty.Meow(command.OperationId);
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime, account == null
                         ? $"Account {command.AccountId} not found."
                         : "Account balance is not enough"));
+                
                 return;
             }
 
@@ -87,6 +87,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime, "Withdrawal is disabled"));
+                
                 return;
             }
             

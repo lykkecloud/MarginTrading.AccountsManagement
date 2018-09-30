@@ -4,7 +4,7 @@ using Newtonsoft.Json.Converters;
 namespace MarginTrading.AccountsManagement.InternalModels
 {
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum State
+    public enum WithdrawalState
     {
         Created = 0,
         FreezingAmount = 1,
@@ -12,6 +12,5 @@ namespace MarginTrading.AccountsManagement.InternalModels
         UnfreezingAmount = 3,
         Succeeded = 4,
         Failed = 5,
-
     }
 }
