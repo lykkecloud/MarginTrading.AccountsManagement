@@ -23,7 +23,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
             CurrentApplicationInfo applicationInfo, 
             IConvertService convertService, 
             ISlackNotificationsSender slackNotificationsSender)
-            : base(logger, slackNotificationsSender, applicationInfo)
+            : base(logger, slackNotificationsSender, applicationInfo, MessageFormat.MessagePack)
         {
             _accountHistoryRepository = accountHistoryRepository;
             _settings = settings;
