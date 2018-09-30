@@ -9,7 +9,5 @@ namespace MarginTrading.AccountsManagement.Settings
         
         public string ConnectionString { get; set; }
         public string LogsConnString { get; set; }
-        
-        public string SqlConnectionString { get; set; }
     }
 }
