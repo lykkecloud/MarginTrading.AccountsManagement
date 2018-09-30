@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
 using Lykke.MarginTrading.BrokerBase;
+using Lykke.MarginTrading.BrokerBase.Models;
 using Lykke.MarginTrading.BrokerBase.Settings;
 using Lykke.SlackNotifications;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
