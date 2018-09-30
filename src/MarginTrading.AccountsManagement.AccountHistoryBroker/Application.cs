@@ -1,11 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
-using Lykke.SlackNotifications;
+using Lykke.MarginTrading.BrokerBase;
+using Lykke.MarginTrading.BrokerBase.Settings;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
-using MarginTrading.AccountsManagement.BrokerBase;
-using MarginTrading.AccountsManagement.BrokerBase.Services;
-using MarginTrading.AccountsManagement.BrokerBase.Settings;
+using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
 using MarginTrading.AccountsManagement.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker

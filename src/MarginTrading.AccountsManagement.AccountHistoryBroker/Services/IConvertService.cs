@@ -1,7 +1,7 @@
 ﻿using System;
 using AutoMapper;
 
-namespace MarginTrading.AccountsManagement.BrokerBase.Services
+namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Services
 {
     public interface IConvertService
     {
