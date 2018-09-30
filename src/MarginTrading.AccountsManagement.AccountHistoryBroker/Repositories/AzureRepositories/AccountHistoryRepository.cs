@@ -16,7 +16,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Azu
         public AccountHistoryRepository(IReloadingManager<Settings> settings, ILog log,
             IConvertService convertService)
         {
-            _tableStorage = AzureTableStorage<AccountHistoryEntity>.Create(settings.Nested(s => s.Db.HistoryConnString),
+            _tableStorage = AzureTableStorage<AccountHistoryEntity>.Create(settings.Nested(s => s.Db.ConnString),
                 "AccountHistory", log);
             _convertService = convertService;
         }

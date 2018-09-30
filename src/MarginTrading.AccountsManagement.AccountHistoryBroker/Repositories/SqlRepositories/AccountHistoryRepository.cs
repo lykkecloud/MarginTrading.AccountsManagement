@@ -47,7 +47,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             _settings = settings;
             _convertService = convertService;
             
-            using (var conn = new SqlConnection(_settings.Db.HistoryConnString))
+            using (var conn = new SqlConnection(_settings.Db.ConnString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
@@ -62,7 +62,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
         {
             var entity = _convertService.Convert<AccountHistoryEntity>(obj);
             
-            using (var conn = new SqlConnection(_settings.Db.HistoryConnString))
+            using (var conn = new SqlConnection(_settings.Db.ConnString))
             {
                 try
                 {
