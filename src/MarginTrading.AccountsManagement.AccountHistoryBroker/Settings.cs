@@ -1,4 +1,4 @@
-﻿using MarginTrading.AccountsManagement.BrokerBase.Settings;
+﻿using Lykke.MarginTrading.BrokerBase.Settings;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 {
@@ -11,8 +11,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
     public class Db
     {
         public string StorageMode { get; set; }
-        public string HistoryConnString { get; set; }
-        public string HistorySqlConnString { get; set; }
+        public string ConnString { get; set; }
     }
     
     public class RabbitMqQueues
