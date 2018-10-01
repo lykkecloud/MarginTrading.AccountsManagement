@@ -23,7 +23,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
     {
         private const string TableName = "MarginTradingAccounts";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
-                                                 "[Id] [nvarchar] (64) NOT NULL PRIMARY KEY," +
+                                                 "[Id] [nvarchar] (64) NOT NULL PRIMARY KEY, " +
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
                                                  "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
                                                  "[BaseAssetId] [nvarchar] (64) NOT NULL, " +
@@ -32,8 +32,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[LegalEntity] [nvarchar] (64) NOT NULL, " +
                                                  "[IsDisabled] [bit] NOT NULL, " +
                                                  "[IsWithdrawalDisabled] [bit] NOT NULL, " +
-                                                 "[ModificationTimestamp] [DateTime] NOT NULL," +
-                                                 "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL" +
+                                                 "[ModificationTimestamp] [DateTime] NOT NULL, " +
+                                                 "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL, " +
+                                                 "INDEX IX_{0}_Client (ClientId)" +
                                                  ");";
         
         private static Type DataType => typeof(IAccount);

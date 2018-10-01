@@ -18,12 +18,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
     {
         private const string TableName = "OperationExecutionInfo";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
-                                                 "[Oid] [bigint] NOT NULL IDENTITY(1,1) PRIMARY KEY," +
-                                                 "[Id] [nvarchar] (128) NOT NULL," +
+                                                 "[Oid] [bigint] NOT NULL IDENTITY(1,1) PRIMARY KEY, " +
+                                                 "[Id] [nvarchar] (128) NOT NULL, " +
                                                  "[LastModified] [datetime] NOT NULL, " +
                                                  "[OperationName] [nvarchar] (64) NULL, " +
                                                  "[Version] [nvarchar] (64) NULL, " +
-                                                 "[Data] [nvarchar] (MAX) NOT NULL," +
+                                                 "[Data] [nvarchar] (MAX) NOT NULL, " +
                                                  "CONSTRAINT [UX_OpExInfo_Id_Op] UNIQUE NONCLUSTERED ([Id], [OperationName])" +
                                                  ");";
         
