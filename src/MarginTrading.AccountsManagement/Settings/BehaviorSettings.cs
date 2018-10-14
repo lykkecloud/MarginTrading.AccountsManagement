@@ -12,6 +12,6 @@ namespace MarginTrading.AccountsManagement.Settings
 
         [Optional] public bool BalanceResetIsEnabled { get; set; }
 
-        [Optional] public bool DefaultWithdrawalIsEnabled { get; set; } = false;
+        [Optional] public bool DefaultWithdrawalIsEnabled { get; set; } = true;
     }
 }

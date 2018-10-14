@@ -273,7 +273,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 : accountId;
 
             IAccount account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, 
-                !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? false), DateTime.UtcNow);
+                !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true), DateTime.UtcNow);
 
             await _accountsRepository.AddAsync(account);
             account = await _accountsRepository.GetAsync(accountId);
