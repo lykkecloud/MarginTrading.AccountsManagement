@@ -33,5 +33,8 @@ namespace MarginTrading.AccountsManagement.Settings
 
         [Optional, CanBeNull]
         public ChaosSettings ChaosKitty { get; set; }
+        
+        [Optional]
+        public bool UseSerilog { get; set; }
     }
 }
