@@ -16,6 +16,7 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
+using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -47,6 +48,7 @@ namespace MarginTrading.AccountsManagement
         {
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
+                .AddSerilogJson(env)
                 .AddEnvironmentVariables()
                 .Build();
             Environment = env;
@@ -74,7 +76,7 @@ namespace MarginTrading.AccountsManagement
 
                 var builder = new ContainerBuilder();
                 var appSettings = Configuration.LoadSettings<AppSettings>();
-                Log = CreateLog(services, appSettings);
+                Log = CreateLog(Configuration, appSettings);
 
                 builder.RegisterModule(new AccountsManagementModule(appSettings, Log));
                 builder.RegisterModule(new AccountsManagementExternalServicesModule(appSettings));
@@ -183,14 +185,18 @@ namespace MarginTrading.AccountsManagement
             }
         }
 
-        private static ILog CreateLog(IServiceCollection services, IReloadingManager<AppSettings> settings)
+        private static ILog CreateLog(IConfiguration configuration, IReloadingManager<AppSettings> settings)
         {
             var aggregateLogger = new AggregateLogger();
             var consoleLogger = new LogToConsole();
             
             aggregateLogger.AddLog(consoleLogger);
 
-            if (settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.SqlServer.ToString())
+            if (settings.CurrentValue.MarginTradingAccountManagement.UseSerilog)
+            {
+                aggregateLogger.AddLog(new SerilogLogger(typeof(Startup).Assembly, configuration));
+            }
+            else if (settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.SqlServer.ToString())
             {
                 var sqlLogger = new LogToSql(new SqlLogRepository("AccountManagementLog",
                     settings.CurrentValue.MarginTradingAccountManagement.Db.LogsConnString));
