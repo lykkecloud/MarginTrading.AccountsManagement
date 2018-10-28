@@ -48,6 +48,7 @@ namespace MarginTrading.AccountsManagement
         {
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
+                .AddSerilogJson(env)
                 .AddEnvironmentVariables()
                 .AddSerilogJson(env)
                 .Build();
@@ -107,6 +108,12 @@ namespace MarginTrading.AccountsManagement
                 {
                     app.UseHsts();
                 }
+                          
+#if DEBUG
+                app.UseLykkeMiddleware(ServiceName, ex => ex.ToString());
+#else
+                app.UseLykkeMiddleware(ServiceName, ex => new ErrorResponse {ErrorMessage = ex.Message});
+#endif
 
                 app.UseMvc();
                 app.UseSwagger();
