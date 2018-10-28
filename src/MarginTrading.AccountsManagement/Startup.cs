@@ -23,6 +23,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Modules;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Repositories.Implementation.SQL;
+using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -36,27 +37,22 @@ namespace MarginTrading.AccountsManagement
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
-                .AddInMemoryCollection(new Dictionary<string, string>
-                {
-                    {"SettingsUrl", Path.Combine(env.ContentRootPath, "appsettings.dev.json")}
-                })
-                .AddSerilogJson(env)
-                .AddEnvironmentVariables();
-            Configuration = builder.Build();
-            Environment = env;
-        }
-
-        public static string ServiceName { get; } = PlatformServices.Default
-            .Application.ApplicationName;
+        public static string ServiceName { get; } = PlatformServices.Default.Application.ApplicationName;
 
         private IHostingEnvironment Environment { get; }
         private IContainer ApplicationContainer { get; set; }
         private IConfigurationRoot Configuration { get; }
         [CanBeNull] private ILog Log { get; set; }
+        
+        public Startup(IHostingEnvironment env)
+        {
+            Configuration = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddSerilogJson(env)
+                .AddEnvironmentVariables()
+                .Build();
+            Environment = env;
+        }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
@@ -98,6 +94,7 @@ namespace MarginTrading.AccountsManagement
             }
         }
 
+        [UsedImplicitly]
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
         {
             try
@@ -106,7 +103,11 @@ namespace MarginTrading.AccountsManagement
                 {
                     app.UseDeveloperExceptionPage();
                 }
-
+                else
+                {
+                    app.UseHsts();
+                }
+                          
 #if DEBUG
                 app.UseLykkeMiddleware(ServiceName, ex => ex.ToString());
 #else
@@ -233,6 +234,8 @@ namespace MarginTrading.AccountsManagement
                 
                 aggregateLogger.AddLog(azureStorageLogger);
             }
+
+            LogLocator.Log = aggregateLogger;
 
             return aggregateLogger;
         }
