@@ -35,18 +35,18 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
         [UsedImplicitly]
         private async Task Handle(LiquidationFinishedEvent evt, ICommandSender sender)
         {
-            await Handle(evt.OperationId, evt.AccountId,
+            await HandleEvents(evt.OperationId, evt.AccountId,
                 evt.OpenPositionsRemainingOnAccount, evt.CurrentTotalCapital, sender);
         }
 
         [UsedImplicitly]
         private async Task Handle(LiquidationFailedEvent evt, ICommandSender sender)
         {
-            await Handle(evt.OperationId, evt.AccountId,
+            await HandleEvents(evt.OperationId, evt.AccountId,
                 evt.OpenPositionsRemainingOnAccount, evt.CurrentTotalCapital, sender);
         }
         
-        private async Task Handle(string operationId, string accountId, 
+        private async Task HandleEvents(string operationId, string accountId, 
             int openPositionsOnAccount, decimal currentTotalCapital, ICommandSender sender)
         {
             var account = await _accountsRepository.GetAsync(accountId);
