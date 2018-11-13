@@ -32,10 +32,16 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands
         
         [Key(6)]
         public decimal Amount { get; }
+        
+        [Key(7)]
+        public int OpenPositionsRemainingOnAccount { get; }
+        
+        [Key(8)]
+        public decimal CurrentTotalCapital { get; }
 
         public NotifyNegativeProtectionInternalCommand([NotNull] string id, [NotNull] string correlationId, 
             [NotNull] string causationId, DateTime eventTimestamp, [NotNull] string clientId, 
-            [NotNull] string accountId, decimal amount)
+            [NotNull] string accountId, decimal amount, int openPositionsRemainingOnAccount, decimal currentTotalCapital)
         {
             Id = id;
             CorrelationId = correlationId;
@@ -44,6 +50,8 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands
             ClientId = clientId;
             AccountId = accountId;
             Amount = amount;
+            OpenPositionsRemainingOnAccount = openPositionsRemainingOnAccount;
+            CurrentTotalCapital = currentTotalCapital;
         }
     }
 }
