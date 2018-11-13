@@ -12,14 +12,11 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
     [UsedImplicitly]
     internal class NegativeProtectionCommandsHandler
     {
-        private readonly IChaosKitty _chaosKitty;
         private readonly AccountManagementSettings _accountManagementSettings;
 
         public NegativeProtectionCommandsHandler(
-            IChaosKitty chaosKitty,
             AccountManagementSettings accountManagementSettings)
         {
-            _chaosKitty = chaosKitty;
             _accountManagementSettings = accountManagementSettings;
         }
 
@@ -36,7 +33,9 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
                 clientId: command.ClientId,
                 accountId: command.AccountId,
                 amount: command.Amount,
-                isAutoCompensated: _accountManagementSettings.NegativeProtectionAutoCompensation
+                isAutoCompensated: _accountManagementSettings.NegativeProtectionAutoCompensation,
+                openPositionsRemainingOnAccount: command.OpenPositionsRemainingOnAccount,
+                currentTotalCapital: command.CurrentTotalCapital
             ));
         }
     }

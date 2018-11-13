@@ -33,15 +33,34 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         [Key(5)]
         public string AccountId { get; }
         
+        /// <summary>
+        /// Amount of compensation to make account positive
+        /// </summary>
         [Key(6)]
         public decimal Amount { get; }
         
+        /// <summary>
+        /// Shows if negative balance was automatically compensated
+        /// </summary>
         [Key(7)]
         public bool IsAutoCompensated { get; }
+        
+        /// <summary>
+        /// Number of open positions of account at the moment of liquidation end
+        /// </summary>
+        [Key(8)]
+        public int OpenPositionsRemainingOnAccount { get; }
+        
+        /// <summary>
+        /// Total capital of account at the moment of liquidation end
+        /// </summary>
+        [Key(9)]
+        public decimal CurrentTotalCapital { get; }
 
         public NegativeProtectionEvent([NotNull] string id, [NotNull] string correlationId,
             [NotNull] string causationId, DateTime eventTimestamp, [NotNull] string clientId,
-            [NotNull] string accountId, decimal amount, bool isAutoCompensated)
+            [NotNull] string accountId, decimal amount, bool isAutoCompensated, 
+            int openPositionsRemainingOnAccount, decimal currentTotalCapital)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             CorrelationId = correlationId ?? throw new ArgumentNullException(nameof(correlationId));
@@ -51,6 +70,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
             IsAutoCompensated = isAutoCompensated;
+            OpenPositionsRemainingOnAccount = openPositionsRemainingOnAccount;
+            CurrentTotalCapital = currentTotalCapital;
         }
     }
 }

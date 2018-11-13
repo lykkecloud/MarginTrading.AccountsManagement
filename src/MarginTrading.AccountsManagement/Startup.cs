@@ -138,7 +138,7 @@ namespace MarginTrading.AccountsManagement
         {
             try
             {
-                // NOTE: Service not yet recieves and processes requests here
+                // NOTE: Service not yet receives and processes requests here
 
                 await Log.WriteMonitorAsync("", "", "Started");
             }
@@ -153,7 +153,7 @@ namespace MarginTrading.AccountsManagement
         {
             try
             {
-                // NOTE: Service still can recieve and process requests here, so take care about it if you add logic here.
+                // NOTE: Service still can receive and process requests here, so take care about it if you add logic here.
             }
             catch (Exception ex)
             {
@@ -170,7 +170,7 @@ namespace MarginTrading.AccountsManagement
         {
             try
             {
-                // NOTE: Service can't recieve and process requests here, so you can destroy all resources
+                // NOTE: Service can't receive and process requests here, so you can destroy all resources
 
                 if (Log != null)
                 {

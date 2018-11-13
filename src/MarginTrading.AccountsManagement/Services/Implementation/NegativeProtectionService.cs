@@ -7,7 +7,6 @@ using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
-    
     public class NegativeProtectionService : INegativeProtectionService
     {
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
@@ -24,29 +23,32 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _negativeProtectionAutoCompensation = accountManagementSettings.NegativeProtectionAutoCompensation;
         }
         
-        public async Task<bool> CheckAsync(string correlationId, string causationId, IAccount account)
+        public async Task<decimal?> CheckAsync(string operationId, IAccount account, decimal currentTotalCapital)
         {
-            if (account == null || account.Balance >= 0)
-                return false;
+            if (account == null || currentTotalCapital >= 0)
+                return null;
             
             //idempotency is satisfied at source sagas
+            
+            var amount = Math.Abs(currentTotalCapital);
 
             if (_negativeProtectionAutoCompensation)
             {
-                await _sendBalanceCommandsService.ChargeManuallyAsync(accountId: account.Id,
-                    amountDelta: Math.Abs(account.Balance),
-                    operationId: $"{causationId}-negative-protection",
+                await _sendBalanceCommandsService.ChargeManuallyAsync(
+                    accountId: account.Id,
+                    amountDelta: amount,
+                    operationId: $"{operationId}-negative-protection",
                     reason: "Negative protection",
                     source: nameof(NegativeProtectionService),
                     auditLog: null,
                     type: AccountBalanceChangeReasonType.CompensationPayments,
-                    eventSourceId: correlationId,
+                    eventSourceId: operationId,
                     assetPairId: null,
                     tradingDate: _systemClock.UtcNow.UtcDateTime
                 );
             }
 
-            return true;
+            return amount;
         }
     }
 }
