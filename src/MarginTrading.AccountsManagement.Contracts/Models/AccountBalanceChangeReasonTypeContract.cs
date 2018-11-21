@@ -69,5 +69,10 @@
         /// Compensation payments
         /// </summary>
         CompensationPayments = 14,
+        
+        /// <summary>
+        /// New account was created
+        /// </summary>
+        Create = 15,
     }
 }
