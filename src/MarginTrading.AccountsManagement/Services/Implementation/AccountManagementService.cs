@@ -283,7 +283,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true), DateTime.UtcNow);
 
             await _accountsRepository.AddAsync(account);
-            account = (Account) await _accountsRepository.GetAsync(accountId);
+            account = Convert(await _accountsRepository.GetAsync(accountId));
 
             _eventSender.SendAccountChangedEvent(nameof(CreateAccount), account,
                 AccountChangedEventTypeContract.Created, id);
@@ -358,6 +358,22 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 throw new ValidationException($"Account disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
             }
+        }
+
+        private static Account Convert(IAccount account)
+        {
+            return new Account(
+                id: account.Id,
+                clientId: account.ClientId,
+                tradingConditionId: account.TradingConditionId,
+                baseAssetId: account.BaseAssetId,
+                balance: account.Balance,
+                withdrawTransferLimit: account.WithdrawTransferLimit,
+                legalEntity: account.LegalEntity,
+                isDisabled: account.IsDisabled,
+                isWithdrawalDisabled: account.IsWithdrawalDisabled,
+                modificationTimestamp: account.ModificationTimestamp
+            );
         }
 
         #endregion
