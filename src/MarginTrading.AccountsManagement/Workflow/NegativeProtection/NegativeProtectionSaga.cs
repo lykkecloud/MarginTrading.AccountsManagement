@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
@@ -17,16 +18,20 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
     internal class NegativeProtectionSaga
     {
         private readonly CqrsContextNamesSettings _contextNames;
+        private readonly AccountManagementSettings _settings;
         private readonly INegativeProtectionService _negativeProtectionService;
         private readonly IAccountsRepository _accountsRepository;
         private readonly ISystemClock _systemClock;
 
-        public NegativeProtectionSaga(CqrsContextNamesSettings contextNames,
+        public NegativeProtectionSaga(
+            CqrsContextNamesSettings contextNames,
+            AccountManagementSettings settings,
             INegativeProtectionService negativeProtectionService,
             IAccountsRepository accountsRepository,
             ISystemClock systemClock)
         {
             _contextNames = contextNames;
+            _settings = settings;
             _negativeProtectionService = negativeProtectionService;
             _accountsRepository = accountsRepository;
             _systemClock = systemClock;
@@ -49,8 +54,10 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
         private async Task HandleEvents(string operationId, string accountId, 
             int openPositionsOnAccount, decimal currentTotalCapital, ICommandSender sender)
         {
+            await Task.Delay(_settings.NegativeProtectionTimeoutMs);
+                
             var account = await _accountsRepository.GetAsync(accountId);
-            var amount = await _negativeProtectionService.CheckAsync(operationId, account, currentTotalCapital);
+            var amount = await _negativeProtectionService.CheckAsync(operationId, account);
 
             if (account == null || amount == null)
             {
@@ -68,7 +75,7 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
                     openPositionsRemainingOnAccount: openPositionsOnAccount,
                     currentTotalCapital: currentTotalCapital
                 ),
-                _contextNames.AccountsManagement);
+                _contextNames.AccountsManagement);  
         }
     }
 }

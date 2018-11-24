@@ -15,8 +15,7 @@ namespace MarginTrading.AccountsManagement.Services
         /// </summary>
         /// <param name="operationId"></param>
         /// <param name="account"></param>
-        /// <param name="currentTotalCapital"></param>
         /// <returns></returns>
-        Task<decimal?> CheckAsync(string operationId, IAccount account, decimal currentTotalCapital);
+        Task<decimal?> CheckAsync(string operationId, IAccount account);
     }
 }

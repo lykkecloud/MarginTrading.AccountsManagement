@@ -23,14 +23,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _negativeProtectionAutoCompensation = accountManagementSettings.NegativeProtectionAutoCompensation;
         }
         
-        public async Task<decimal?> CheckAsync(string operationId, IAccount account, decimal currentTotalCapital)
+        public async Task<decimal?> CheckAsync(string operationId, IAccount account)
         {
-            if (account == null || currentTotalCapital >= 0)
+            if (account == null || account.Balance >= 0)
                 return null;
             
             //idempotency is satisfied at source sagas
             
-            var amount = Math.Abs(currentTotalCapital);
+            var amount = Math.Abs(account.Balance);
 
             if (_negativeProtectionAutoCompensation)
             {
