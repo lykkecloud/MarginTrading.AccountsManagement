@@ -134,7 +134,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         /// <returns></returns>
         [Post("/api/accounts/{accountId}/reset")]
-        Task<AccountContract> Reset(string accountId);
+        Task Reset(string accountId);
 
         /// <summary>
         /// Get account statistics for the current trading day

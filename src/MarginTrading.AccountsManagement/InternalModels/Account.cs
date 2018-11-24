@@ -30,7 +30,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public string ClientId { get; }
         public string TradingConditionId { get; }
         public string BaseAssetId { get; }
-        public decimal Balance { get; set; }
+        public decimal Balance { get; }
         public decimal WithdrawTransferLimit { get; }
         public string LegalEntity { get; }
         public bool IsDisabled { get; }
