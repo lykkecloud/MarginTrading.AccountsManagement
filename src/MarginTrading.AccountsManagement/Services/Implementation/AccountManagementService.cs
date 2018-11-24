@@ -247,14 +247,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
-        public async Task<IAccount> ResetAccountAsync(string accountId)
+        public async Task ResetAccountAsync(string accountId)
         {
             if (_settings.Behavior?.BalanceResetIsEnabled != true)
             {
                 throw new NotSupportedException("Account reset is not supported");
             }
 
-            if (!(await _accountsRepository.GetAsync(accountId) is Account account))
+            var account = await _accountsRepository.GetAsync(accountId);
+            if (account == null)
             {
                 throw new ArgumentOutOfRangeException($"Account with id [{accountId}] does not exist");
             }
@@ -262,9 +263,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
                 _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
                 "Reset account Api");
-
-            account.Balance = _settings.Behavior.DefaultBalance;
-            return account;
         }
 
         #endregion
@@ -279,20 +277,20 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
                 : accountId;
 
-            var account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, 
+            IAccount account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, 
                 !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true), DateTime.UtcNow);
 
             await _accountsRepository.AddAsync(account);
-            account = Convert(await _accountsRepository.GetAsync(accountId));
+            account = await _accountsRepository.GetAsync(accountId);
 
             _eventSender.SendAccountChangedEvent(nameof(CreateAccount), account,
                 AccountChangedEventTypeContract.Created, id);
 
+            //todo consider moving to CQRS projection
             if (_settings.Behavior?.DefaultBalance != null && _settings.Behavior.DefaultBalance != default)
             {
                 await UpdateBalanceAsync(Guid.NewGuid().ToString(), account.Id, _settings.Behavior.DefaultBalance, 
                     AccountBalanceChangeReasonType.Create, "Create account Api");
-                account.Balance = _settings.Behavior.DefaultBalance;
             }
 
             return account;
@@ -358,22 +356,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 throw new ValidationException($"Account disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
             }
-        }
-
-        private static Account Convert(IAccount account)
-        {
-            return new Account(
-                id: account.Id,
-                clientId: account.ClientId,
-                tradingConditionId: account.TradingConditionId,
-                baseAssetId: account.BaseAssetId,
-                balance: account.Balance,
-                withdrawTransferLimit: account.WithdrawTransferLimit,
-                legalEntity: account.LegalEntity,
-                isDisabled: account.IsDisabled,
-                isWithdrawalDisabled: account.IsWithdrawalDisabled,
-                modificationTimestamp: account.ModificationTimestamp
-            );
         }
 
         #endregion

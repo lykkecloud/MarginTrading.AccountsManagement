@@ -48,7 +48,7 @@ namespace MarginTrading.AccountsManagement.Services
         Task<IAccount> UpdateAccountAsync(string accountId,
             string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled);
         
-        Task<IAccount> ResetAccountAsync(string accountId);
+        Task ResetAccountAsync(string accountId);
         
         #endregion
 
