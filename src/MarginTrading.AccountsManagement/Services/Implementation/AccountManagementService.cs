@@ -24,6 +24,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IAccountsRepository _accountsRepository;
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly ITradingConditionsService _tradingConditionsService;
+        private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
         private readonly IOrdersApi _ordersApi;
         private readonly IPositionsApi _positionsApi;
         private readonly AccountManagementSettings _settings;
@@ -34,6 +35,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         public AccountManagementService(IAccountsRepository accountsRepository,
             IAccountBalanceChangesRepository accountBalanceChangesRepository,
             ITradingConditionsService tradingConditionsService,
+            ISendBalanceCommandsService sendBalanceCommandsService,
             IOrdersApi ordersApi,
             IPositionsApi positionsApi,
             AccountManagementSettings settings,
@@ -44,6 +46,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _accountsRepository = accountsRepository;
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _tradingConditionsService = tradingConditionsService;
+            _sendBalanceCommandsService = sendBalanceCommandsService;
             _ordersApi = ordersApi;
             _positionsApi = positionsApi;
             _settings = settings;
@@ -244,7 +247,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
-        public async Task<IAccount> ResetAccountAsync(string accountId)
+        public async Task ResetAccountAsync(string accountId)
         {
             if (_settings.Behavior?.BalanceResetIsEnabled != true)
             {
@@ -252,12 +255,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
 
             var account = await _accountsRepository.GetAsync(accountId);
-
             if (account == null)
-                throw new ArgumentOutOfRangeException(
-                    $"Account with id [{accountId}] does not exist");
+            {
+                throw new ArgumentOutOfRangeException($"Account with id [{accountId}] does not exist");
+            }
 
-            return await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, _settings.Behavior.DefaultBalance - account.Balance);
+            await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
+                _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
+                "Reset account Api");
         }
 
         #endregion
@@ -281,23 +286,30 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _eventSender.SendAccountChangedEvent(nameof(CreateAccount), account,
                 AccountChangedEventTypeContract.Created, id);
 
-            if (_settings.Behavior?.DefaultBalance != null)
+            //todo consider moving to CQRS projection
+            if (_settings.Behavior?.DefaultBalance != null && _settings.Behavior.DefaultBalance != default)
             {
-                account = await UpdateBalanceAsync(Guid.NewGuid().ToString(), account.Id, _settings.Behavior.DefaultBalance);
+                await UpdateBalanceAsync(Guid.NewGuid().ToString(), account.Id, _settings.Behavior.DefaultBalance, 
+                    AccountBalanceChangeReasonType.Create, "Create account Api");
             }
 
             return account;
         }
 
-        private async Task<IAccount> UpdateBalanceAsync(string operationId, string accountId,
-            decimal amountDelta, bool changeTransferLimit = false)
+        private async Task UpdateBalanceAsync(string operationId, string accountId,
+            decimal amountDelta, AccountBalanceChangeReasonType changeReasonType, string source, bool changeTransferLimit = false)
         {
-            // todo: move to workflow command handler
-            var account = await _accountsRepository.UpdateBalanceAsync(operationId, accountId, amountDelta, changeTransferLimit);
-            _eventSender.SendAccountChangedEvent(nameof(UpdateBalanceAsync), account,
-                AccountChangedEventTypeContract.BalanceUpdated, operationId);
-                
-            return account;
+            await _sendBalanceCommandsService.ChargeManuallyAsync(
+                accountId: accountId,
+                amountDelta: amountDelta,
+                operationId: operationId,
+                reason: changeReasonType.ToString(),
+                source: source,
+                auditLog: null,
+                type: changeReasonType,
+                eventSourceId: operationId,
+                assetPairId: null,
+                tradingDate: _systemClock.UtcNow.UtcDateTime);
         }
         
         private async Task ValidateTradingConditionAsync(string accountId,

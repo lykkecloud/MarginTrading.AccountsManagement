@@ -271,10 +271,9 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("{accountId}/reset")]
-        public Task<AccountContract> Reset([NotNull] string accountId)
+        public async Task Reset([NotNull] string accountId)
         {
-            return Convert(
-                _accountManagementService.ResetAccountAsync(accountId.RequiredNotNullOrWhiteSpace(nameof(accountId))));
+            await _accountManagementService.ResetAccountAsync(accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)));
         }
 
         /// <summary>
