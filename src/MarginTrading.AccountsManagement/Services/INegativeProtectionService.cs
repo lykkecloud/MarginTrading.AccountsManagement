@@ -13,10 +13,9 @@ namespace MarginTrading.AccountsManagement.Services
         /// to credit the corresponding amount to the account to cover loss.
         /// Charging is called with a special type "CompensationPayments", event is logged in a common way.
         /// </summary>
-        /// <param name="correlationId"></param>
-        /// <param name="causationId"></param>
+        /// <param name="operationId"></param>
         /// <param name="account"></param>
         /// <returns></returns>
-        Task<bool> CheckAsync(string correlationId, string causationId, IAccount account);
+        Task<decimal?> CheckAsync(string operationId, IAccount account);
     }
 }

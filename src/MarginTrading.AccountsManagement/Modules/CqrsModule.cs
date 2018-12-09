@@ -23,6 +23,7 @@ using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
+using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 
 namespace MarginTrading.AccountsManagement.Modules
 {
@@ -257,8 +258,9 @@ namespace MarginTrading.AccountsManagement.Modules
         {
             return RegisterSaga<NegativeProtectionSaga>()
                 .ListeningEvents(
-                    typeof(AccountChangedEvent))
-                .From(_contextNames.AccountsManagement)
+                    typeof(LiquidationFinishedEvent),
+                    typeof(LiquidationFailedEvent))
+                .From(_contextNames.TradingEngine)
                 .On(DefaultRoute)
                 .PublishingCommands(
                     typeof(NotifyNegativeProtectionInternalCommand))

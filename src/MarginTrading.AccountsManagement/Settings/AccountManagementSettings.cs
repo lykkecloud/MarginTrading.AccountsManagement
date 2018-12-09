@@ -27,9 +27,16 @@ namespace MarginTrading.AccountsManagement.Settings
         
         [Optional]
         public bool EnableOperationsLogs { get; set; }
-        
+
+        /// <summary>
+        /// Shows if negative account capital will be automatically compensated.
+        /// Enabled by default.
+        /// </summary>
+        [Optional] 
+        public bool NegativeProtectionAutoCompensation { get; set; } = true;
+
         [Optional]
-        public bool NegativeProtectionAutoCompensation { get; set; }
+        public int NegativeProtectionTimeoutMs { get; set; } = 30000;
 
         [Optional, CanBeNull]
         public ChaosSettings ChaosKitty { get; set; }

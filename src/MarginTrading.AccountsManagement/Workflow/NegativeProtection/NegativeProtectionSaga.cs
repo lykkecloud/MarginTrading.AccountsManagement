@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
@@ -9,6 +10,7 @@ using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands;
+using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
@@ -16,51 +18,64 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
     internal class NegativeProtectionSaga
     {
         private readonly CqrsContextNamesSettings _contextNames;
+        private readonly AccountManagementSettings _settings;
         private readonly INegativeProtectionService _negativeProtectionService;
         private readonly IAccountsRepository _accountsRepository;
         private readonly ISystemClock _systemClock;
-        private readonly IChaosKitty _chaosKitty;
 
-        public NegativeProtectionSaga(CqrsContextNamesSettings contextNames,
+        public NegativeProtectionSaga(
+            CqrsContextNamesSettings contextNames,
+            AccountManagementSettings settings,
             INegativeProtectionService negativeProtectionService,
             IAccountsRepository accountsRepository,
-            ISystemClock systemClock,
-            IChaosKitty chaosKitty)
+            ISystemClock systemClock)
         {
             _contextNames = contextNames;
+            _settings = settings;
             _negativeProtectionService = negativeProtectionService;
             _accountsRepository = accountsRepository;
             _systemClock = systemClock;
-            _chaosKitty = chaosKitty;
         }
 
         [UsedImplicitly]
-        private async Task Handle(AccountChangedEvent evt, ICommandSender sender)
+        private async Task Handle(LiquidationFinishedEvent evt, ICommandSender sender)
         {
-            if (evt.EventType != AccountChangedEventTypeContract.BalanceUpdated || evt.BalanceChange == null)
-                return;
-            
-            var account = await _accountsRepository.GetAsync(evt.Account.Id);
+            await HandleEvents(evt.OperationId, evt.AccountId,
+                evt.OpenPositionsRemainingOnAccount, evt.CurrentTotalCapital, sender);
+        }
 
-            var correlationId = evt.Source ?? Guid.NewGuid().ToString("N"); //if comes through API;
-            var causationId = evt.BalanceChange.Id;
-            if (!await _negativeProtectionService.CheckAsync(
-                correlationId: correlationId,
-                causationId: causationId,
-                account: account))
-                return;
+        [UsedImplicitly]
+        private async Task Handle(LiquidationFailedEvent evt, ICommandSender sender)
+        {
+            await HandleEvents(evt.OperationId, evt.AccountId,
+                evt.OpenPositionsRemainingOnAccount, evt.CurrentTotalCapital, sender);
+        }
+        
+        private async Task HandleEvents(string operationId, string accountId, 
+            int openPositionsOnAccount, decimal currentTotalCapital, ICommandSender sender)
+        {
+            await Task.Delay(_settings.NegativeProtectionTimeoutMs);
+                
+            var account = await _accountsRepository.GetAsync(accountId);
+            var amount = await _negativeProtectionService.CheckAsync(operationId, account);
 
-            sender.SendCommand(
-                new NotifyNegativeProtectionInternalCommand(
+            if (account == null || amount == null)
+            {
+                return;
+            }
+
+            sender.SendCommand(new NotifyNegativeProtectionInternalCommand(
                     id: Guid.NewGuid().ToString("N"),
-                    correlationId: correlationId,
-                    causationId: causationId,
+                    correlationId: operationId,
+                    causationId: operationId,
                     eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                    clientId: evt.Account.ClientId,
-                    accountId: evt.Account.Id,
-                    amount: Math.Abs(evt.BalanceChange.Balance)
+                    clientId: account.ClientId,
+                    accountId: account.Id,
+                    amount: amount.Value,
+                    openPositionsRemainingOnAccount: openPositionsOnAccount,
+                    currentTotalCapital: currentTotalCapital
                 ),
-                _contextNames.AccountsManagement);
+                _contextNames.AccountsManagement);  
         }
     }
 }
