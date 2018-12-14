@@ -8,6 +8,6 @@ namespace MarginTrading.AccountsManagement.Settings
         public AccountManagementSettings MarginTradingAccountManagement { get; set; }
         
         public ClientSettings MarginTradingSettingsServiceClient { get; set; }
-        public ClientSettings MtBackendServiceClient { get; set; }
+        public OptionalClientSettings MtBackendServiceClient { get; set; }
     }
 }

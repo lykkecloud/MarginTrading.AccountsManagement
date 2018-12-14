@@ -237,8 +237,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             await ValidateTradingConditionAsync(accountId, tradingConditionId);
 
-            await ValidateIfDisableIsAvailableAsync(accountId, isDisabled);
-
             var result = await _accountsRepository.UpdateAccountAsync(accountId, tradingConditionId, isDisabled,
                 isWithdrawalDisabled);
             _eventSender.SendAccountChangedEvent(nameof(UpdateAccountAsync), result, 
@@ -342,6 +340,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
         }
 
+        //TODO: use only for account archiving
         private async Task ValidateIfDisableIsAvailableAsync(string accountId, bool? isDisabled)
         {
             if (isDisabled == null || isDisabled == false)
