@@ -196,7 +196,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
                 amountDelta: request.AmountDelta.RequiredNotEqualsTo(default, nameof(request.AmountDelta)),
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)),
+                reason: request.Reason,
                 source: "Api",
                 auditLog: request.AdditionalInfo,
                 type: request.ReasonType.ToType<AccountBalanceChangeReasonType>(),

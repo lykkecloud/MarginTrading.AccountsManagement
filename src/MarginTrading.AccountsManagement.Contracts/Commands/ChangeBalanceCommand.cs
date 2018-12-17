@@ -94,7 +94,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Amount = amount;
             ReasonType = reasonType;
-            Reason = reason ?? throw new ArgumentNullException(nameof(reason));
+            Reason = reason;
             AuditLog = auditLog;
             EventSourceId = eventSourceId;
             AssetPairId = assetPairId;
