@@ -28,10 +28,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         }
 
         public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, DateTime? @from = null,
-            DateTime? to = null)
+            DateTime? to = null, AccountBalanceChangeReasonType? reasonType = null)
         {
             return (await _tableStorage.WhereAsync(accountId, from ?? DateTime.MinValue,
-                    to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
+                    to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo,
+                    x => reasonType == null || x.ReasonType == reasonType.ToString()))
                 .OrderByDescending(item => item.ChangeTimestamp).ToList();
         }
 

@@ -125,12 +125,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             
             return true;
         }
-        
-        public async Task<IAccount> UpdateAccountAsync(string accountId,
-            string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled)
+
+        public async Task<IAccount> UpdateAccountAsync(string accountId, string tradingConditionId, bool? isDisabled,
+            bool? isWithdrawalDisabled)
         {
             var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;
-            
+
             var account = await _tableStorage.MergeAsync(pk,
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
@@ -142,6 +142,40 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
                     if (isWithdrawalDisabled.HasValue)
                         a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
+
+                    return a;
+                });
+
+            return account;
+        }
+
+        public async Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId, TemporaryCapital temporaryCapital, bool addOrRemove)
+        {
+            var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;
+            
+            var account = await _tableStorage.MergeAsync(pk,
+                AccountEntity.GenerateRowKey(accountId), a =>
+                {
+                    var accountInterface = (IAccount) a;
+                
+                    if (addOrRemove)
+                    {
+                        if (temporaryCapital != null && accountInterface.TemporaryCapital.All(x => x.Id != temporaryCapital.Id))
+                        {
+                            accountInterface.TemporaryCapital.Add(temporaryCapital);
+                        }
+                    }
+                    else
+                    {
+                        if (temporaryCapital != null)
+                        {
+                            accountInterface.TemporaryCapital.RemoveAll(x => x.Id == temporaryCapital.Id);
+                        }
+                        else
+                        {
+                            accountInterface.TemporaryCapital.Clear();
+                        }
+                    }
                         
                     return a;
                 });

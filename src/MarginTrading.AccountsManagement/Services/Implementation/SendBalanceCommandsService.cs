@@ -6,6 +6,7 @@ using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -71,6 +72,54 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     amount: amountDelta,
                     comment: reason,
                     auditLog: auditLog),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
+            return Task.FromResult(operationId);
+        }
+
+        public Task<string> GiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
+            string reason, string auditLog)
+        {
+            var operationId = Guid.NewGuid().ToString();
+            _cqrsEngine.SendCommand(
+                new StartGiveTemporaryCapitalInternalCommand(
+                    operationId: operationId,
+                    eventSourceId = eventSourceId,
+                    accountId = accountId,
+                    amount = amount,
+                    reason = reason,
+                    auditLog = auditLog
+                ),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
+            return Task.FromResult(operationId);
+
+
+//            await _sendBalanceCommandsService.ChargeManuallyAsync(
+//                accountId: accountId,
+//                amountDelta: amount,
+//                operationId: null,
+//                reason: reason,
+//                source: "Api",
+//                auditLog: auditLog,
+//                type: AccountBalanceChangeReasonType.TemporaryCashAdjustment,
+//                eventSourceId: eventSourceId, 
+//                assetPairId: null, 
+//                tradingDate: _systemClock.UtcNow.DateTime)
+        }
+
+        public Task<string> RevokeTemporaryCapital(string eventSourceId, string accountId,
+            string revokeEventSourceId, string auditLog)
+        {
+            var operationId = Guid.NewGuid().ToString();
+            _cqrsEngine.SendCommand(
+                new StartRevokeTemporaryCapitalInternalCommand(
+                    operationId: operationId,
+                    eventSourceId = eventSourceId,
+                    accountId = accountId,
+                    revokeEventSourceId = revokeEventSourceId,
+                    auditLog = auditLog
+                ),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);

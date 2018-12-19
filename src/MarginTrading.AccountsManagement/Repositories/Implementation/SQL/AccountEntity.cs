@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Common;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
+using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using Newtonsoft.Json;
 
@@ -29,6 +31,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public bool IsWithdrawalDisabled { get; set; }
 
         public DateTime ModificationTimestamp { get; set; }
+
+        List<TemporaryCapital> IAccount.TemporaryCapital
+        {
+            get => JsonConvert.DeserializeObject<List<TemporaryCapital>>(TemporaryCapital);
+            set => value.ToJson();
+        }
+        public string TemporaryCapital { get; set; } = "[]";
 
         List<string> IAccount.LastExecutedOperations => JsonConvert.DeserializeObject<List<string>>(LastExecutedOperations);
         public string LastExecutedOperations { get; set; } = "[]";

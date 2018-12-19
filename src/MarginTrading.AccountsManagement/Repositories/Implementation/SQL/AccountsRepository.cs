@@ -171,7 +171,36 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
             });
         }
-        
+
+        public async Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId,
+            TemporaryCapital temporaryCapital, bool addOrRemove)
+        {
+            return await GetAccountAndUpdate(accountId, a =>
+            {
+                var accountInterface = (IAccount) a;
+
+                if (addOrRemove)
+                {
+                    if (temporaryCapital != null &&
+                        accountInterface.TemporaryCapital.All(x => x.Id != temporaryCapital.Id))
+                    {
+                        accountInterface.TemporaryCapital.Add(temporaryCapital);
+                    }
+                }
+                else
+                {
+                    if (temporaryCapital != null)
+                    {
+                        accountInterface.TemporaryCapital.RemoveAll(x => x.Id == temporaryCapital.Id);
+                    }
+                    else
+                    {
+                        accountInterface.TemporaryCapital.Clear();
+                    }
+                }
+            });
+        }
+
         #region Private Methods
 
         private bool TryUpdateOperationsList(string operationId, AccountEntity a)

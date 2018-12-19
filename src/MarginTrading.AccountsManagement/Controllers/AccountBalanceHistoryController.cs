@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
+    /// <inheritdoc cref="IAccountBalanceHistoryApi" />
     [Route("api/balance-history")]
     public class AccountBalanceHistoryController : Controller, IAccountBalanceHistoryApi
     {
@@ -25,6 +26,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
         }
 
+        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
         [Route("by-account/{accountId}")]
         [HttpGet]
         public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount(string accountId,
@@ -35,6 +37,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }
 
+        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
         [Route("{accountId}")]
         [HttpGet]
         public async Task<AccountBalanceChangeContract[]> ByAccountAndEventSource(

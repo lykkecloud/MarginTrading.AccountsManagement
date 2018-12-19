@@ -194,8 +194,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var accountHistory = (await _accountBalanceChangesRepository.GetAsync(
                 accountId: accountId,
                 //TODO rethink the way trading day's start & end are selected 
-                from: _systemClock.UtcNow.UtcDateTime.Date
-            )).ToList();
+                @from: _systemClock.UtcNow.UtcDateTime.Date)).ToList();
 
             var sortedHistory = accountHistory.OrderByDescending(x => x.ChangeTimestamp).ToList();
             var firstEvent = sortedHistory.LastOrDefault();
@@ -261,6 +260,37 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
                 _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
                 "Reset account Api");
+        }
+
+        public async Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId,
+            TemporaryCapital temporaryCapital, bool? addOrRemove)
+        {
+            if (!addOrRemove.HasValue)
+            {
+                return null;
+            }
+            
+            var result = await _accountsRepository.UpdateAccountTemporaryCapitalAsync(accountId, 
+                temporaryCapital, addOrRemove.Value);
+            
+            _eventSender.SendAccountChangedEvent(nameof(UpdateAccountTemporaryCapitalAsync), result, 
+            AccountChangedEventTypeContract.Updated, Guid.NewGuid().ToString("N"));
+                
+            return result;
+        }
+
+        public async Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
+            string reason, string auditLog)
+        {
+            return await _sendBalanceCommandsService.GiveTemporaryCapital(eventSourceId, accountId,
+                amount, reason, auditLog);
+        }
+
+        public async Task<string> StartRevokeTemporaryCapital(string eventSourceId, string accountId,
+            string revokeEventSourceId, string auditLog)
+        {
+            return await _sendBalanceCommandsService.RevokeTemporaryCapital(eventSourceId, accountId,
+                revokeEventSourceId, auditLog);
         }
 
         #endregion

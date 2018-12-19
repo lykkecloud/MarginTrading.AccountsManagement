@@ -18,6 +18,9 @@ using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands;
+using MarginTrading.AccountsManagement.Workflow.TemporaryCapital;
+using MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Commands;
+using MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Events;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
@@ -93,6 +96,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 RegisterDepositSaga(),
                 RegisterClosePositionSaga(),
                 RegisterNegativeProtectionSaga(),
+                RegisterTemporaryCapitalSaga(),
                 RegisterContext());
         }
 
@@ -105,6 +109,7 @@ namespace MarginTrading.AccountsManagement.Modules
             RegisterDepositCommandHandler(contextRegistration);
             RegisterUpdateBalanceCommandHandler(contextRegistration);
             RegisterNegativeProtectionCommandsHandler(contextRegistration);
+            RegisterTemporaryCapitalCommandsHandler(contextRegistration);
             return contextRegistration;
         }
 
@@ -277,6 +282,50 @@ namespace MarginTrading.AccountsManagement.Modules
                 .WithCommandsHandler<NegativeProtectionCommandsHandler>()
                 .PublishingEvents(
                     typeof(NegativeProtectionEvent))
+                .With(DefaultPipeline);
+        }
+
+        private IRegistration RegisterTemporaryCapitalSaga()
+        {
+            return RegisterSaga<TemporaryCapitalSaga>()
+                .ListeningEvents(
+                    typeof(GiveTemporaryCapitalStartedInternalEvent),
+                    typeof(RevokeTemporaryCapitalStartedInternalEvent),
+                    typeof(AccountChangedEvent),
+                    typeof(AccountBalanceChangeFailedEvent)
+                )
+                .From(_contextNames.TradingEngine)
+                .On(DefaultRoute)
+                .PublishingCommands(
+                    typeof(UpdateBalanceInternalCommand),
+                    typeof(FinishGiveTemporaryCapitalInternalCommand),
+                    typeof(FinishRevokeTemporaryCapitalInternalCommand)
+                )
+                .To(_contextNames.AccountsManagement)
+                .With(DefaultPipeline);
+        }
+
+        private static void RegisterTemporaryCapitalCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(StartGiveTemporaryCapitalInternalCommand),
+                    typeof(FinishGiveTemporaryCapitalInternalCommand),
+                    
+                    typeof(StartRevokeTemporaryCapitalInternalCommand),
+                    typeof(FinishRevokeTemporaryCapitalInternalCommand)
+                )
+                .On(DefaultRoute)
+                .WithCommandsHandler<TemporaryCapitalCommandsHandler>()
+                .PublishingEvents(
+                    typeof(GiveTemporaryCapitalStartedInternalEvent),
+                    typeof(GiveTemporaryCapitalSucceededEvent),
+                    typeof(GiveTemporaryCapitalFailedEvent),
+                    
+                    typeof(RevokeTemporaryCapitalStartedInternalEvent),
+                    typeof(RevokeTemporaryCapitalSucceededEvent),
+                    typeof(RevokeTemporaryCapitalFailedEvent)
+                )
                 .With(DefaultPipeline);
         }
 

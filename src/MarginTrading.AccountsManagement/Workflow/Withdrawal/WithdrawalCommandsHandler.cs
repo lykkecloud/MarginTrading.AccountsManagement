@@ -70,8 +70,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             var realisedDailyPnl = (await _accountBalanceChangesRepository.GetAsync(
                 accountId: command.AccountId,
                 //TODO rethink the way trading day's start & end are selected 
-                from: _systemClock.UtcNow.UtcDateTime.Date
-            )).Where(x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL).Sum(x => x.ChangeAmount);
+                @from: _systemClock.UtcNow.UtcDateTime.Date))
+                .Where(x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL)
+                .Sum(x => x.ChangeAmount);
             
             if (account == null || account.Balance - realisedDailyPnl < command.Amount)
             {
