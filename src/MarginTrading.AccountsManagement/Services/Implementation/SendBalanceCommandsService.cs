@@ -6,7 +6,8 @@ using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Commands;
+using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
+using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation

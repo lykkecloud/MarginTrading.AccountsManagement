@@ -1,6 +1,6 @@
 namespace MarginTrading.AccountsManagement.InternalModels
 {
-    public enum GiveTemporaryCapitalState
+    public enum TemporaryCapitalState
     {
         Initiated,
         

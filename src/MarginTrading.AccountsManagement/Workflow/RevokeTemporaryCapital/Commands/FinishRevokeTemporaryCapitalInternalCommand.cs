@@ -3,12 +3,12 @@ using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MessagePack;
 
-namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Commands
+namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands
 {
     [MessagePackObject]
-    public class FinishGiveTemporaryCapitalInternalCommand : BaseEvent
+    public class FinishRevokeTemporaryCapitalInternalCommand: BaseEvent
     {
-        public FinishGiveTemporaryCapitalInternalCommand([NotNull] string operationId, DateTime eventTimestamp,
+        public FinishRevokeTemporaryCapitalInternalCommand([NotNull] string operationId, DateTime eventTimestamp,
             bool isSuccess, string failReason)
             : base(operationId, eventTimestamp)
         {

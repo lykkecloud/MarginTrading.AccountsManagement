@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
@@ -6,22 +7,22 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Commands;
-using MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Events;
+using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
+using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Events;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using Microsoft.Extensions.Internal;
 
-namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
+namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
 {
-    internal class TemporaryCapitalSaga
+    internal class GiveTemporaryCapitalSaga
     {
-        internal const string OperationName = "TemporaryCapital";
+        internal const string OperationName = "GiveTemporaryCapital";
         private readonly CqrsContextNamesSettings _contextNames;
         private readonly ISystemClock _systemClock;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
 
-        public TemporaryCapitalSaga(
+        public GiveTemporaryCapitalSaga(
             CqrsContextNamesSettings contextNames,
             ISystemClock systemClock,
             IOperationExecutionInfoRepository executionInfoRepository,
@@ -33,8 +34,6 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
             _chaosKitty = chaosKitty;
         }
         
-        #region GiveTemporaryCapital
-
         /// <summary>
         /// Temporary capital is saved on account, start account balance update
         /// </summary>
@@ -54,7 +53,7 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
                 return;
             }
 
-            if (executionInfo.Data.SwitchState(GiveTemporaryCapitalState.Initiated, GiveTemporaryCapitalState.Started))
+            if (executionInfo.Data.SwitchState(TemporaryCapitalState.Initiated, TemporaryCapitalState.Started))
             {
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
@@ -93,7 +92,7 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
             if (executionInfo == null)
                 return;
 
-            if (executionInfo.Data.SwitchState(GiveTemporaryCapitalState.Started, GiveTemporaryCapitalState.ChargedOnAccount))
+            if (executionInfo.Data.SwitchState(TemporaryCapitalState.Started, TemporaryCapitalState.ChargedOnAccount))
             {
                 sender.SendCommand(
                     new FinishGiveTemporaryCapitalInternalCommand(
@@ -124,7 +123,7 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
             if (executionInfo == null)
                 return;
             
-            if (executionInfo.Data.SwitchState(GiveTemporaryCapitalState.Started, GiveTemporaryCapitalState.Failing))
+            if (executionInfo.Data.SwitchState(TemporaryCapitalState.Started, TemporaryCapitalState.Failing))
             {
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
@@ -150,8 +149,8 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
         {
             var executionInfo = await _executionInfoRepository.GetAsync<GiveTemporaryCapitalData>(OperationName, e.OperationId);
 
-            if (executionInfo != null && executionInfo.Data.SwitchState(GiveTemporaryCapitalState.ChargedOnAccount, 
-                    GiveTemporaryCapitalState.Succeded))
+            if (executionInfo != null && executionInfo.Data.SwitchState(TemporaryCapitalState.ChargedOnAccount, 
+                    TemporaryCapitalState.Succeded))
             {
                 await _executionInfoRepository.Save(executionInfo);
             }
@@ -165,21 +164,13 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
         {
             var executionInfo = await _executionInfoRepository.GetAsync<GiveTemporaryCapitalData>(OperationName, e.OperationId);
 
-            if (executionInfo != null && executionInfo.Data.SwitchState(GiveTemporaryCapitalState.Initiated, 
-                    GiveTemporaryCapitalState.Failed))
+            if (executionInfo != null && executionInfo.Data.SwitchState(TemporaryCapitalState.Initiated, 
+                    TemporaryCapitalState.Failed))
             {
                 executionInfo.Data.FailReason = e.FailReason;
                 
                 await _executionInfoRepository.Save(executionInfo);
             }
         }
-        
-        #endregion GiveTemporaryCapital
-        
-        #region RevokeTemporaryCapital
-        
-        
-        
-        #endregion RevokeTemporaryCapital
     }
 }

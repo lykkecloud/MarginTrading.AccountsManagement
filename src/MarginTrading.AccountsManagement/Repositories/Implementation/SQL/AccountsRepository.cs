@@ -210,6 +210,19 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             });
         }
 
+        public async Task<IAccount> UpdateAccountRollbackTemporaryCapitalAsync(string accountId, 
+            List<TemporaryCapital> revokedTemporaryCapital)
+        {
+            return await GetAccountAndUpdate(accountId, a =>
+            {
+                var result = ((IAccount) a).TemporaryCapital;
+
+                result.AddRange(revokedTemporaryCapital.Where(x => result.All(r => r.Id != x.Id)));
+
+                a.TemporaryCapital = result.ToJson();
+            });
+        }
+
         #region Private Methods
 
         private bool TryUpdateOperationsList(string operationId, AccountEntity a)

@@ -1,18 +1,19 @@
 using JetBrains.Annotations;
 using MessagePack;
 
-namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Commands
+namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands
 {
     [MessagePackObject]
-    public class StartRevokeTemporaryCapitalInternalCommand
+    public class StartGiveTemporaryCapitalInternalCommand
     {
-        public StartRevokeTemporaryCapitalInternalCommand([NotNull] string operationId,
-            string eventSourceId, string accountId, string revokeEventSourceId, string auditLog)
+        public StartGiveTemporaryCapitalInternalCommand([NotNull] string operationId,
+            string eventSourceId, string accountId, decimal amount, string reason, string auditLog)
         {
             OperationId = operationId;
             EventSourceId = eventSourceId;
             AccountId = accountId;
-            RevokeEventSourceId = revokeEventSourceId;
+            Amount = amount;
+            Reason = reason;
             AuditLog = auditLog;
         }
         
@@ -26,9 +27,12 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Commands
         public string AccountId { get; }
         
         [Key(3)]
-        public string RevokeEventSourceId { get; }
+        public decimal Amount { get; }
         
         [Key(4)]
+        public string Reason { get; }
+        
+        [Key(5)]
         public string AuditLog { get; }
     }
 }

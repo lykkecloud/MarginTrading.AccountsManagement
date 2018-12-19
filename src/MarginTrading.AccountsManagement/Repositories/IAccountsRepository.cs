@@ -32,5 +32,7 @@ namespace MarginTrading.AccountsManagement.Repositories
 
         Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId, TemporaryCapital temporaryCapital, 
             bool addOrRemove);
+
+        Task<IAccount> UpdateAccountRollbackTemporaryCapitalAsync(string accountId, List<TemporaryCapital> revokedTemporaryCapital);
     }
 }

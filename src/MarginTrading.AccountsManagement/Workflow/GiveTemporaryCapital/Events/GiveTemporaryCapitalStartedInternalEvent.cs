@@ -2,7 +2,7 @@ using System;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MessagePack;
 
-namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital.Events
+namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Events
 {
     [MessagePackObject]
     internal class GiveTemporaryCapitalStartedInternalEvent : BaseEvent
