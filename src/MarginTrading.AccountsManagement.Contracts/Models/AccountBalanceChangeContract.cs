@@ -28,7 +28,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             LegalEntity = legalEntity;
             AuditLog = auditLog;
             Instrument = instrument;
-            TradingDate = tradingDate == DateTime.MinValue ? changeTimestamp.Date : tradingDate;
+            TradingDate = tradingDate == DateTime.MinValue ? changeTimestamp.Date : tradingDate.Date;
         }
 
         /// <summary>
