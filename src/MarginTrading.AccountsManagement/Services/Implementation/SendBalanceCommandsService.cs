@@ -93,19 +93,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
-
-
-//            await _sendBalanceCommandsService.ChargeManuallyAsync(
-//                accountId: accountId,
-//                amountDelta: amount,
-//                operationId: null,
-//                reason: reason,
-//                source: "Api",
-//                auditLog: auditLog,
-//                type: AccountBalanceChangeReasonType.TemporaryCashAdjustment,
-//                eventSourceId: eventSourceId, 
-//                assetPairId: null, 
-//                tradingDate: _systemClock.UtcNow.DateTime)
         }
 
         public Task<string> RevokeTemporaryCapital(string eventSourceId, string accountId,

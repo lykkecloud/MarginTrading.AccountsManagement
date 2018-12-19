@@ -73,7 +73,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
-                    $"SELECT * FROM {TableName} {whereClause}", new { accountId, from, to, reasonType });
+                    $"SELECT * FROM {TableName} {whereClause}", new
+                    {
+                        accountId, 
+                        from, 
+                        to, 
+                        reasonType = reasonType.ToString(),
+                    });
 
                 return data.ToList();
             }

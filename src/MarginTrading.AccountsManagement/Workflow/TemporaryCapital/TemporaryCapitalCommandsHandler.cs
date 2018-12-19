@@ -17,7 +17,7 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
 {
     internal class TemporaryCapitalCommandsHandler
     {
-        private readonly IAccountManagementService _accountManagementService;
+        private readonly IAccountsRepository _accountsRepository;
         private readonly ISystemClock _systemClock;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
@@ -26,18 +26,20 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
         private const string OperationName = TemporaryCapitalSaga.OperationName;
 
         public TemporaryCapitalCommandsHandler(
-            IAccountManagementService accountManagementService,
+            IAccountsRepository accountsRepository,
             ISystemClock systemClock,
             IOperationExecutionInfoRepository executionInfoRepository,
             IChaosKitty chaosKitty,
             ILog log)
         {
-            _accountManagementService = accountManagementService;
+            _accountsRepository = accountsRepository;
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
             _chaosKitty = chaosKitty;
             _log = log;
         }
+
+        #region GiveTemporaryCapital
 
         /// <summary>
         /// Handles the command to begin giving temporary capital
@@ -70,7 +72,7 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
 
             _chaosKitty.Meow(c.OperationId);
             
-            var account = await _accountManagementService.GetByIdAsync(c.AccountId);
+            var account = await _accountsRepository.GetAsync(c.AccountId);
 
             if (account == null)
             {
@@ -97,7 +99,7 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
 
             try
             {
-                await _accountManagementService.UpdateAccountTemporaryCapitalAsync(c.AccountId,
+                await _accountsRepository.UpdateAccountTemporaryCapitalAsync(c.AccountId,
                     new InternalModels.TemporaryCapital
                     {
                         Id = c.EventSourceId,
@@ -109,12 +111,64 @@ namespace MarginTrading.AccountsManagement.Workflow.TemporaryCapital
             {
                 await _log.WriteErrorAsync(nameof(TemporaryCapitalCommandsHandler),
                     nameof(StartGiveTemporaryCapitalInternalCommand), exception);
+                
                 publisher.PublishEvent(new GiveTemporaryCapitalFailedEvent(c.OperationId, 
-                    _systemClock.UtcNow.UtcDateTime, $"Failed to write temporary capital on account {c.AccountId}", c.EventSourceId));
+                    _systemClock.UtcNow.UtcDateTime, exception.Message, c.EventSourceId));
+                
                 return;
             }
 
-            publisher.PublishEvent(new GiveTemporaryCapitalStartedInternalEvent(c.OperationId, _systemClock.UtcNow.UtcDateTime));
+            publisher.PublishEvent(new GiveTemporaryCapitalStartedInternalEvent(c.OperationId, 
+                _systemClock.UtcNow.UtcDateTime));
         }
+
+        /// <summary>
+        /// Give temporary capital operation is over, finishing it
+        /// </summary>
+        [UsedImplicitly]
+        public async Task Handle(FinishGiveTemporaryCapitalInternalCommand c, IEventPublisher publisher)
+        {
+            var executionInfo = await _executionInfoRepository.GetAsync<GiveTemporaryCapitalData>(OperationName, c.OperationId);
+
+            if (executionInfo == null)
+                return;
+            
+            _chaosKitty.Meow(c.OperationId);
+            
+            if (executionInfo.Data.State == GiveTemporaryCapitalState.ChargedOnAccount)
+            {
+                publisher.PublishEvent(new GiveTemporaryCapitalSucceededEvent(
+                    operationId: c.OperationId, 
+                    eventTimestamp: _systemClock.UtcNow.UtcDateTime,
+                    eventSourceId: executionInfo.Data.EventSourceId,
+                    accountId: executionInfo.Data.AccountId,
+                    amount: executionInfo.Data.Amount,
+                    reason: executionInfo.Data.Reason,
+                    auditLog: executionInfo.Data.AuditLog));
+            }
+            else if (executionInfo.Data.State == GiveTemporaryCapitalState.Failing)
+            {
+                //rollback account. if exception is thrown here, it will be retried until success
+                await _accountsRepository.UpdateAccountTemporaryCapitalAsync(executionInfo.Data.AccountId,
+                    new InternalModels.TemporaryCapital
+                    {
+                        Id = executionInfo.Data.EventSourceId,
+                        Amount = executionInfo.Data.Amount,
+                    },
+                    addOrRemove: false);
+                
+                publisher.PublishEvent(new GiveTemporaryCapitalFailedEvent(c.OperationId, 
+                    _systemClock.UtcNow.UtcDateTime, executionInfo.Data.FailReason, executionInfo.Data.EventSourceId));
+            }
+        }
+
+        #endregion GiveTemporaryCapital
+
+
+        #region RevokeTemporaryCapital
+        
+        
+
+        #endregion RevokeTemporaryCapital
     }
 }

@@ -49,9 +49,6 @@ namespace MarginTrading.AccountsManagement.Services
             string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled);
         
         Task ResetAccountAsync(string accountId);
-
-        Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId,
-            TemporaryCapital temporaryCapital, bool? addOrRemove);
         
         Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount, string reason, 
             string auditLog);

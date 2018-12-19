@@ -262,23 +262,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 "Reset account Api");
         }
 
-        public async Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId,
-            TemporaryCapital temporaryCapital, bool? addOrRemove)
-        {
-            if (!addOrRemove.HasValue)
-            {
-                return null;
-            }
-            
-            var result = await _accountsRepository.UpdateAccountTemporaryCapitalAsync(accountId, 
-                temporaryCapital, addOrRemove.Value);
-            
-            _eventSender.SendAccountChangedEvent(nameof(UpdateAccountTemporaryCapitalAsync), result, 
-            AccountChangedEventTypeContract.Updated, Guid.NewGuid().ToString("N"));
-                
-            return result;
-        }
-
         public async Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
             string reason, string auditLog)
         {

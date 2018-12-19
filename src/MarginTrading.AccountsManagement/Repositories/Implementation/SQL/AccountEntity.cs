@@ -35,7 +35,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         List<TemporaryCapital> IAccount.TemporaryCapital
         {
             get => JsonConvert.DeserializeObject<List<TemporaryCapital>>(TemporaryCapital);
-            set => value.ToJson();
+            set => TemporaryCapital = value.ToJson();
         }
         public string TemporaryCapital { get; set; } = "[]";
 

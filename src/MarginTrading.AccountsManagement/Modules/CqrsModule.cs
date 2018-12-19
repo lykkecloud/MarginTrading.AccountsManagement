@@ -119,7 +119,9 @@ namespace MarginTrading.AccountsManagement.Modules
                 .PublishingCommands(
                     typeof(UpdateBalanceInternalCommand),
                     typeof(WithdrawCommand),
-                    typeof(DepositCommand))
+                    typeof(DepositCommand),
+                    typeof(StartGiveTemporaryCapitalInternalCommand),
+                    typeof(StartRevokeTemporaryCapitalInternalCommand))
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
         }
@@ -290,11 +292,17 @@ namespace MarginTrading.AccountsManagement.Modules
             return RegisterSaga<TemporaryCapitalSaga>()
                 .ListeningEvents(
                     typeof(GiveTemporaryCapitalStartedInternalEvent),
+                    typeof(GiveTemporaryCapitalSucceededEvent),
+                    typeof(GiveTemporaryCapitalFailedEvent),
+                    
                     typeof(RevokeTemporaryCapitalStartedInternalEvent),
+                    typeof(RevokeTemporaryCapitalSucceededEvent),
+                    typeof(RevokeTemporaryCapitalFailedEvent),
+                    
                     typeof(AccountChangedEvent),
                     typeof(AccountBalanceChangeFailedEvent)
                 )
-                .From(_contextNames.TradingEngine)
+                .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
                 .PublishingCommands(
                     typeof(UpdateBalanceInternalCommand),

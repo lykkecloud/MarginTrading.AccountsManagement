@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using AutoMapper;
 using AzureStorage;
+using Common;
 using Common.Log;
 using Dapper;
 using Lykke.SettingsReader;
@@ -177,27 +178,35 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             return await GetAccountAndUpdate(accountId, a =>
             {
-                var accountInterface = (IAccount) a;
+                var result = ((IAccount) a).TemporaryCapital;
 
                 if (addOrRemove)
                 {
-                    if (temporaryCapital != null &&
-                        accountInterface.TemporaryCapital.All(x => x.Id != temporaryCapital.Id))
+                    if (result.Any(x => x.Id == temporaryCapital.Id))
                     {
-                        accountInterface.TemporaryCapital.Add(temporaryCapital);
+                        throw new ArgumentException(
+                            $"Temporary capital record with id {temporaryCapital.Id} is already set on account {accountId}",
+                            nameof(temporaryCapital.Id));
+                    }
+                    
+                    if (temporaryCapital != null)
+                    {
+                        result.Add(temporaryCapital);
                     }
                 }
                 else
                 {
                     if (temporaryCapital != null)
                     {
-                        accountInterface.TemporaryCapital.RemoveAll(x => x.Id == temporaryCapital.Id);
+                        result.RemoveAll(x => x.Id == temporaryCapital.Id);
                     }
                     else
                     {
-                        accountInterface.TemporaryCapital.Clear();
+                        result.Clear();
                     }
                 }
+
+                a.TemporaryCapital = result.ToJson();
             });
         }
 

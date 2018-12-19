@@ -13,5 +13,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public string Reason { get; set; }
 
         public string AuditLog { get; set; }
+        
+        public string FailReason { get; set; }
     }
 }
