@@ -28,8 +28,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             if (account == null || account.Balance >= 0)
                 return null;
             
-            //idempotency is satisfied at source sagas
-            
             var amount = Math.Abs(account.Balance);
 
             if (_negativeProtectionAutoCompensation)

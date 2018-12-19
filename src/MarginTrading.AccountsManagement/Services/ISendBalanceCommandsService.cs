@@ -15,5 +15,11 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task<string> DepositAsync(string accountId, decimal amountDelta,
             string operationId, string reason, string auditLog);
+
+        Task<string> GiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
+            string reason, string auditLog);
+
+        Task<string> RevokeTemporaryCapital(string eventSourceId, string accountId, string revokeEventSourceId,
+            string auditLog);
     }
 }

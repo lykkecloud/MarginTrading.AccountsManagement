@@ -50,7 +50,12 @@ namespace MarginTrading.AccountsManagement.Services
         
         Task ResetAccountAsync(string accountId);
         
-        #endregion
+        Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount, string reason, 
+            string auditLog);
 
+        Task<string> StartRevokeTemporaryCapital(string eventSourceId, string accountId, string revokeEventSourceId,
+            string auditLog);
+        
+        #endregion
     }
 }

@@ -125,12 +125,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             
             return true;
         }
-        
-        public async Task<IAccount> UpdateAccountAsync(string accountId,
-            string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled)
+
+        public async Task<IAccount> UpdateAccountAsync(string accountId, string tradingConditionId, bool? isDisabled,
+            bool? isWithdrawalDisabled)
         {
             var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;
-            
+
             var account = await _tableStorage.MergeAsync(pk,
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
@@ -142,7 +142,70 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
                     if (isWithdrawalDisabled.HasValue)
                         a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
+
+                    return a;
+                });
+
+            return account;
+        }
+
+        public async Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId, TemporaryCapital temporaryCapital, bool addOrRemove)
+        {
+            var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;
+            
+            var account = await _tableStorage.MergeAsync(pk,
+                AccountEntity.GenerateRowKey(accountId), a =>
+                {
+                    var result = ((IAccount) a).TemporaryCapital;
+
+                    if (addOrRemove)
+                    {
+                        if (result.Any(x => x.Id == temporaryCapital.Id))
+                        {
+                            throw new ArgumentException(
+                                $"Temporary capital record with id {temporaryCapital.Id} is already set on account {accountId}",
+                                nameof(temporaryCapital.Id));
+                        }
+                    
+                        if (temporaryCapital != null)
+                        {
+                            result.Add(temporaryCapital);
+                        }
+                    }
+                    else
+                    {
+                        if (temporaryCapital != null)
+                        {
+                            result.RemoveAll(x => x.Id == temporaryCapital.Id);
+                        }
+                        else
+                        {
+                            result.Clear();
+                        }
+                    }
+
+                    a.TemporaryCapital = result;
                         
+                    return a;
+                });
+            
+            return account;
+        }
+
+        public async Task<IAccount> UpdateAccountRollbackTemporaryCapitalAsync(string accountId, 
+            List<TemporaryCapital> revokedTemporaryCapital)
+        {
+            var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;
+            
+            var account = await _tableStorage.MergeAsync(pk,
+                AccountEntity.GenerateRowKey(accountId), a =>
+                {
+                    var result = ((IAccount) a).TemporaryCapital;
+                
+                    result.AddRange(revokedTemporaryCapital.Where(x => result.All(r => r.Id != x.Id)));
+
+                    a.TemporaryCapital = result;
+                    
                     return a;
                 });
             

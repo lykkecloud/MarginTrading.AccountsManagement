@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using AutoMapper;
 using AzureStorage;
+using Common;
 using Common.Log;
 using Dapper;
 using Lykke.SettingsReader;
@@ -171,7 +172,57 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
             });
         }
-        
+
+        public async Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId,
+            TemporaryCapital temporaryCapital, bool addOrRemove)
+        {
+            return await GetAccountAndUpdate(accountId, a =>
+            {
+                var result = ((IAccount) a).TemporaryCapital;
+
+                if (addOrRemove)
+                {
+                    if (result.Any(x => x.Id == temporaryCapital.Id))
+                    {
+                        throw new ArgumentException(
+                            $"Temporary capital record with id {temporaryCapital.Id} is already set on account {accountId}",
+                            nameof(temporaryCapital.Id));
+                    }
+                    
+                    if (temporaryCapital != null)
+                    {
+                        result.Add(temporaryCapital);
+                    }
+                }
+                else
+                {
+                    if (temporaryCapital != null)
+                    {
+                        result.RemoveAll(x => x.Id == temporaryCapital.Id);
+                    }
+                    else
+                    {
+                        result.Clear();
+                    }
+                }
+
+                a.TemporaryCapital = result.ToJson();
+            });
+        }
+
+        public async Task<IAccount> UpdateAccountRollbackTemporaryCapitalAsync(string accountId, 
+            List<TemporaryCapital> revokedTemporaryCapital)
+        {
+            return await GetAccountAndUpdate(accountId, a =>
+            {
+                var result = ((IAccount) a).TemporaryCapital;
+
+                result.AddRange(revokedTemporaryCapital.Where(x => result.All(r => r.Id != x.Id)));
+
+                a.TemporaryCapital = result.ToJson();
+            });
+        }
+
         #region Private Methods
 
         private bool TryUpdateOperationsList(string operationId, AccountEntity a)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
+using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
@@ -74,6 +75,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         }
 
         public DateTime ModificationTimestamp { get; set; }
+
+
+        public List<TemporaryCapital> TemporaryCapital { get; set; } = new List<TemporaryCapital>();
 
         [JsonValueSerializer]
         public List<string> LastExecutedOperations { get; set; } = new List<string>();

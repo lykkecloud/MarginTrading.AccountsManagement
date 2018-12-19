@@ -6,6 +6,8 @@ using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
+using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -71,6 +73,41 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     amount: amountDelta,
                     comment: reason,
                     auditLog: auditLog),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
+            return Task.FromResult(operationId);
+        }
+
+        public Task<string> GiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
+            string reason, string auditLog)
+        {
+            var operationId = Guid.NewGuid().ToString();
+            _cqrsEngine.SendCommand(
+                new StartGiveTemporaryCapitalInternalCommand(
+                    operationId: operationId,
+                    eventSourceId = eventSourceId,
+                    accountId = accountId,
+                    amount = amount,
+                    reason = reason,
+                    auditLog = auditLog
+                ),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
+            return Task.FromResult(operationId);
+        }
+
+        public Task<string> RevokeTemporaryCapital(string eventSourceId, string accountId,
+            string revokeEventSourceId, string auditLog)
+        {
+            var operationId = Guid.NewGuid().ToString();
+            _cqrsEngine.SendCommand(
+                new StartRevokeTemporaryCapitalInternalCommand(
+                    operationId: operationId,
+                    eventSourceId = eventSourceId,
+                    accountId = accountId,
+                    revokeEventSourceId = revokeEventSourceId,
+                    auditLog = auditLog
+                ),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);

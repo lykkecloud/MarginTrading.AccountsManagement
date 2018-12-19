@@ -16,8 +16,14 @@ using MarginTrading.AccountsManagement.Workflow.ClosePosition;
 using MarginTrading.AccountsManagement.Workflow.Deposit;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
+using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital;
+using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
+using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Events;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands;
+using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital;
+using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
+using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Events;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
@@ -93,6 +99,8 @@ namespace MarginTrading.AccountsManagement.Modules
                 RegisterDepositSaga(),
                 RegisterClosePositionSaga(),
                 RegisterNegativeProtectionSaga(),
+                RegisterGiveTemporaryCapitalSaga(),
+                RegisterRevokeTemporaryCapitalSaga(),
                 RegisterContext());
         }
 
@@ -105,6 +113,8 @@ namespace MarginTrading.AccountsManagement.Modules
             RegisterDepositCommandHandler(contextRegistration);
             RegisterUpdateBalanceCommandHandler(contextRegistration);
             RegisterNegativeProtectionCommandsHandler(contextRegistration);
+            RegisterGiveTemporaryCapitalCommandsHandler(contextRegistration);
+            RegisterRevokeTemporaryCapitalCommandsHandler(contextRegistration);
             return contextRegistration;
         }
 
@@ -114,7 +124,9 @@ namespace MarginTrading.AccountsManagement.Modules
                 .PublishingCommands(
                     typeof(UpdateBalanceInternalCommand),
                     typeof(WithdrawCommand),
-                    typeof(DepositCommand))
+                    typeof(DepositCommand),
+                    typeof(StartGiveTemporaryCapitalInternalCommand),
+                    typeof(StartRevokeTemporaryCapitalInternalCommand))
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
         }
@@ -277,6 +289,82 @@ namespace MarginTrading.AccountsManagement.Modules
                 .WithCommandsHandler<NegativeProtectionCommandsHandler>()
                 .PublishingEvents(
                     typeof(NegativeProtectionEvent))
+                .With(DefaultPipeline);
+        }
+
+        private IRegistration RegisterGiveTemporaryCapitalSaga()
+        {
+            return RegisterSaga<GiveTemporaryCapitalSaga>()
+                .ListeningEvents(
+                    typeof(GiveTemporaryCapitalStartedInternalEvent),
+                    typeof(GiveTemporaryCapitalSucceededEvent),
+                    typeof(GiveTemporaryCapitalFailedEvent),
+                    
+                    typeof(AccountChangedEvent),
+                    typeof(AccountBalanceChangeFailedEvent)
+                )
+                .From(_contextNames.AccountsManagement)
+                .On(DefaultRoute)
+                .PublishingCommands(
+                    typeof(UpdateBalanceInternalCommand),
+                    typeof(FinishGiveTemporaryCapitalInternalCommand)
+                )
+                .To(_contextNames.AccountsManagement)
+                .With(DefaultPipeline);
+        }
+
+        private static void RegisterGiveTemporaryCapitalCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(StartGiveTemporaryCapitalInternalCommand),
+                    typeof(FinishGiveTemporaryCapitalInternalCommand)
+                )
+                .On(DefaultRoute)
+                .WithCommandsHandler<GiveTemporaryCapitalCommandsHandler>()
+                .PublishingEvents(
+                    typeof(GiveTemporaryCapitalStartedInternalEvent),
+                    typeof(GiveTemporaryCapitalSucceededEvent),
+                    typeof(GiveTemporaryCapitalFailedEvent)
+                )
+                .With(DefaultPipeline);
+        }
+
+        private IRegistration RegisterRevokeTemporaryCapitalSaga()
+        {
+            return RegisterSaga<RevokeTemporaryCapitalSaga>()
+                .ListeningEvents(
+                    typeof(RevokeTemporaryCapitalStartedInternalEvent),
+                    typeof(RevokeTemporaryCapitalSucceededEvent),
+                    typeof(RevokeTemporaryCapitalFailedEvent),
+                    
+                    typeof(AccountChangedEvent),
+                    typeof(AccountBalanceChangeFailedEvent)
+                )
+                .From(_contextNames.AccountsManagement)
+                .On(DefaultRoute)
+                .PublishingCommands(
+                    typeof(UpdateBalanceInternalCommand),
+                    typeof(FinishRevokeTemporaryCapitalInternalCommand)
+                )
+                .To(_contextNames.AccountsManagement)
+                .With(DefaultPipeline);
+        }
+
+        private static void RegisterRevokeTemporaryCapitalCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(StartRevokeTemporaryCapitalInternalCommand),
+                    typeof(FinishRevokeTemporaryCapitalInternalCommand)
+                )
+                .On(DefaultRoute)
+                .WithCommandsHandler<RevokeTemporaryCapitalCommandsHandler>()
+                .PublishingEvents(
+                    typeof(RevokeTemporaryCapitalStartedInternalEvent),
+                    typeof(RevokeTemporaryCapitalSucceededEvent),
+                    typeof(RevokeTemporaryCapitalFailedEvent)
+                )
                 .With(DefaultPipeline);
         }
 
