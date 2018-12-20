@@ -10,6 +10,7 @@ using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Settings;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 {
@@ -44,12 +45,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         private readonly IConvertService _convertService;
         private readonly AccountManagementSettings _settings;
         private readonly ILog _log;
+        private readonly ISystemClock _systemClock;
         
-        public AccountBalanceChangesRepository(IConvertService convertService, AccountManagementSettings settings, ILog log)
+        public AccountBalanceChangesRepository(IConvertService convertService, 
+            AccountManagementSettings settings, 
+            ILog log,
+            ISystemClock systemClock)
         {
             _convertService = convertService;
-            _log = log;
             _settings = settings;
+            _log = log;
+            _systemClock = systemClock;
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
@@ -98,6 +104,16 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                 return data.ToList();
             }
+        }
+
+        public async Task<decimal> GetRealizedDailyPnl(string accountId)
+        {
+            var history = await GetAsync(
+                accountId: accountId,
+                //TODO rethink the way trading day's start & end are selected 
+                @from: _systemClock.UtcNow.UtcDateTime.Date,
+                reasonType: AccountBalanceChangeReasonType.RealizedPnL);
+            return history.Sum(x => x.ChangeAmount);
         }
 
         public async Task AddAsync(IAccountBalanceChange change)

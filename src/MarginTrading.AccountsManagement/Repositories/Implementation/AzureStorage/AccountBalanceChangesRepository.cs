@@ -10,18 +10,24 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
     internal class AccountBalanceChangesRepository : IAccountBalanceChangesRepository
     {
         private readonly IConvertService _convertService;
+        private readonly ISystemClock _systemClock;
         private readonly INoSQLTableStorage<AccountBalanceChangeEntity> _tableStorage;
 
-        public AccountBalanceChangesRepository(IReloadingManager<AccountManagementSettings> settings, ILog log,
-            IConvertService convertService, IAzureTableStorageFactoryService azureTableStorageFactoryService)
+        public AccountBalanceChangesRepository(IReloadingManager<AccountManagementSettings> settings, 
+            ILog log,
+            IConvertService convertService,
+            ISystemClock systemClock,
+            IAzureTableStorageFactoryService azureTableStorageFactoryService)
         {
             _convertService = convertService;
+            _systemClock = systemClock;
             _tableStorage =
                 azureTableStorageFactoryService.Create<AccountBalanceChangeEntity>(
                     settings.Nested(s => s.Db.ConnectionString), "AccountHistory", log);
@@ -42,6 +48,16 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                                                           && (string.IsNullOrWhiteSpace(eventSourceId) ||
                                                               x.EventSourceId == eventSourceId)))
                 .OrderByDescending(item => item.ChangeTimestamp).ToList();
+        }
+
+        public async Task<decimal> GetRealizedDailyPnl(string accountId)
+        {
+            var history = await GetAsync(
+                accountId: accountId,
+                //TODO rethink the way trading day's start & end are selected 
+                @from: _systemClock.UtcNow.UtcDateTime.Date,
+                reasonType: AccountBalanceChangeReasonType.RealizedPnL);
+            return history.Sum(x => x.ChangeAmount);
         }
 
         public async Task AddAsync(IAccountBalanceChange change)
