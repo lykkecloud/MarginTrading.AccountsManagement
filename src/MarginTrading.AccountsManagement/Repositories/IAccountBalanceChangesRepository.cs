@@ -10,7 +10,11 @@ namespace MarginTrading.AccountsManagement.Repositories
     {
         Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId,
             DateTime? @from = null, DateTime? to = null, AccountBalanceChangeReasonType? reasonType = null);
+        
         Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, string eventSourceId);
+
+        Task<decimal> GetRealizedDailyPnl(string accountId);
+        
         Task AddAsync(IAccountBalanceChange change);
     }
 }

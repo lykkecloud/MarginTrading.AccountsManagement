@@ -67,14 +67,9 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     lastModified: _systemClock.UtcNow.UtcDateTime));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
-            var realisedDailyPnl = (await _accountBalanceChangesRepository.GetAsync(
-                accountId: command.AccountId,
-                //TODO rethink the way trading day's start & end are selected 
-                @from: _systemClock.UtcNow.UtcDateTime.Date))
-                .Where(x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL)
-                .Sum(x => x.ChangeAmount);
-            
-            if (account == null || account.Balance - realisedDailyPnl < command.Amount)
+            var temporaryCapital = account?.TemporaryCapital.Sum(x => x.Amount) ?? default;
+            var realisedDailyPnl = await _accountBalanceChangesRepository.GetRealizedDailyPnl(command.AccountId);
+            if (account == null || account.Balance - realisedDailyPnl - temporaryCapital < command.Amount)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime, account == null

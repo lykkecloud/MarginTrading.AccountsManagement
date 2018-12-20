@@ -20,6 +20,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
         private readonly IAccountsRepository _accountsRepository;
         private readonly ISystemClock _systemClock;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
+        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly IChaosKitty _chaosKitty;
         private readonly ILog _log;
         private readonly AccountManagementSettings _settings;
@@ -30,6 +31,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             IAccountsRepository accountsRepository,
             ISystemClock systemClock,
             IOperationExecutionInfoRepository executionInfoRepository,
+            IAccountBalanceChangesRepository accountBalanceChangesRepository,
             IChaosKitty chaosKitty,
             ILog log,
             AccountManagementSettings settings)
@@ -37,6 +39,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             _accountsRepository = accountsRepository;
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
+            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _chaosKitty = chaosKitty;
             _log = log;
             _settings = settings;
@@ -104,16 +107,16 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                 .Where(x => string.IsNullOrEmpty(c.RevokeEventSourceId) || x.Id == c.RevokeEventSourceId)
                 .ToList();
             
-            //todo ask Anton
-//            var amountToRevoke = temporaryCapitalToRevoke.Select(x => x.Amount).Sum();
-//            if (account.Balance < amountToRevoke)
-//            {
-//                publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
-//                    _systemClock.UtcNow.UtcDateTime,
-//                    $"Account {c.AccountId} balance {account.Balance}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}",
-//                    c.EventSourceId, c.RevokeEventSourceId));
-//                return; 
-//            }
+            var realisedDailyPnl = await _accountBalanceChangesRepository.GetRealizedDailyPnl(c.AccountId);
+            var amountToRevoke = temporaryCapitalToRevoke.Select(x => x.Amount).Sum();
+            if (account.Balance - realisedDailyPnl < amountToRevoke)
+            {
+                publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
+                    _systemClock.UtcNow.UtcDateTime,
+                    $"Account {c.AccountId} balance {account.Balance}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}",
+                    c.EventSourceId, c.RevokeEventSourceId));
+                return; 
+            }
 
             try
             {
