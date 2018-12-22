@@ -7,28 +7,28 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Comma
     public class StartRevokeTemporaryCapitalInternalCommand
     {
         public StartRevokeTemporaryCapitalInternalCommand([NotNull] string operationId,
-            string eventSourceId, string accountId, string revokeEventSourceId, string auditLog)
+            string accountId, string revokeEventSourceId, string comment, string additionalInfo)
         {
             OperationId = operationId;
-            EventSourceId = eventSourceId;
             AccountId = accountId;
             RevokeEventSourceId = revokeEventSourceId;
-            AuditLog = auditLog;
+            Comment = comment;
+            AdditionalInfo = additionalInfo;
         }
         
         [Key(0)]
         public string OperationId { get; }
         
         [Key(1)]
-        public string EventSourceId { get; }
-        
-        [Key(2)]
         public string AccountId { get; }
         
-        [Key(3)]
+        [Key(2)]
         public string RevokeEventSourceId { get; }
         
+        [Key(3)]
+        public string Comment { get; }
+        
         [Key(4)]
-        public string AuditLog { get; }
+        public string AdditionalInfo { get; }
     }
 }

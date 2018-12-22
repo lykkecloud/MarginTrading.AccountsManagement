@@ -26,7 +26,7 @@ namespace MarginTrading.AccountsManagement.InternalModels.Interfaces
         DateTime ModificationTimestamp { get; }
         
         
-        List<TemporaryCapital> TemporaryCapital { get; set; }
+        List<TemporaryCapital> TemporaryCapital { get; }
         
         
         List<string> LastExecutedOperations { get; }

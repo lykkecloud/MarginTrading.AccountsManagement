@@ -31,13 +31,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         public string Comment { get; set; }
         
         /// <summary>
-        /// User ID of the support staff who entered the TCC
+        /// Any external additional info
         /// </summary>
-        public string InitiatedBy { get; set; }
-        
-        /// <summary>
-        /// User ID of the support staff who approved the TCC
-        /// </summary>
-        public string ArbitratedBy { get; set; }
+        public string AdditionalInfo { get; set; }
     }
 }

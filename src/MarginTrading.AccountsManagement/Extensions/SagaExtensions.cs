@@ -1,6 +1,7 @@
 using System;
+using MarginTrading.AccountsManagement.InternalModels;
 
-namespace MarginTrading.AccountsManagement.InternalModels
+namespace MarginTrading.AccountsManagement.Extensions
 {
     public static class SagaExtensions
     {

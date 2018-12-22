@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
+using Lykke.Logs.MsSql.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
@@ -33,7 +34,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[AuditLog] [nvarchar] (MAX) NULL, " +
                                                  "[Instrument] [nvarchar] (64) NULL, " +
                                                  "[TradingDate] [datetime] NULL, " +
-                                                 "INDEX IX_{0}_Base (Id, AccountId, ChangeTimestamp, EventSourceId)" +
+                                                 "INDEX IX_{0}_Base (Id, AccountId, ChangeTimestamp, EventSourceId, ReasonType)" +
                                                  ");";
         
         private static Type DataType => typeof(IAccountBalanceChange);
@@ -108,12 +109,21 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public async Task<decimal> GetRealizedDailyPnl(string accountId)
         {
-            var history = await GetAsync(
-                accountId: accountId,
-                //TODO rethink the way trading day's start & end are selected 
-                @from: _systemClock.UtcNow.UtcDateTime.Date,
-                reasonType: AccountBalanceChangeReasonType.RealizedPnL);
-            return history.Sum(x => x.ChangeAmount);
+            var whereClause = "WHERE AccountId=@accountId"
+                              + " AND ChangeTimestamp > @from"
+                              + " AND ReasonType = @reasonType";
+            
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                return await conn.QuerySingleAsync<int>(
+                    $"SELECT SUM(ChangeAmount) FROM {TableName} {whereClause}", new
+                    {
+                        accountId,
+                        //TODO rethink the way trading day's start & end are selected 
+                        from = _systemClock.UtcNow.UtcDateTime.Date,
+                        reasonType = AccountBalanceChangeReasonType.RealizedPnL.ToString(),
+                    });
+            }
         }
 
         public async Task AddAsync(IAccountBalanceChange change)

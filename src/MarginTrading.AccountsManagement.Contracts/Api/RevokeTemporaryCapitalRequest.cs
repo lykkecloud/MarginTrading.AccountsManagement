@@ -21,8 +21,13 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         public string RevokeEventSourceId { get; set; }
         
         /// <summary>
-        /// User who requested revocation
+        /// Additional comments of support staff
         /// </summary>
-        public string RevokedBy { get; set; }
+        public string Comment { get; set; }
+        
+        /// <summary>
+        /// Any external additional info
+        /// </summary>
+        public string AdditionalInfo { get; set; }
     }
 }
