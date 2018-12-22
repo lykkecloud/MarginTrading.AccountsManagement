@@ -8,15 +8,18 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Events;
+using MarginTrading.Backend.Contracts;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
 {
     internal class RevokeTemporaryCapitalCommandsHandler
     {
+        private readonly IAccountsApi _accountsApi;
         private readonly IAccountsRepository _accountsRepository;
         private readonly ISystemClock _systemClock;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
@@ -28,6 +31,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
         private const string OperationName = RevokeTemporaryCapitalSaga.OperationName;
 
         public RevokeTemporaryCapitalCommandsHandler(
+            IAccountsApi accountsApi,
             IAccountsRepository accountsRepository,
             ISystemClock systemClock,
             IOperationExecutionInfoRepository executionInfoRepository,
@@ -36,6 +40,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             ILog log,
             AccountManagementSettings settings)
         {
+            _accountsApi = accountsApi;
             _accountsRepository = accountsRepository;
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
@@ -61,10 +66,10 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                     {
                         State = TemporaryCapitalState.Initiated,
                         OperationId = c.OperationId,
-                        EventSourceId = c.EventSourceId,
                         AccountId = c.AccountId,
                         RevokeEventSourceId = c.RevokeEventSourceId,
-                        AuditLog = c.AuditLog,
+                        Comment = c.Comment,
+                        AdditionalInfo = c.AdditionalInfo,
                     },
                     lastModified: _systemClock.UtcNow.UtcDateTime));
 
@@ -80,15 +85,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             if (account == null)
             {
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
-                    _systemClock.UtcNow.UtcDateTime, $"Account {c.AccountId} not found", c.EventSourceId,
-                    c.RevokeEventSourceId));
-                return;
-            }
-
-            if (account.IsDisabled)
-            {
-                publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId, 
-                    _systemClock.UtcNow.UtcDateTime, $"Account {c.AccountId} is disabled", c.EventSourceId,
+                    _systemClock.UtcNow.UtcDateTime, $"Account {c.AccountId} not found", 
                     c.RevokeEventSourceId));
                 return;
             }
@@ -99,7 +96,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
                     _systemClock.UtcNow.UtcDateTime,
                     $"Account {c.AccountId} doesn't contain temporary capital with id {c.RevokeEventSourceId}",
-                    c.EventSourceId, c.RevokeEventSourceId));
+                    c.RevokeEventSourceId));
                 return; 
             }
 
@@ -113,18 +110,30 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             {
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
                     _systemClock.UtcNow.UtcDateTime,
-                    $"Account {c.AccountId} balance {account.Balance}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}",
-                    c.EventSourceId, c.RevokeEventSourceId));
-                return; 
+                    $"Account {c.AccountId} balance {account.Balance}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}."
+                    + (realisedDailyPnl > 0 ? $" Taking into account current realized daily PnL {realisedDailyPnl}{account.BaseAssetId}." : ""),
+                    c.RevokeEventSourceId));
+                return;
+            }
+
+            var accountStat = await _accountsApi.GetAccountStats(c.AccountId);
+            if (accountStat != null && accountStat.FreeMargin < amountToRevoke)
+            {
+                publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
+                    _systemClock.UtcNow.UtcDateTime,
+                    $"MT Core account {c.AccountId} free margin {accountStat.FreeMargin}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}.",
+                    c.RevokeEventSourceId));
+                return;
             }
 
             try
             {
-                await _accountsRepository.UpdateAccountTemporaryCapitalAsync(c.AccountId,
+                await _accountsRepository.UpdateAccountTemporaryCapitalAsync(c.AccountId, 
+                    AccountManagementService.UpdateTemporaryCapital,
                     string.IsNullOrEmpty(c.RevokeEventSourceId)
-                    ? null
-                    : new InternalModels.TemporaryCapital { Id = c.RevokeEventSourceId },
-                    addOrRemove: false);
+                        ? null
+                        : new InternalModels.TemporaryCapital { Id = c.RevokeEventSourceId },
+                    isAdd: false);
             }
             catch (Exception exception)
             {
@@ -132,11 +141,15 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                     nameof(StartRevokeTemporaryCapitalInternalCommand), exception);
                 
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId, 
-                    _systemClock.UtcNow.UtcDateTime, exception.Message, c.EventSourceId, 
-                    c.RevokeEventSourceId));
+                    _systemClock.UtcNow.UtcDateTime, exception.Message, c.RevokeEventSourceId));
                 
                 return;
             }
+
+            _chaosKitty.Meow(
+                $"{nameof(StartRevokeTemporaryCapitalInternalCommand)}: " +
+                "publisher.PublishEvent: " +
+                $"{c.OperationId}");
 
             publisher.PublishEvent(new RevokeTemporaryCapitalStartedInternalEvent(c.OperationId, 
                 _systemClock.UtcNow.UtcDateTime, temporaryCapitalToRevoke));
@@ -169,16 +182,17 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                     eventSourceId: executionInfo.Data.EventSourceId,
                     accountId: executionInfo.Data.AccountId,
                     revokeEventSourceId: executionInfo.Data.RevokeEventSourceId,
-                    auditLog: executionInfo.Data.AuditLog));
+                    comment: executionInfo.Data.Comment,
+                    additionalInfo: executionInfo.Data.AdditionalInfo));
             }
             else if (executionInfo.Data.State == TemporaryCapitalState.Failing)
             {
                 //rollback account. if exception is thrown here, it will be retried until success
-                await _accountsRepository.UpdateAccountRollbackTemporaryCapitalAsync(executionInfo.Data.AccountId,
+                await _accountsRepository.RollbackTemporaryCapitalRevokeAsync(executionInfo.Data.AccountId,
                     executionInfo.Data.RevokedTemporaryCapital);
                 
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId, 
-                    _systemClock.UtcNow.UtcDateTime, executionInfo.Data.FailReason, executionInfo.Data.EventSourceId,
+                    _systemClock.UtcNow.UtcDateTime, executionInfo.Data.FailReason, 
                     executionInfo.Data.RevokeEventSourceId));
             }
         }

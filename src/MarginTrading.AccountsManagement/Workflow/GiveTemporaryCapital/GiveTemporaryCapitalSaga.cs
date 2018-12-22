@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
@@ -60,18 +61,18 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                         operationId: e.OperationId,
                         accountId: executionInfo.Data.AccountId,
                         amountDelta: executionInfo.Data.Amount,
-                        comment: "Give temporary capital",
-                        auditLog: executionInfo.Data.AuditLog,
+                        comment: executionInfo.Data.Comment,
+                        auditLog: executionInfo.Data.AdditionalInfo,
                         source: OperationName,
                         changeReasonType: AccountBalanceChangeReasonType.TemporaryCashAdjustment,
-                        eventSourceId: executionInfo.Data.EventSourceId,
+                        eventSourceId: e.OperationId,
                         assetPairId: string.Empty,
                         tradingDay: _systemClock.UtcNow.UtcDateTime),
-                    _contextNames.AccountsManagement);   
+                    _contextNames.AccountsManagement);
 
                 _chaosKitty.Meow(
                     $"{nameof(GiveTemporaryCapitalStartedInternalEvent)}: " +
-                    "Save_OperationExecutionInfo:" +
+                    "Save_OperationExecutionInfo: " +
                     $"{e.OperationId}");
                 
                 await _executionInfoRepository.Save(executionInfo);
@@ -164,7 +165,9 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
         {
             var executionInfo = await _executionInfoRepository.GetAsync<GiveTemporaryCapitalData>(OperationName, e.OperationId);
 
-            if (executionInfo != null && executionInfo.Data.SwitchState(TemporaryCapitalState.Initiated, 
+            if (executionInfo != null 
+                && new [] {TemporaryCapitalState.Initiated, TemporaryCapitalState.Failing}.Contains(executionInfo.Data.State)
+                && executionInfo.Data.SwitchState(executionInfo.Data.State, 
                     TemporaryCapitalState.Failed))
             {
                 executionInfo.Data.FailReason = e.FailReason;

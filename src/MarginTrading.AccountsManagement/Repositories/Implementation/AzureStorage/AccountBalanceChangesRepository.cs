@@ -52,12 +52,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
         public async Task<decimal> GetRealizedDailyPnl(string accountId)
         {
-            var history = await GetAsync(
-                accountId: accountId,
-                //TODO rethink the way trading day's start & end are selected 
-                @from: _systemClock.UtcNow.UtcDateTime.Date,
-                reasonType: AccountBalanceChangeReasonType.RealizedPnL);
-            return history.Sum(x => x.ChangeAmount);
+            return (await _tableStorage.WhereAsync(accountId,
+                    //TODO rethink the way trading day's start & end are selected 
+                    _systemClock.UtcNow.UtcDateTime.Date,
+                    DateTime.MaxValue,
+                    ToIntervalOption.IncludeTo,
+                    x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL.ToString()))
+                .Sum(x => x.ChangeAmount);
         }
 
         public async Task AddAsync(IAccountBalanceChange change)

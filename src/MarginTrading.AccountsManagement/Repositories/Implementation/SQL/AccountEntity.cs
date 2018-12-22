@@ -32,11 +32,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public DateTime ModificationTimestamp { get; set; }
 
-        List<TemporaryCapital> IAccount.TemporaryCapital
-        {
-            get => JsonConvert.DeserializeObject<List<TemporaryCapital>>(TemporaryCapital);
-            set => TemporaryCapital = value.ToJson();
-        }
+        List<TemporaryCapital> IAccount.TemporaryCapital => JsonConvert.DeserializeObject<List<TemporaryCapital>>(TemporaryCapital);
         public string TemporaryCapital { get; set; } = "[]";
 
         List<string> IAccount.LastExecutedOperations => JsonConvert.DeserializeObject<List<string>>(LastExecutedOperations);

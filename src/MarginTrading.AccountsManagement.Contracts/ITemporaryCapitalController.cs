@@ -27,12 +27,5 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// <param name="request"></param>
         [Delete("/api/temporary-capital")]
         Task<string> RevokeTemporaryCapital([Body] RevokeTemporaryCapitalRequest request);
-
-        /// <summary>
-        /// See the list of transactions of temporary capital
-        /// </summary>
-        [Get("/api/temporary-capital/{accountId}")]
-        Task<List<AccountBalanceChangeContract>> ListTemporaryCapital(string accountId,
-            [CanBeNull] [Query] DateTime? @from = null, [CanBeNull] [Query] DateTime? to = null);
     }
 }

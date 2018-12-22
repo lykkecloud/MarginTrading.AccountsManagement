@@ -17,9 +17,10 @@ namespace MarginTrading.AccountsManagement.Services
             string operationId, string reason, string auditLog);
 
         Task<string> GiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
-            string reason, string auditLog);
+            string reason, string comment, string additionalInfo);
 
         Task<string> RevokeTemporaryCapital(string eventSourceId, string accountId, string revokeEventSourceId,
-            string auditLog);
+            string comment,
+            string additionalInfo);
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
-namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
+namespace MarginTrading.AccountsManagement.Extensions
 {
     public static class ValidationExtensions
     {

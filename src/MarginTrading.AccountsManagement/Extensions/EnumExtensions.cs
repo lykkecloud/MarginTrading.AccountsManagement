@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MarginTrading.AccountsManagement
+namespace MarginTrading.AccountsManagement.Extensions
 {
     public static class EnumExtensions
     {

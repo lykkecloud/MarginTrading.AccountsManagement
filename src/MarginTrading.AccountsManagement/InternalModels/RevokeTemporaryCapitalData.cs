@@ -12,7 +12,9 @@ namespace MarginTrading.AccountsManagement.InternalModels
         
         public string RevokeEventSourceId { get; set; }
 
-        public string AuditLog { get; set; }
+        public string Comment { get; set; }
+
+        public string AdditionalInfo { get; set; }
         
         public string FailReason { get; set; }
         

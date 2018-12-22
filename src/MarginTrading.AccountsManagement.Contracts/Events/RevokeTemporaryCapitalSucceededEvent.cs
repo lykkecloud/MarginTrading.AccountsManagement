@@ -8,13 +8,14 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     public class RevokeTemporaryCapitalSucceededEvent : BaseEvent
     {
         public RevokeTemporaryCapitalSucceededEvent([NotNull] string operationId, DateTime eventTimestamp,
-            string eventSourceId, string accountId, string revokeEventSourceId, string auditLog)
+            string eventSourceId, string accountId, string revokeEventSourceId, string comment, string additionalInfo)
             : base(operationId, eventTimestamp)
         {
             EventSourceId = eventSourceId;
             AccountId = accountId;
             RevokeEventSourceId = revokeEventSourceId;
-            AuditLog = auditLog;
+            Comment = comment;
+            AdditionalInfo = additionalInfo;
         }
 
         [Key(2)] 
@@ -25,8 +26,11 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
 
         [Key(4)] 
         public string RevokeEventSourceId { get; }
+        
+        [Key(5)]
+        public string Comment { get; }
 
-        [Key(5)] 
-        public string AuditLog { get; }
+        [Key(6)] 
+        public string AdditionalInfo { get; }
     }
 }

@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
@@ -199,7 +200,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginChargeManually([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeManuallyRequest request)
         {
-            await ValidateAccountId(accountId);
+            await _accountManagementService.ValidateAccountId(accountId);
 
             return await _sendBalanceCommandsService.ChargeManuallyAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
@@ -234,7 +235,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginDeposit([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            await ValidateAccountId(accountId);
+            await _accountManagementService.ValidateAccountId(accountId);
             
             return await _sendBalanceCommandsService.DepositAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
@@ -264,7 +265,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginWithdraw([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            await ValidateAccountId(accountId);
+            await _accountManagementService.ValidateAccountId(accountId);
             
             return await _sendBalanceCommandsService.WithdrawAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
@@ -367,16 +368,6 @@ namespace MarginTrading.AccountsManagement.Controllers
         private Account Convert(AccountContract account)
         {
             return _convertService.Convert<AccountContract, Account>(account);
-        }
-
-        private async Task ValidateAccountId(string accountId)
-        {
-            var account = await _accountManagementService.GetByIdAsync(accountId);
-
-            if (account == null)
-            {
-                throw new ArgumentException($"Account {accountId} does not exist");
-            }
         }
     }
 }

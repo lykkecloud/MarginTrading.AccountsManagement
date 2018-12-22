@@ -8,6 +8,7 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Events;
@@ -60,11 +61,11 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                     {
                         State = TemporaryCapitalState.Initiated,
                         OperationId = c.OperationId,
-                        EventSourceId = c.EventSourceId,
                         AccountId = c.AccountId,
                         Amount = c.Amount,
                         Reason = c.Reason,
-                        AuditLog = c.AuditLog,
+                        Comment = c.Comment,
+                        AdditionalInfo = c.AdditionalInfo,
                     },
                     lastModified: _systemClock.UtcNow.UtcDateTime));
 
@@ -80,35 +81,27 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
             if (account == null)
             {
                 publisher.PublishEvent(new GiveTemporaryCapitalFailedEvent(c.OperationId, 
-                    _systemClock.UtcNow.UtcDateTime, $"Account {c.AccountId} not found", c.EventSourceId));
+                    _systemClock.UtcNow.UtcDateTime, $"Account {c.AccountId} not found"));
                 return;
             }
 
-            if (account.IsDisabled)
+            if (account.TemporaryCapital.Any(x => x.Id == c.OperationId))
             {
-                publisher.PublishEvent(new GiveTemporaryCapitalFailedEvent(c.OperationId, 
-                    _systemClock.UtcNow.UtcDateTime, $"Account {c.AccountId} is disabled", c.EventSourceId));
-                return;
-            }
-
-            if (account.TemporaryCapital.Any(x => x.Id == c.EventSourceId))
-            {
-                publisher.PublishEvent(new GiveTemporaryCapitalFailedEvent(c.OperationId,
-                    _systemClock.UtcNow.UtcDateTime,
-                    $"Account {c.AccountId} already contain temporary capital with id {c.EventSourceId}",
-                    c.EventSourceId));
+                publisher.PublishEvent(new GiveTemporaryCapitalStartedInternalEvent(c.OperationId,
+                    _systemClock.UtcNow.UtcDateTime));
                 return; 
             }
 
             try
             {
-                await _accountsRepository.UpdateAccountTemporaryCapitalAsync(c.AccountId,
+                await _accountsRepository.UpdateAccountTemporaryCapitalAsync(c.AccountId, 
+                    AccountManagementService.UpdateTemporaryCapital,
                     new InternalModels.TemporaryCapital
                     {
-                        Id = c.EventSourceId,
+                        Id = c.OperationId,
                         Amount = c.Amount,
                     },
-                    addOrRemove: true);
+                    isAdd: true);
             }
             catch (Exception exception)
             {
@@ -116,10 +109,13 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                     nameof(StartGiveTemporaryCapitalInternalCommand), exception);
                 
                 publisher.PublishEvent(new GiveTemporaryCapitalFailedEvent(c.OperationId, 
-                    _systemClock.UtcNow.UtcDateTime, exception.Message, c.EventSourceId));
+                    _systemClock.UtcNow.UtcDateTime, exception.Message));
                 
                 return;
             }
+            
+            _chaosKitty.Meow($"{nameof(StartGiveTemporaryCapitalInternalCommand)}: " +
+                             "publisher.PublishEvent: " + c.OperationId);
 
             publisher.PublishEvent(new GiveTemporaryCapitalStartedInternalEvent(c.OperationId, 
                 _systemClock.UtcNow.UtcDateTime));
@@ -135,8 +131,6 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
 
             if (executionInfo == null)
                 return;
-            
-            _chaosKitty.Meow(c.OperationId);
 
             if (!new[] {TemporaryCapitalState.ChargedOnAccount, TemporaryCapitalState.Failing}
                 .Contains(executionInfo.Data.State))
@@ -149,25 +143,30 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                 publisher.PublishEvent(new GiveTemporaryCapitalSucceededEvent(
                     operationId: c.OperationId, 
                     eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                    eventSourceId: executionInfo.Data.EventSourceId,
+                    eventSourceId: executionInfo.Data.OperationId,
                     accountId: executionInfo.Data.AccountId,
                     amount: executionInfo.Data.Amount,
                     reason: executionInfo.Data.Reason,
-                    auditLog: executionInfo.Data.AuditLog));
+                    comment: executionInfo.Data.Comment,
+                    additionalInfo: executionInfo.Data.AdditionalInfo));
             }
             else if (executionInfo.Data.State == TemporaryCapitalState.Failing)
             {
                 //rollback account. if exception is thrown here, it will be retried until success
-                await _accountsRepository.UpdateAccountTemporaryCapitalAsync(executionInfo.Data.AccountId,
+                await _accountsRepository.UpdateAccountTemporaryCapitalAsync(executionInfo.Data.AccountId, 
+                    AccountManagementService.UpdateTemporaryCapital,
                     new InternalModels.TemporaryCapital
                     {
-                        Id = executionInfo.Data.EventSourceId,
+                        Id = executionInfo.Data.OperationId,
                         Amount = executionInfo.Data.Amount,
                     },
-                    addOrRemove: false);
+                    isAdd: false);
+            
+                _chaosKitty.Meow($"{nameof(FinishGiveTemporaryCapitalInternalCommand)}: " +
+                                 "publisher.PublishEvent: " + c.OperationId);
                 
                 publisher.PublishEvent(new GiveTemporaryCapitalFailedEvent(c.OperationId, 
-                    _systemClock.UtcNow.UtcDateTime, executionInfo.Data.FailReason, executionInfo.Data.EventSourceId));
+                    _systemClock.UtcNow.UtcDateTime, executionInfo.Data.FailReason));
             }
         }
     }

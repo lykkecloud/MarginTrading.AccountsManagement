@@ -17,13 +17,16 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         [Get("/api/balance-history/by-account/{accountId}")]
         Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount([NotNull] string accountId,
-            [CanBeNull][Query] DateTime? @from = null, [CanBeNull][Query] DateTime? to = null);
+            [CanBeNull] [Query] DateTime? @from = null, 
+            [CanBeNull] [Query] DateTime? to = null,
+            [CanBeNull] [Query] AccountBalanceChangeReasonTypeContract? reasonType = null);
 
         /// <summary>
         /// Get account balance change history by account Id and eventSourceId (like Withdraw or Deposit)
         /// </summary>
         [Get("/api/balance-history/{accountId}")]
         Task<AccountBalanceChangeContract[]> ByAccountAndEventSource(
-            [NotNull] string accountId, [CanBeNull][Query] string eventSourceId = null);
+            [NotNull] string accountId, 
+            [CanBeNull][Query] string eventSourceId = null);
     }
 }

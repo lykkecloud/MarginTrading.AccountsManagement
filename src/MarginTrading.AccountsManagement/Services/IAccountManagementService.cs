@@ -39,6 +39,8 @@ namespace MarginTrading.AccountsManagement.Services
         Task<IAccount> GetByIdAsync(string accountId);
 
         Task<AccountStat> GetStat(string accountId);
+
+        Task ValidateAccountId(string accountId);
         
         #endregion
         
@@ -50,11 +52,12 @@ namespace MarginTrading.AccountsManagement.Services
         
         Task ResetAccountAsync(string accountId);
         
-        Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount, string reason, 
-            string auditLog);
+        Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount, string reason,
+            string comment, string additionalInfo);
 
         Task<string> StartRevokeTemporaryCapital(string eventSourceId, string accountId, string revokeEventSourceId,
-            string auditLog);
+            string comment,
+            string additionalInfo);
         
         #endregion
     }

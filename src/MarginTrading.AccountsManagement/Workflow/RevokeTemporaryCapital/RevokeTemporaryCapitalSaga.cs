@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
@@ -64,8 +65,8 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                         operationId: e.OperationId,
                         accountId: executionInfo.Data.AccountId,
                         amountDelta: - executionInfo.Data.RevokedTemporaryCapital.Sum(x => x.Amount),
-                        comment: "Revoke temporary capital",
-                        auditLog: executionInfo.Data.AuditLog,
+                        comment: $"{executionInfo.Data.Comment}  ***  Revoked eventSourceIds: [{string.Join(",", executionInfo.Data.RevokedTemporaryCapital.Select(x => x.Id))}]",
+                        auditLog: executionInfo.Data.AdditionalInfo,
                         source: OperationName,
                         changeReasonType: AccountBalanceChangeReasonType.TemporaryCashAdjustment,
                         eventSourceId: executionInfo.Data.EventSourceId,

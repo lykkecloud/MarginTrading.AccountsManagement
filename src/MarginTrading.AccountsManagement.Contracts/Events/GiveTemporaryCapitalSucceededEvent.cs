@@ -11,14 +11,15 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     public class GiveTemporaryCapitalSucceededEvent : BaseEvent
     {
         public GiveTemporaryCapitalSucceededEvent([NotNull] string operationId, DateTime eventTimestamp, 
-            string eventSourceId, string accountId, decimal amount, string reason, string auditLog)
+            string eventSourceId, string accountId, decimal amount, string reason, string comment, string additionalInfo)
             : base(operationId, eventTimestamp)
         {
             EventSourceId = eventSourceId;
             AccountId = accountId;
             Amount = amount;
             Reason = reason;
-            AuditLog = auditLog;
+            Comment = comment;
+            AdditionalInfo = additionalInfo;
         }
         
         [Key(2)]
@@ -34,6 +35,9 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         public string Reason { get; }
         
         [Key(6)]
-        public string AuditLog { get; }
+        public string Comment { get; }
+        
+        [Key(7)]
+        public string AdditionalInfo { get; }
     }
 }
