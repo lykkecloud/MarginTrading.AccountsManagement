@@ -102,21 +102,39 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             var entity = Convert(executionInfo, _systemClock.UtcNow.UtcDateTime);
+            var affectedRows = 0;
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 try
                 {
-                    await conn.ExecuteAsync(
-                        $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
-                }
-                catch (SqlException)
-                {
-                    await conn.ExecuteAsync(
+                    affectedRows = await conn.ExecuteAsync(
                         $"update {TableName} set {GetUpdateClause} where Id=@Id " +
                         "and OperationName=@OperationName " +
-                        "and LastModified=@PrevLastModified ", entity);
+                        "and LastModified=@PrevLastModified",
+                        entity);
                 }
+                catch (Exception ex)
+                {
+                    await _log.WriteErrorAsync(nameof(OperationExecutionInfoRepository), nameof(GetOrAddAsync), ex);
+                    throw;
+                }
+            }
+
+            if (affectedRows == 0)
+            {
+                var existingExecutionInfo = await GetAsync<TData>(executionInfo.OperationName, executionInfo.Id);
+
+                if (existingExecutionInfo == null)
+                {
+                    throw new InvalidOperationException(
+                        $"Execution info {executionInfo.OperationName}:{executionInfo.Id} does not exist");
+                }
+
+                throw new InvalidOperationException(
+                    $"Optimistic Concurrency Violation Encountered. " +
+                    $"Existing info: [{existingExecutionInfo.ToJson()}] " +
+                    $"New info: [{executionInfo.ToJson()}]");
             }
         }
         

@@ -77,8 +77,6 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             {
                 return;
             }
-
-            _chaosKitty.Meow(c.OperationId);
             
             var account = await _accountsRepository.GetAsync(c.AccountId);
 
@@ -165,8 +163,6 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
 
             if (executionInfo == null)
                 return;
-            
-            _chaosKitty.Meow(c.OperationId);
 
             if (!new[] {TemporaryCapitalState.ChargedOnAccount, TemporaryCapitalState.Failing}
                 .Contains(executionInfo.Data.State))
@@ -190,6 +186,11 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                 //rollback account. if exception is thrown here, it will be retried until success
                 await _accountsRepository.RollbackTemporaryCapitalRevokeAsync(executionInfo.Data.AccountId,
                     executionInfo.Data.RevokedTemporaryCapital);
+
+                _chaosKitty.Meow(
+                    $"{nameof(FinishRevokeTemporaryCapitalInternalCommand)}: " +
+                    "publisher.PublishEvent: " +
+                    $"{c.OperationId}");
                 
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId, 
                     _systemClock.UtcNow.UtcDateTime, executionInfo.Data.FailReason, 
