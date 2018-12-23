@@ -169,11 +169,13 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
         {
             var executionInfo = await _executionInfoRepository.GetAsync<RevokeTemporaryCapitalData>(OperationName, e.OperationId);
 
-            if (executionInfo != null && executionInfo.Data.SwitchState(TemporaryCapitalState.Initiated, 
+            if (executionInfo != null
+                && new[] {TemporaryCapitalState.Initiated, TemporaryCapitalState.Failing}.Contains(executionInfo.Data.State)
+                && executionInfo.Data.SwitchState(executionInfo.Data.State,
                     TemporaryCapitalState.Failed))
             {
                 executionInfo.Data.FailReason = e.FailReason;
-                
+
                 await _executionInfoRepository.Save(executionInfo);
             }
         }

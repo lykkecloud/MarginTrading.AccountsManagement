@@ -77,6 +77,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         public DateTime ModificationTimestamp { get; set; }
 
 
+        [JsonValueSerializer]
         public List<TemporaryCapital> TemporaryCapital { get; set; } = new List<TemporaryCapital>();
 
         [JsonValueSerializer]

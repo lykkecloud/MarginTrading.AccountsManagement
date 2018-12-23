@@ -158,7 +158,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             var account = await _tableStorage.MergeAsync(pk,
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
-                    a.TemporaryCapital = a.TemporaryCapital = handler(
+                    a.TemporaryCapital = handler(
                         accountId,
                         ((IAccount) a).TemporaryCapital,
                         temporaryCapital,
