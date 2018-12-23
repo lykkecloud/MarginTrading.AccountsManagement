@@ -115,14 +115,14 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
-                return await conn.QuerySingleAsync<int>(
+                return await conn.QuerySingleAsync<decimal?>(
                     $"SELECT SUM(ChangeAmount) FROM {TableName} {whereClause}", new
                     {
                         accountId,
                         //TODO rethink the way trading day's start & end are selected 
                         from = _systemClock.UtcNow.UtcDateTime.Date,
                         reasonType = AccountBalanceChangeReasonType.RealizedPnL.ToString(),
-                    });
+                    }) ?? 0;
             }
         }
 
