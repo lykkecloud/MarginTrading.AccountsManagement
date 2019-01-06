@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Extensions;
@@ -25,7 +26,7 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         /// <inheritdoc cref="ITemporaryCapitalController" />
         [HttpPost]
-        public async Task<string> GiveTemporaryCapital(GiveTemporaryCapitalRequest request)
+        public async Task<string> GiveTemporaryCapital([FromBody][NotNull] GiveTemporaryCapitalRequest request)
         {
             request.RequiredNotNull(nameof(request));
             await _accountManagementService.ValidateAccountId(request.AccountId);
@@ -42,7 +43,7 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         /// <inheritdoc cref="ITemporaryCapitalController" />
         [HttpDelete]
-        public async Task<string> RevokeTemporaryCapital(RevokeTemporaryCapitalRequest request)
+        public async Task<string> RevokeTemporaryCapital([FromBody][NotNull] RevokeTemporaryCapitalRequest request)
         {
             request.RequiredNotNull(nameof(request));
             await _accountManagementService.ValidateAccountId(request.AccountId);
