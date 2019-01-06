@@ -13,7 +13,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Comma
             AccountId = accountId;
             RevokeEventSourceId = revokeEventSourceId;
             Comment = comment;
-            AdditionalInfo = additionalInfo;
+            AdditionalInfo = additionalInfo; 
         }
         
         [Key(0)]
