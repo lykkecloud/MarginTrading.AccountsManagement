@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
+using Lykke.Logs.MsSql.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Settings;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 {
@@ -32,7 +34,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[AuditLog] [nvarchar] (MAX) NULL, " +
                                                  "[Instrument] [nvarchar] (64) NULL, " +
                                                  "[TradingDate] [datetime] NULL, " +
-                                                 "INDEX IX_{0}_Base (Id, AccountId, ChangeTimestamp, EventSourceId)" +
+                                                 "INDEX IX_{0}_Base (Id, AccountId, ChangeTimestamp, EventSourceId, ReasonType)" +
                                                  ");";
         
         private static Type DataType => typeof(IAccountBalanceChange);
@@ -44,12 +46,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         private readonly IConvertService _convertService;
         private readonly AccountManagementSettings _settings;
         private readonly ILog _log;
+        private readonly ISystemClock _systemClock;
         
-        public AccountBalanceChangesRepository(IConvertService convertService, AccountManagementSettings settings, ILog log)
+        public AccountBalanceChangesRepository(IConvertService convertService, 
+            AccountManagementSettings settings, 
+            ILog log,
+            ISystemClock systemClock)
         {
             _convertService = convertService;
-            _log = log;
             _settings = settings;
+            _log = log;
+            _systemClock = systemClock;
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
@@ -63,16 +70,23 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         }
         
         public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, DateTime? @from = null,
-            DateTime? to = null)
+            DateTime? to = null, AccountBalanceChangeReasonType? reasonType = null)
         {
             var whereClause = "WHERE 1=1 " + (!string.IsNullOrWhiteSpace(accountId) ? " AND AccountId=@accountId" : "")
                                        + (from != null ? " AND ChangeTimestamp > @from" : "")
-                                       + (to != null ? " AND ChangeTimestamp < @to" : "");
+                                       + (to != null ? " AND ChangeTimestamp < @to" : "")
+                                       + (reasonType != null ? " AND ReasonType = @reasonType" : "");
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
-                    $"SELECT * FROM {TableName} {whereClause}", new { accountId, from, to });
+                    $"SELECT * FROM {TableName} {whereClause}", new
+                    {
+                        accountId, 
+                        from, 
+                        to, 
+                        reasonType = reasonType.ToString(),
+                    });
 
                 return data.ToList();
             }
@@ -90,6 +104,25 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     new { accountId, eventSourceId });
 
                 return data.ToList();
+            }
+        }
+
+        public async Task<decimal> GetRealizedDailyPnl(string accountId)
+        {
+            var whereClause = "WHERE AccountId=@accountId"
+                              + " AND ChangeTimestamp > @from"
+                              + " AND ReasonType = @reasonType";
+            
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                return await conn.QuerySingleAsync<decimal?>(
+                    $"SELECT SUM(ChangeAmount) FROM {TableName} {whereClause}", new
+                    {
+                        accountId,
+                        //TODO rethink the way trading day's start & end are selected 
+                        from = _systemClock.UtcNow.UtcDateTime.Date,
+                        reasonType = AccountBalanceChangeReasonType.RealizedPnL.ToString(),
+                    }) ?? 0;
             }
         }
 

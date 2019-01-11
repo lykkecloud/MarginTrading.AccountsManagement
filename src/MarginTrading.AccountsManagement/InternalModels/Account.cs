@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AutoMapper;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using Newtonsoft.Json;
@@ -27,15 +28,28 @@ namespace MarginTrading.AccountsManagement.InternalModels
         }
 
         public string Id { get; }
+        
         public string ClientId { get; }
+        
         public string TradingConditionId { get; }
+        
         public string BaseAssetId { get; }
+        
         public decimal Balance { get; }
+        
         public decimal WithdrawTransferLimit { get; }
+        
         public string LegalEntity { get; }
+        
         public bool IsDisabled { get; }
+        
         public bool IsWithdrawalDisabled { get; }
+        
         public DateTime ModificationTimestamp { get; }
+        
+        
+        public List<TemporaryCapital> TemporaryCapital { get; set; } = new List<TemporaryCapital>(); 
+            
 
         public List<string> LastExecutedOperations { get; set; } = new List<string>();
     }

@@ -6,6 +6,8 @@ using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
+using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -74,6 +76,39 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
+        }
+
+        public Task<string> GiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
+            string reason, string comment, string additionalInfo)
+        {
+            _cqrsEngine.SendCommand(
+                new StartGiveTemporaryCapitalInternalCommand(
+                    operationId: eventSourceId,
+                    accountId: accountId,
+                    amount: amount,
+                    reason: reason,
+                    comment: comment,
+                    additionalInfo: additionalInfo
+                ),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
+            return Task.FromResult(eventSourceId);
+        }
+
+        public Task<string> RevokeTemporaryCapital(string eventSourceId, string accountId,
+            string revokeEventSourceId, string comment, string additionalInfo)
+        {
+            _cqrsEngine.SendCommand(
+                new StartRevokeTemporaryCapitalInternalCommand(
+                    operationId:  eventSourceId,
+                    accountId: accountId,
+                    revokeEventSourceId: revokeEventSourceId,
+                    comment: comment,
+                    additionalInfo: additionalInfo
+                ),
+                _cqrsContextNamesSettings.AccountsManagement,
+                _cqrsContextNamesSettings.AccountsManagement);
+            return Task.FromResult(eventSourceId);
         }
     }
 }

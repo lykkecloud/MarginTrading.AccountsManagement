@@ -23,8 +23,6 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
         [UsedImplicitly]
         public void Handle(NotifyNegativeProtectionInternalCommand command, IEventPublisher publisher)
         {
-            //skipping idempotency violation check
-            
             publisher.PublishEvent(new NegativeProtectionEvent(
                 id: Guid.NewGuid().ToString("N"),
                 correlationId: command.CorrelationId,

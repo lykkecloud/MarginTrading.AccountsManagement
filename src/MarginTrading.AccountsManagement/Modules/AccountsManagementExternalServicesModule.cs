@@ -33,6 +33,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 .Create();
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IOrdersApi>());
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IPositionsApi>());
+            builder.RegisterInstance(mtCoreClientGenerator.Generate<IAccountsApi>());
             
             builder.Populate(_services);
         }

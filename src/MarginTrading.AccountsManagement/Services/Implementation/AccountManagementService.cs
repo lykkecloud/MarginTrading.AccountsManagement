@@ -7,6 +7,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
@@ -194,8 +195,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var accountHistory = (await _accountBalanceChangesRepository.GetAsync(
                 accountId: accountId,
                 //TODO rethink the way trading day's start & end are selected 
-                from: _systemClock.UtcNow.UtcDateTime.Date
-            )).ToList();
+                @from: _systemClock.UtcNow.UtcDateTime.Date)).ToList();
 
             var sortedHistory = accountHistory.OrderByDescending(x => x.ChangeTimestamp).ToList();
             var firstEvent = sortedHistory.LastOrDefault();
@@ -225,6 +225,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 accountBalance: account.Balance,
                 prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance
             );
+        }
+
+        public async Task ValidateAccountId(string accountId)
+        {
+            var account = await GetByIdAsync(accountId);
+
+            if (account == null)
+            {
+                throw new ArgumentException($"Account {accountId} does not exist");
+            }
         }
 
         #endregion
@@ -261,6 +271,29 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
                 _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
                 "Reset account Api");
+        }
+
+        public async Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
+            string reason, string comment, string additionalInfo)
+        {
+            return await _sendBalanceCommandsService.GiveTemporaryCapital(
+                eventSourceId, 
+                accountId,
+                amount, 
+                reason, 
+                comment, 
+                additionalInfo);
+        }
+
+        public async Task<string> StartRevokeTemporaryCapital(string eventSourceId, string accountId,
+            string revokeEventSourceId, string comment, string additionalInfo)
+        {
+            return await _sendBalanceCommandsService.RevokeTemporaryCapital(
+                eventSourceId, 
+                accountId,
+                revokeEventSourceId, 
+                comment, 
+                additionalInfo);
         }
 
         #endregion
@@ -355,6 +388,40 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 throw new ValidationException($"Account disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
             }
+        }
+
+        public static List<TemporaryCapital> UpdateTemporaryCapital(string accountId, List<TemporaryCapital> current,
+            TemporaryCapital temporaryCapital, bool isAdd)
+        {
+            var result = current.ToList();
+            
+            if (isAdd)
+            {
+                if (result.Any(x => x.Id == temporaryCapital.Id))
+                {
+                    throw new ArgumentException(
+                        $"Temporary capital record with id {temporaryCapital.Id} is already set on account {accountId}",
+                        nameof(temporaryCapital.Id));
+                }
+                    
+                if (temporaryCapital != null)
+                {
+                    result.Add(temporaryCapital);
+                }
+            }
+            else
+            {
+                if (temporaryCapital != null)
+                {
+                    result.RemoveAll(x => x.Id == temporaryCapital.Id);
+                }
+                else
+                {
+                    result.Clear();
+                }
+            }
+
+            return result;
         }
 
         #endregion

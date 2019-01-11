@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 using System.Transactions;
 using AutoMapper;
 using AzureStorage;
+using Common;
 using Common.Log;
 using Dapper;
+using Lykke.Logs.MsSql.Extensions;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
@@ -171,7 +173,35 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
             });
         }
-        
+
+        public async Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId,
+            Func<string, List<TemporaryCapital>, TemporaryCapital, bool, List<TemporaryCapital>> handler,
+            TemporaryCapital temporaryCapital, bool isAdd)
+        {
+            return await GetAccountAndUpdate(accountId, a =>
+            {
+                a.TemporaryCapital = handler(
+                    accountId,
+                    ((IAccount) a).TemporaryCapital,
+                    temporaryCapital,
+                    isAdd
+                ).ToJson();
+            });
+        }
+
+        public async Task<IAccount> RollbackTemporaryCapitalRevokeAsync(string accountId, 
+            List<TemporaryCapital> revokedTemporaryCapital)
+        {
+            return await GetAccountAndUpdate(accountId, a =>
+            {
+                var result = ((IAccount) a).TemporaryCapital;
+
+                result.AddRange(revokedTemporaryCapital.Where(x => result.All(r => r.Id != x.Id)));
+
+                a.TemporaryCapital = result.ToJson();
+            });
+        }
+
         #region Private Methods
 
         private bool TryUpdateOperationsList(string operationId, AccountEntity a)

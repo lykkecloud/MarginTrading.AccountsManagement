@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
+using Lykke.Logs.MsSql.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Settings;
@@ -68,7 +69,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                     if (operationInfo == null)
                     {
-                        var entity = Convert(factory());
+                        var entity = Convert(factory(), _systemClock.UtcNow.UtcDateTime);
 
                         await conn.ExecuteAsync(
                             $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
@@ -100,21 +101,40 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
-            var entity = Convert(executionInfo);
-            entity.LastModified = _systemClock.UtcNow.UtcDateTime;
+            var entity = Convert(executionInfo, _systemClock.UtcNow.UtcDateTime);
+            var affectedRows = 0;
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 try
                 {
-                    await conn.ExecuteAsync(
-                        $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
+                    affectedRows = await conn.ExecuteAsync(
+                        $"update {TableName} set {GetUpdateClause} where Id=@Id " +
+                        "and OperationName=@OperationName " +
+                        "and LastModified=@PrevLastModified",
+                        entity);
                 }
-                catch (SqlException)
+                catch (Exception ex)
                 {
-                    await conn.ExecuteAsync(
-                        $"update {TableName} set {GetUpdateClause} where Id=@Id and OperationName=@OperationName", entity);
+                    await _log.WriteErrorAsync(nameof(OperationExecutionInfoRepository), nameof(GetOrAddAsync), ex);
+                    throw;
                 }
+            }
+
+            if (affectedRows == 0)
+            {
+                var existingExecutionInfo = await GetAsync<TData>(executionInfo.OperationName, executionInfo.Id);
+
+                if (existingExecutionInfo == null)
+                {
+                    throw new InvalidOperationException(
+                        $"Execution info {executionInfo.OperationName}:{executionInfo.Id} does not exist");
+                }
+
+                throw new InvalidOperationException(
+                    $"Optimistic Concurrency Violation Encountered. " +
+                    $"Existing info: [{existingExecutionInfo.ToJson()}] " +
+                    $"New info: [{executionInfo.ToJson()}]");
             }
         }
         
@@ -130,7 +150,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     : ((JToken) entity.Data).ToObject<TData>());
         }
 
-        private static OperationExecutionInfoEntity Convert<TData>(IOperationExecutionInfo<TData> model)
+        private static OperationExecutionInfoEntity Convert<TData>(IOperationExecutionInfo<TData> model, DateTime now)
             where TData : class
         {
             return new OperationExecutionInfoEntity
@@ -138,7 +158,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 Id = model.Id,
                 OperationName = model.OperationName,
                 Data = model.Data.ToJson(),
-                LastModified = model.LastModified
+                PrevLastModified = model.LastModified,
+                LastModified = now
             };
         }
     }

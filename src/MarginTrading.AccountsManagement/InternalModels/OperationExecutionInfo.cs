@@ -18,8 +18,8 @@ namespace MarginTrading.AccountsManagement.InternalModels
         {
             OperationName = operationName ?? throw new ArgumentNullException(nameof(operationName));
             Id = id ?? throw new ArgumentNullException(nameof(id));
-            Data = data ?? throw new ArgumentNullException(nameof(data));
             LastModified = lastModified;
+            Data = data ?? throw new ArgumentNullException(nameof(data));
         }
     }
 }

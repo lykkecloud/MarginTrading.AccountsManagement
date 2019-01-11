@@ -6,6 +6,7 @@ using AutoMapper;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
+    /// <inheritdoc cref="IAccountBalanceHistoryApi" />
     [Route("api/balance-history")]
     public class AccountBalanceHistoryController : Controller, IAccountBalanceHistoryApi
     {
@@ -25,20 +27,30 @@ namespace MarginTrading.AccountsManagement.Controllers
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
         }
 
+        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
         [Route("by-account/{accountId}")]
         [HttpGet]
-        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount(string accountId,
-            [FromQuery] DateTime? @from = null, [FromQuery] DateTime? to = null)
+        public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount(
+            string accountId,
+            [FromQuery] DateTime? @from = null, 
+            [FromQuery] DateTime? to = null,
+            [FromQuery] AccountBalanceChangeReasonTypeContract? reasonType = null)
         {
-            var data = await _accountBalanceChangesRepository.GetAsync(accountId, @from?.ToUniversalTime(),
-                to?.ToUniversalTime());
+            var data = await _accountBalanceChangesRepository.GetAsync(
+                accountId, 
+                from: @from?.ToUniversalTime(),
+                to: to?.ToUniversalTime(),
+                reasonType: reasonType?.ToType<AccountBalanceChangeReasonType>());
+            
             return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }
 
+        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
         [Route("{accountId}")]
         [HttpGet]
         public async Task<AccountBalanceChangeContract[]> ByAccountAndEventSource(
-            string accountId, [FromQuery] string eventSourceId = null)
+            string accountId, 
+            [FromQuery] string eventSourceId = null)
         {
             var data = await _accountBalanceChangesRepository.GetAsync(accountId, eventSourceId);
 

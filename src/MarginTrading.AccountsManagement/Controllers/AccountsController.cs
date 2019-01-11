@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
@@ -26,7 +28,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
 
         public AccountsController(
-            IAccountManagementService accountManagementService, 
+            IAccountManagementService accountManagementService,
             IConvertService convertService,
             ISystemClock systemClock,
             ISendBalanceCommandsService sendBalanceCommandsService)
@@ -37,6 +39,8 @@ namespace MarginTrading.AccountsManagement.Controllers
             _sendBalanceCommandsService = sendBalanceCommandsService;
         }
 
+        #region CRUD
+        
         /// <summary>
         /// Gets all accounts
         /// </summary>
@@ -168,6 +172,12 @@ namespace MarginTrading.AccountsManagement.Controllers
             return Convert(result);
         }
 
+        
+
+        #endregion CRUD
+
+        #region Deposit/Withdraw/ChargeManually
+        
         /// <summary>
         /// Starts the operation of manually charging the client's account.
         /// Amount is absolute, i.e. negative value goes for charging.
@@ -190,7 +200,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginChargeManually([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeManuallyRequest request)
         {
-            await ValidateAccountId(accountId);
+            await _accountManagementService.ValidateAccountId(accountId);
 
             return await _sendBalanceCommandsService.ChargeManuallyAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
@@ -225,7 +235,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginDeposit([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            await ValidateAccountId(accountId);
+            await _accountManagementService.ValidateAccountId(accountId);
             
             return await _sendBalanceCommandsService.DepositAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
@@ -255,7 +265,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginWithdraw([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            await ValidateAccountId(accountId);
+            await _accountManagementService.ValidateAccountId(accountId);
             
             return await _sendBalanceCommandsService.WithdrawAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
@@ -264,7 +274,11 @@ namespace MarginTrading.AccountsManagement.Controllers
                 reason: request.Reason,
                 auditLog: request.AdditionalInfo);
         }
+        
+        #endregion Deposit/Withdraw/ChargeManually
 
+        #region System actions
+        
         /// <summary>
         /// Reset account balance to default value (from settings)
         /// </summary>
@@ -274,24 +288,6 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task Reset([NotNull] string accountId)
         {
             await _accountManagementService.ResetAccountAsync(accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)));
-        }
-
-        /// <summary>
-        /// Get account statistics for the current trading day
-        /// </summary>
-        /// <param name="accountId"></param>
-        /// <returns></returns>
-        [HttpGet("stat/{accountId}")]
-        public async Task<AccountStatContract> GetStat(string accountId)
-        {
-            if (string.IsNullOrWhiteSpace(accountId))
-            {
-                throw new ArgumentNullException(nameof(accountId), "Account must be set.");
-            }
-
-            var stat = await _accountManagementService.GetStat(accountId);
-
-            return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }
 
         /// <summary>
@@ -318,6 +314,28 @@ namespace MarginTrading.AccountsManagement.Controllers
                 request.TradingConditionId.RequiredNotNullOrWhiteSpace(nameof(request.TradingConditionId)),
                 request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId)));
             return Convert(account);
+        }
+
+        
+
+        #endregion System actions
+
+        /// <summary>
+        /// Get account statistics for the current trading day
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [HttpGet("stat/{accountId}")]
+        public async Task<AccountStatContract> GetStat(string accountId)
+        {
+            if (string.IsNullOrWhiteSpace(accountId))
+            {
+                throw new ArgumentNullException(nameof(accountId), "Account must be set.");
+            }
+
+            var stat = await _accountManagementService.GetStat(accountId);
+
+            return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }
 
         private async Task<PaginatedResponseContract<AccountContract>> Convert(Task<PaginatedResponse<IAccount>> accounts)
@@ -350,16 +368,6 @@ namespace MarginTrading.AccountsManagement.Controllers
         private Account Convert(AccountContract account)
         {
             return _convertService.Convert<AccountContract, Account>(account);
-        }
-
-        private async Task ValidateAccountId(string accountId)
-        {
-            var account = await _accountManagementService.GetByIdAsync(accountId);
-
-            if (account == null)
-            {
-                throw new ArgumentException($"Account {accountId} does not exist");
-            }
         }
     }
 }
