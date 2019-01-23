@@ -1,7 +1,7 @@
 namespace MarginTrading.AccountsManagement.Contracts.Models
 {
     /// <summary>
-    /// Abject with additional information for activities
+    /// Object with additional information for activities
     /// </summary>
     public class AccountChangeMetadata
     {
