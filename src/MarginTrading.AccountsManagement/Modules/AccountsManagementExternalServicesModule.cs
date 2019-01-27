@@ -2,6 +2,8 @@
 using Autofac.Extensions.DependencyInjection;
 using Lykke.HttpClientGenerator;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common.Startup;
+using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.SettingsService.Contracts;
@@ -24,13 +26,19 @@ namespace MarginTrading.AccountsManagement.Modules
             // todo register external services here
             var settingsServiceClientGenerator = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>(
+                    $"MT Settings [{_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl}]")
                 .Create();
+            
             builder.RegisterInstance(settingsServiceClientGenerator.Generate<ITradingConditionsApi>());
 
             var mtCoreClientGenerator = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.MtBackendServiceClient.ServiceUrl)
                 .WithApiKey(_settings.CurrentValue.MtBackendServiceClient.ApiKey)
+                .WithServiceName<LykkeErrorResponse>(
+                    $"MT Trading Core [{_settings.CurrentValue.MtBackendServiceClient.ServiceUrl}]")
                 .Create();
+            
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IOrdersApi>());
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IPositionsApi>());
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IAccountsApi>());
