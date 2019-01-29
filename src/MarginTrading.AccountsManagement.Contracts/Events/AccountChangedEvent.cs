@@ -17,9 +17,13 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         /// <summary>
         /// OperationId is defined optional just to extend the message pack object - the parameter is still mandatory.  
         /// </summary>
-        public AccountChangedEvent(DateTime changeTimestamp, [NotNull] string source, [NotNull] AccountContract account,
-            AccountChangedEventTypeContract eventType, AccountBalanceChangeContract balanceChange = null, 
-            string operationId = null)
+        public AccountChangedEvent(DateTime changeTimestamp, 
+            [NotNull] string source, 
+            [NotNull] AccountContract account,
+            AccountChangedEventTypeContract eventType, 
+            AccountBalanceChangeContract balanceChange = null, 
+            string operationId = null,
+            string activitiesMetadata = null)
         {
             if (!Enum.IsDefined(typeof(AccountChangedEventTypeContract), eventType))
                 throw new InvalidEnumArgumentException(
@@ -34,6 +38,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
             ChangeTimestamp = changeTimestamp;
             Account = account ?? throw new ArgumentNullException(nameof(account));
             EventType = eventType;
+            ActivitiesMetadata = activitiesMetadata;
             BalanceChange = balanceChange;
             OperationId = operationId;
         }
@@ -75,5 +80,11 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         /// </summary>
         [Key(5)]
         public string OperationId { get; }
+        
+        /// <summary>
+        /// Serialised object with additional information for activities in any format
+        /// </summary>
+        [Key(6)]
+        public string ActivitiesMetadata { get; }
     }
 }

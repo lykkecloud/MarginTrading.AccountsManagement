@@ -247,10 +247,21 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             await ValidateTradingConditionAsync(accountId, tradingConditionId);
 
-            var result = await _accountsRepository.UpdateAccountAsync(accountId, tradingConditionId, isDisabled,
-                isWithdrawalDisabled);
-            _eventSender.SendAccountChangedEvent(nameof(UpdateAccountAsync), result, 
-                AccountChangedEventTypeContract.Updated, Guid.NewGuid().ToString("N"));
+            var account = await _accountsRepository.GetAsync(accountId);
+
+            var result =
+                await _accountsRepository.UpdateAccountAsync(
+                    accountId,
+                    tradingConditionId,
+                    isDisabled,
+                    isWithdrawalDisabled);
+            
+            _eventSender.SendAccountChangedEvent(
+                nameof(UpdateAccountAsync),
+                result,
+                AccountChangedEventTypeContract.Updated,
+                Guid.NewGuid().ToString("N"),
+                previousSnapshot: account);
                 
             return result;
         }

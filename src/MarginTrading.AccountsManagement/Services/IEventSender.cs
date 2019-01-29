@@ -9,6 +9,7 @@ namespace MarginTrading.AccountsManagement.Services
     public interface IEventSender
     {
         void SendAccountChangedEvent(string source, IAccount account, AccountChangedEventTypeContract eventType,
-            string operationId, AccountBalanceChangeContract balanceChangeContract = null);
+            string operationId, AccountBalanceChangeContract balanceChangeContract = null,
+            IAccount previousSnapshot = null);
     }
 }

@@ -101,8 +101,15 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
 
                 var convertedAccount = Convert(account);
 
-                publisher.PublishEvent(new AccountChangedEvent(change.ChangeTimestamp, command.Source, convertedAccount,
-                    AccountChangedEventTypeContract.BalanceUpdated, change, command.OperationId));
+                publisher.PublishEvent(
+                    new AccountChangedEvent(
+                        change.ChangeTimestamp,
+                        command.Source,
+                        convertedAccount,
+                        AccountChangedEventTypeContract.BalanceUpdated,
+                        change,
+                        command.OperationId)
+                );
                 
                 await _executionInfoRepository.Save(executionInfo);
             }
