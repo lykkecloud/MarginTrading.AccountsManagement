@@ -227,7 +227,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             );
         }
 
-        public async Task ValidateAccountId(string accountId)
+        public async Task<IAccount> ValidateAccountId(string accountId)
         {
             var account = await GetByIdAsync(accountId);
 
@@ -235,6 +235,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 throw new ArgumentException($"Account {accountId} does not exist");
             }
+
+            return account;
         }
 
         #endregion

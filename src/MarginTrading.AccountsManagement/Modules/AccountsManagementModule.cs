@@ -80,6 +80,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<TradingConditionsService>().As<ITradingConditionsService>().SingleInstance();
             builder.RegisterType<NegativeProtectionService>().As<INegativeProtectionService>().SingleInstance();
+            builder.RegisterType<AccuracyService>().As<IAccuracyService>().SingleInstance();
             
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
             builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance(); 
