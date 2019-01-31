@@ -40,7 +40,7 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task<AccountStat> GetStat(string accountId);
 
-        Task ValidateAccountId(string accountId);
+        Task<IAccount> ValidateAccountId(string accountId);
         
         #endregion
         

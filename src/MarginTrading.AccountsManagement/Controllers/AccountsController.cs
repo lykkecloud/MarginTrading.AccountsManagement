@@ -23,17 +23,20 @@ namespace MarginTrading.AccountsManagement.Controllers
     public class AccountsController : Controller, IAccountsApi
     {
         private readonly IAccountManagementService _accountManagementService;
+        private readonly IAccuracyService _accuracyService;
         private readonly IConvertService _convertService;
         private readonly ISystemClock _systemClock;
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
 
         public AccountsController(
             IAccountManagementService accountManagementService,
+            IAccuracyService accuracyService,
             IConvertService convertService,
             ISystemClock systemClock,
             ISendBalanceCommandsService sendBalanceCommandsService)
         {
             _accountManagementService = accountManagementService;
+            _accuracyService = accuracyService;
             _convertService = convertService;
             _systemClock = systemClock;
             _sendBalanceCommandsService = sendBalanceCommandsService;
@@ -200,11 +203,15 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginChargeManually([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeManuallyRequest request)
         {
-            await _accountManagementService.ValidateAccountId(accountId);
+            var account = await _accountManagementService.ValidateAccountId(accountId);
+
+            var amount = await _accuracyService.ToAccountAccuracy(
+                request.AmountDelta.RequiredNotEqualsTo(default, nameof(request.AmountDelta)),
+                account.BaseAssetId, nameof(BeginChargeManually));
 
             return await _sendBalanceCommandsService.ChargeManuallyAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredNotEqualsTo(default, nameof(request.AmountDelta)),
+                amountDelta: amount,
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
                 reason: request.Reason,
                 source: "Api",
@@ -235,11 +242,15 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginDeposit([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            await _accountManagementService.ValidateAccountId(accountId);
+            var account = await _accountManagementService.ValidateAccountId(accountId);
+
+            var amount = await _accuracyService.ToAccountAccuracy(
+                request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
+                account.BaseAssetId, nameof(BeginDeposit));
             
             return await _sendBalanceCommandsService.DepositAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
+                amountDelta: amount,
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
                 reason: request.Reason,
                 auditLog: request.AdditionalInfo);
@@ -265,11 +276,15 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginWithdraw([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            await _accountManagementService.ValidateAccountId(accountId);
+            var account = await _accountManagementService.ValidateAccountId(accountId);
+
+            var amount = await _accuracyService.ToAccountAccuracy(
+                request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
+                account.BaseAssetId, nameof(BeginWithdraw));
             
             return await _sendBalanceCommandsService.WithdrawAsync(
                 accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: request.AmountDelta.RequiredGreaterThan(default(decimal), nameof(request.AmountDelta)),
+                amountDelta: amount,
                 operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
                 reason: request.Reason,
                 auditLog: request.AdditionalInfo);

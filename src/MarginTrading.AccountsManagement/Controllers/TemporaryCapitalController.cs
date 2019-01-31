@@ -5,43 +5,58 @@ using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
+using MarginTrading.SettingsService.Contracts;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
-    /// <inheritdoc cref="ITemporaryCapitalController" />
+    /// <summary>
+    /// Manage user temporary capital
+    /// </summary>
     [Route("api/temporary-capital")]
     public class TemporaryCapitalController : Controller, ITemporaryCapitalController
     {
         private readonly IAccountManagementService _accountManagementService;
-        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
+        private readonly IAccuracyService _accuracyService;
         
         public TemporaryCapitalController(
             IAccountManagementService accountManagementService,
-            IAccountBalanceChangesRepository accountBalanceChangesRepository)
+            IAccuracyService accuracyService)
         {
             _accountManagementService = accountManagementService;
-            _accountBalanceChangesRepository = accountBalanceChangesRepository;
+            _accuracyService = accuracyService;
         }
 
-        /// <inheritdoc cref="ITemporaryCapitalController" />
+        /// <summary>
+        /// Start give temporary capital to investor account operation.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>Operation ID</returns>
         [HttpPost]
         public async Task<string> GiveTemporaryCapital([FromBody][NotNull] GiveTemporaryCapitalRequest request)
         {
             request.RequiredNotNull(nameof(request));
-            await _accountManagementService.ValidateAccountId(request.AccountId);
+            var account = await _accountManagementService.ValidateAccountId(request.AccountId
+                .RequiredNotNullOrWhiteSpace(nameof(request.AccountId)));
+
+            var amount = await _accuracyService.ToAccountAccuracy(
+                request.Amount.RequiredGreaterThan(0, nameof(request.Amount)),
+                account.BaseAssetId, nameof(GiveTemporaryCapital));
 
             return await _accountManagementService.StartGiveTemporaryCapital(
                 eventSourceId: request.EventSourceId.RequiredNotNullOrWhiteSpace(nameof(request.EventSourceId)),
-                accountId: request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
-                amount: request.Amount.RequiredGreaterThan(0, nameof(request.Amount)),
+                accountId: account.Id,
+                amount: amount,
                 reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)), 
                 comment: request.Comment,
                 additionalInfo: request.AdditionalInfo
             );
         }
 
-        /// <inheritdoc cref="ITemporaryCapitalController" />
+        /// <summary>
+        /// Revoke temporary capital previously given to an account. One transaction at a time or altogether.
+        /// </summary>
+        /// <param name="request"></param>
         [HttpDelete]
         public async Task<string> RevokeTemporaryCapital([FromBody][NotNull] RevokeTemporaryCapitalRequest request)
         {
