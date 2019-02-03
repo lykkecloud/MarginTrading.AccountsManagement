@@ -18,6 +18,7 @@ using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Modules;
@@ -75,7 +76,8 @@ namespace MarginTrading.AccountsManagement
                 });
 
                 var builder = new ContainerBuilder();
-                var appSettings = Configuration.LoadSettings<AppSettings>();
+                var appSettings = Configuration.LoadSettings<AppSettings>(
+                    throwExceptionOnCheckError: !Configuration.NotTrowExceptionsOnServiceValidation());
                 Log = CreateLog(Configuration, appSettings);
 
                 builder.RegisterModule(new AccountsManagementModule(appSettings, Log));
