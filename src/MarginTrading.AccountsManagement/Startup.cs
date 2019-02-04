@@ -78,7 +78,7 @@ namespace MarginTrading.AccountsManagement
 
                 var builder = new ContainerBuilder();
                 var appSettings = Configuration.LoadSettings<AppSettings>(
-                    throwExceptionOnCheckError: !Configuration.NotTrowExceptionsOnServiceValidation());
+                    throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation());
                 Log = CreateLog(Configuration, appSettings);
 
                 builder.RegisterModule(new AccountsManagementModule(appSettings, Log));
