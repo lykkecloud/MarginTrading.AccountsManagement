@@ -4,6 +4,7 @@ using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Contracts.Models
 {
+    [UsedImplicitly]
     [MessagePackObject]
     public class AccountContract
     {
@@ -36,10 +37,13 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         
         [Key(9)]
         public bool IsWithdrawalDisabled { get; }
+        
+        [Key(10)]
+        public bool IsDeleted { get; }
 
         public AccountContract([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
             [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
-            bool isDisabled, DateTime modificationTimestamp, bool isWithdrawalDisabled)
+            bool isDisabled, DateTime modificationTimestamp, bool isWithdrawalDisabled, bool isDeleted)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
@@ -51,6 +55,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             IsDisabled = isDisabled;
             ModificationTimestamp = modificationTimestamp;
             IsWithdrawalDisabled = isWithdrawalDisabled;
+            IsDeleted = isDeleted;
         }
     }
 }

@@ -29,6 +29,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public bool IsDisabled { get; set; }
         
         public bool IsWithdrawalDisabled { get; set; }
+        
+        public bool IsDeleted { get; set; }
 
         public DateTime ModificationTimestamp { get; set; }
 

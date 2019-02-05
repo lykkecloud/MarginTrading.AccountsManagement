@@ -1,7 +1,7 @@
 ﻿namespace MarginTrading.AccountsManagement.Contracts.Models
 {
     /// <summary>
-    /// What happend to the account
+    /// What happened to the account
     /// </summary>
     public enum AccountChangedEventTypeContract
     {
@@ -19,5 +19,10 @@
         /// The balance was updated
         /// </summary>
         BalanceUpdated = 4,
+        
+        /// <summary>
+        /// The account was deleted
+        /// </summary>
+        Deleted = 6,
     }
 }

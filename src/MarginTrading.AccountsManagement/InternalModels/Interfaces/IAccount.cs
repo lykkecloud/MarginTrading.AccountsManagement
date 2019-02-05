@@ -23,6 +23,8 @@ namespace MarginTrading.AccountsManagement.InternalModels.Interfaces
         
         bool IsWithdrawalDisabled { get; }
         
+        bool IsDeleted { get; }
+        
         DateTime ModificationTimestamp { get; }
         
         
