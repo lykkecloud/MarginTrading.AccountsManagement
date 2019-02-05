@@ -170,19 +170,20 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Get
 
-        public Task<IReadOnlyList<IAccount>> ListAsync(string search)
+        public Task<IReadOnlyList<IAccount>> ListAsync(string search, bool showDeleted = false)
         {
-            return _accountsRepository.GetAllAsync(search: search);
+            return _accountsRepository.GetAllAsync(search: search, showDeleted: showDeleted);
         }
 
-        public Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search = null, int? skip = null, int? take = null)
+        public Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search, bool showDeleted = false,
+            int? skip = null, int? take = null)
         {
-            return _accountsRepository.GetByPagesAsync(search, skip, take);
+            return _accountsRepository.GetByPagesAsync(search, showDeleted, skip: skip, take: take);
         }
 
-        public Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId)
+        public Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId, bool showDeleted = false)
         {
-            return _accountsRepository.GetAllAsync(clientId: clientId);
+            return _accountsRepository.GetAllAsync(clientId: clientId, showDeleted: showDeleted);
         }
 
         public Task<IAccount> GetByIdAsync(string accountId)
@@ -227,13 +228,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             );
         }
 
-        public async Task<IAccount> ValidateAccountId(string accountId)
+        public async Task<IAccount> EnsureAccountExistsAsync(string accountId)
         {
             var account = await GetByIdAsync(accountId);
 
             if (account == null)
             {
-                throw new ArgumentException($"Account {accountId} does not exist");
+                throw new ArgumentException($"Account [{accountId}] does not exist");
             }
 
             return account;
@@ -249,7 +250,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             await ValidateTradingConditionAsync(accountId, tradingConditionId);
 
-            var account = await _accountsRepository.GetAsync(accountId);
+            var account = await EnsureAccountExistsAsync(accountId);
+            EnsureAccountNotDeleted(account);
 
             var result =
                 await _accountsRepository.UpdateAccountAsync(
@@ -268,6 +270,38 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
+        public async Task<IAccount> Delete(string accountId)
+        {
+            var account = await EnsureAccountExistsAsync(accountId);
+
+            EnsureAccountNotDeleted(account);
+
+            if (account.Balance != 0)
+            {
+                throw new ValidationException($"Account [{accountId}] balance is non-zero, so it cannot be deleted.");
+            }
+
+            var ordersTask = _ordersApi.ListAsync(accountId);
+            var positionsTask = _positionsApi.ListAsync(accountId);
+            var orders = await ordersTask;
+            var positions = await positionsTask;
+            if (orders.Any() || positions.Any())
+            {
+                throw new ValidationException($"Account deletion is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
+            }
+
+            var result = await _accountsRepository.DeleteAsync(accountId);
+            
+            _eventSender.SendAccountChangedEvent(
+                nameof(Delete),
+                result,
+                AccountChangedEventTypeContract.Deleted,
+                Guid.NewGuid().ToString("N"),
+                previousSnapshot: account);
+
+            return result;
+        }
+
         public async Task ResetAccountAsync(string accountId)
         {
             if (_settings.Behavior?.BalanceResetIsEnabled != true)
@@ -275,11 +309,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new NotSupportedException("Account reset is not supported");
             }
 
-            var account = await _accountsRepository.GetAsync(accountId);
-            if (account == null)
-            {
-                throw new ArgumentOutOfRangeException($"Account with id [{accountId}] does not exist");
-            }
+            var account = await EnsureAccountExistsAsync(accountId);
+            EnsureAccountNotDeleted(account);
 
             await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
                 _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
@@ -314,6 +345,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Helpers
 
+        public void EnsureAccountNotDeleted(IAccount account)
+        {
+            if (account.IsDeleted)
+            {
+                throw new ValidationException($"Account [{account.Id}] is deleted. No operations are permitted.");
+            }
+        }
+
         private async Task<IAccount> CreateAccount(string clientId, string baseAssetId, string tradingConditionId,
             string legalEntityId, string accountId = null)
         {
@@ -321,8 +360,18 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
                 : accountId;
 
-            IAccount account = new Account(id, clientId, tradingConditionId, baseAssetId, 0, 0, legalEntityId, false, 
-                !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true), DateTime.UtcNow);
+            IAccount account = new Account(
+                id, 
+                clientId, 
+                tradingConditionId, 
+                baseAssetId, 
+                0, 
+                0, 
+                legalEntityId, 
+                false, 
+                !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true), 
+                false,
+                DateTime.UtcNow);
 
             await _accountsRepository.AddAsync(account);
             account = await _accountsRepository.GetAsync(accountId);
@@ -383,23 +432,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     $"Account with id [{accountId}] has LegalEntity " +
                     $"[{account.LegalEntity}], but trading condition with id [{tradingConditionId}] has " +
                     $"LegalEntity [{newLegalEntity}]");
-            }
-        }
-
-        //TODO: use only for account archiving
-        private async Task ValidateIfDisableIsAvailableAsync(string accountId, bool? isDisabled)
-        {
-            if (isDisabled == null || isDisabled == false)
-                return;
-            
-            var ordersTask = _ordersApi.ListAsync(accountId);
-            var positionsTask = _positionsApi.ListAsync(accountId);
-            var orders = await ordersTask;
-            var positions = await positionsTask;
-
-            if (orders.Any() || positions.Any())
-            {
-                throw new ValidationException($"Account disabling is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
             }
         }
 
