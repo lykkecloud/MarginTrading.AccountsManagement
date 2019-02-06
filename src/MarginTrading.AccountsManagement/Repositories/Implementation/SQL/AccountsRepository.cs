@@ -35,6 +35,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[IsDisabled] [bit] NOT NULL, " +
                                                  "[IsWithdrawalDisabled] [bit] NOT NULL, " +
                                                  "[ModificationTimestamp] [DateTime] NOT NULL, " +
+                                                 "[TemporaryCapital] [nvarchar] (MAX) NOT NULL, " +
                                                  "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL, " +
                                                  "INDEX IX_{0}_Client (ClientId)" +
                                                  ");";
