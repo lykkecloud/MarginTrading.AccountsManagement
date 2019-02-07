@@ -76,7 +76,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                     publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId,
                         _systemClock.UtcNow.UtcDateTime, ex.Message, command.Source));
                 
-                    await _executionInfoRepository.Save(executionInfo);
+                    await _executionInfoRepository.SaveAsync(executionInfo);
                     
                     return;
                 }
@@ -111,7 +111,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                         command.OperationId)
                 );
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 

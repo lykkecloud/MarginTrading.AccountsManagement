@@ -73,12 +73,6 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         [Patch("/api/accounts/{accountId}")]
         Task<AccountContract> Change(string accountId, [Body] ChangeAccountRequest request);
-
-        /// <summary>
-        /// Delete an account.
-        /// </summary>
-        [Delete("/api/accounts/{accountId}")]
-        Task<AccountContract> Delete(string accountId);
         
         /// <summary>
         /// Starts the operation of manually charging the client's account.

@@ -57,11 +57,19 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return Convert<TData>(obj);
         }
 
-        public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
+        public async Task SaveAsync<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             var entity = Convert(executionInfo);
             entity.LastModified = _systemClock.UtcNow.UtcDateTime;
             await _tableStorage.ReplaceAsync(entity);
+        }
+
+        public async Task DeleteAsync<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
+        {
+            var entity = Convert(executionInfo);
+            await _tableStorage.DeleteIfExistAsync(
+                partitionKey: OperationExecutionInfoEntity.GeneratePartitionKey(entity.OperationName),
+                rowKey: OperationExecutionInfoEntity.GeneratePartitionKey(executionInfo.Id));
         }
 
         private static IOperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)

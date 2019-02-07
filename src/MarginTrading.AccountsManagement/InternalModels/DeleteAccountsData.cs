@@ -1,0 +1,32 @@
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
+
+namespace MarginTrading.AccountsManagement.InternalModels
+{
+    public class DeleteAccountsData : OperationDataBase<DeleteAccountsState>
+    {
+        public string OperationId { get; set; }
+
+        public List<string> AccountIds { get; set; }
+        
+        public string Comment { get; set; }
+        
+        public Dictionary<string, string> FailedAccountIds { get; set; }
+        
+        public List<string> GetAccountsToDelete() => AccountIds.Except(FailedAccountIds.Keys).ToList();
+
+        public void AddFailedIfNotExist(Dictionary<string, string> failedAccountIds)
+        {
+            foreach (var (accountId, reason) in failedAccountIds)
+            {
+                if (FailedAccountIds.ContainsKey(accountId))
+                {
+                    continue;
+                }
+                    
+                FailedAccountIds.Add(accountId, $"[{State.ToString()}]: {reason}");
+            }
+        }
+    }
+}

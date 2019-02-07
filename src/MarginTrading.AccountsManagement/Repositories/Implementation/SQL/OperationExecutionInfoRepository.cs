@@ -99,7 +99,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
+        public async Task SaveAsync<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             var entity = Convert(executionInfo, _systemClock.UtcNow.UtcDateTime);
             var affectedRows = 0;
@@ -137,7 +137,28 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     $"New info: [{executionInfo.ToJson()}]");
             }
         }
-        
+
+        public async Task DeleteAsync<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
+        {
+            var entity = Convert(executionInfo, _systemClock.UtcNow.UtcDateTime);
+            
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                try
+                {
+                    await conn.ExecuteAsync(
+                        $"DELETE {TableName} where Id=@Id " +
+                        "and OperationName=@OperationName ",
+                        entity);
+                }
+                catch (Exception ex)
+                {
+                    await _log.WriteErrorAsync(nameof(OperationExecutionInfoRepository), nameof(GetOrAddAsync), ex);
+                    throw;
+                }
+            }
+        }
+
         private static OperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class
         {

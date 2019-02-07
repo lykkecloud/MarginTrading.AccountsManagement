@@ -10,9 +10,16 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     [MessagePackObject]
     public abstract class BaseEvent
     {
+        /// <summary>
+        /// The unique id of operation.<br/>
+        /// Two operations with equal type and id are considered one operation, all duplicates are skipped.<br/>
+        /// </summary>
         [Key(0)]
         public string OperationId { get; }
         
+        /// <summary>
+        /// Time of event creation.
+        /// </summary>
         [Key(1)]
         public DateTime EventTimestamp { get; }
 

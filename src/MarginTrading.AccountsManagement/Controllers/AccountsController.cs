@@ -176,16 +176,14 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
-        /// Delete an account.
+        /// Delete accounts. For test purposes only!
         /// </summary>
         [HttpDelete("{accountId}")]
-        public async Task<AccountContract> Delete(string accountId)
+        public async Task Delete(List<string> accountIds)
         {
-            accountId.RequiredNotNullOrEmpty(nameof(accountId), $"{nameof(accountId)} must be set.");
+            accountIds.RequiredNotNullOrEmpty(nameof(accountIds), $"{nameof(accountIds)} must be set.");
 
-            var result = await _accountManagementService.Delete(accountId);
-
-            return Convert(result);
+            //todo send command
         }
 
         #endregion CRUD
