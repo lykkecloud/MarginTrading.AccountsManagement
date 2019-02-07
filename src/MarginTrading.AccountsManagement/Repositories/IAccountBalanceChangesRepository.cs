@@ -16,5 +16,7 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task<decimal> GetRealizedDailyPnl(string accountId);
         
         Task AddAsync(IAccountBalanceChange change);
+        
+        Task<decimal> GetBalance(string accountId, DateTime date);
     }
 }

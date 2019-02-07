@@ -28,5 +28,11 @@ namespace MarginTrading.AccountsManagement.Contracts
         Task<AccountBalanceChangeContract[]> ByAccountAndEventSource(
             [NotNull] string accountId, 
             [CanBeNull][Query] string eventSourceId = null);
+
+        /// <summary>
+        /// Get account balance on a particular date
+        /// </summary>
+        [Get("/api/balance/{accountId}")]
+        Task<decimal> GetBalanceOnDate([NotNull] string accountId, [Query] DateTime? date);
     }
 }
