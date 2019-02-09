@@ -13,6 +13,9 @@ using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.ClosePosition;
+using MarginTrading.AccountsManagement.Workflow.DeleteAccounts;
+using MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Commands;
+using MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Events;
 using MarginTrading.AccountsManagement.Workflow.Deposit;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
@@ -101,6 +104,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 RegisterNegativeProtectionSaga(),
                 RegisterGiveTemporaryCapitalSaga(),
                 RegisterRevokeTemporaryCapitalSaga(),
+                RegisterDeleteAccountsSaga(),
                 RegisterContext());
         }
 
@@ -115,6 +119,7 @@ namespace MarginTrading.AccountsManagement.Modules
             RegisterNegativeProtectionCommandsHandler(contextRegistration);
             RegisterGiveTemporaryCapitalCommandsHandler(contextRegistration);
             RegisterRevokeTemporaryCapitalCommandsHandler(contextRegistration);
+            RegisterDeleteAccountsCommandsHandler(contextRegistration);
             return contextRegistration;
         }
 
@@ -364,6 +369,67 @@ namespace MarginTrading.AccountsManagement.Modules
                     typeof(RevokeTemporaryCapitalStartedInternalEvent),
                     typeof(RevokeTemporaryCapitalSucceededEvent),
                     typeof(RevokeTemporaryCapitalFailedEvent)
+                )
+                .With(DefaultPipeline);
+        }
+
+        private IRegistration RegisterDeleteAccountsSaga()
+        {
+            var sagaRegistration = RegisterSaga<DeleteAccountsSaga>();
+                
+            sagaRegistration
+                .ListeningEvents(
+                    typeof(DeleteAccountsStartedInternalEvent),
+                    typeof(AccountsMarkedAsDeletedEvent)
+                )
+                .From(_contextNames.AccountsManagement)
+                .On(DefaultRoute)
+                .PublishingCommands(
+                    typeof(BlockAccountsForDeletionCommand),
+                    typeof(MtCoreFinishAccountsDeletionCommand)
+                )
+                .To(_contextNames.TradingEngine)
+                .With(DefaultPipeline);
+
+            sagaRegistration
+                .ListeningEvents(
+                    typeof(AccountsBlockedForDeletionEvent),
+                    typeof(MtCoreDeleteAccountsFinishedEvent)
+                )
+                .From(_contextNames.TradingEngine)
+                .On(DefaultRoute)
+                .PublishingCommands(
+                    typeof(MarkAccountsAsDeletedInternalCommand),
+                    typeof(FinishAccountsDeletionInternalCommand)
+                )
+                .To(_contextNames.AccountsManagement)
+                .With(DefaultPipeline);
+            
+            sagaRegistration
+                .ListeningEvents(
+                    typeof(AccountsDeletionFinishedEvent)
+                )
+                .From(_contextNames.AccountsManagement)
+                .On(DefaultRoute);
+
+            return sagaRegistration;
+        }
+
+        private static void RegisterDeleteAccountsCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(DeleteAccountsCommand),
+                    typeof(MarkAccountsAsDeletedInternalCommand),
+                    typeof(FinishAccountsDeletionInternalCommand)
+                )
+                .On(DefaultRoute)
+                .WithCommandsHandler<DeleteAccountsCommandsHandler>()
+                .PublishingEvents(
+                    typeof(DeleteAccountsStartedInternalEvent),
+                    typeof(AccountsMarkedAsDeletedEvent),
+                    typeof(AccountsDeletionFinishedEvent),
+                    typeof(AccountChangedEvent)
                 )
                 .With(DefaultPipeline);
         }

@@ -270,38 +270,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
-        public async Task<IAccount> Delete(string accountId)
-        {
-            var account = await EnsureAccountExistsAsync(accountId);
-
-            EnsureAccountNotDeleted(account);
-
-            if (account.Balance != 0)
-            {
-                throw new ValidationException($"Account [{accountId}] balance is non-zero, so it cannot be deleted.");
-            }
-
-            var ordersTask = _ordersApi.ListAsync(accountId);
-            var positionsTask = _positionsApi.ListAsync(accountId);
-            var orders = await ordersTask;
-            var positions = await positionsTask;
-            if (orders.Any() || positions.Any())
-            {
-                throw new ValidationException($"Account deletion is only available when there are no orders ({orders.Count}) and positions ({positions.Count}).");
-            }
-
-            var result = await _accountsRepository.DeleteAsync(accountId);
-            
-            _eventSender.SendAccountChangedEvent(
-                nameof(Delete),
-                result,
-                AccountChangedEventTypeContract.Deleted,
-                Guid.NewGuid().ToString("N"),
-                previousSnapshot: account);
-
-            return result;
-        }
-
         public async Task ResetAccountAsync(string accountId)
         {
             if (_settings.Behavior?.BalanceResetIsEnabled != true)

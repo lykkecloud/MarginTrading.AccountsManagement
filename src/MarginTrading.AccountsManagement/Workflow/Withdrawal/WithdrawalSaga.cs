@@ -58,7 +58,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 
                 _chaosKitty.Meow(e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -91,7 +91,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 
                 _chaosKitty.Meow(e.OperationId);
 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -115,7 +115,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 
                 _chaosKitty.Meow(e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -142,7 +142,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 
                 _chaosKitty.Meow(e.BalanceChange.Id);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -170,7 +170,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 
                 _chaosKitty.Meow(e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -193,7 +193,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 
                 _chaosKitty.Meow(e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             } 
         }
 
@@ -222,7 +222,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             {
                 executionInfo.Data.FailReason = e.Reason;
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
         
@@ -235,7 +235,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             var executionInfo = await _executionInfoRepository.GetAsync<WithdrawalDepositData>(OperationName, e.OperationId);
             if (executionInfo != null && SwitchState(executionInfo.Data, executionInfo.Data.State, WithdrawalState.Succeeded))
             {
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
