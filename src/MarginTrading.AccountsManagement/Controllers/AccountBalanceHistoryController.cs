@@ -69,7 +69,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         {
             var targetDate = date ?? _systemClock.UtcNow.UtcDateTime.Date;
             
-            return await _accountBalanceChangesRepository.GetBalance(accountId, targetDate);
+            return await _accountBalanceChangesRepository.GetBalanceAsync(accountId, targetDate);
         }
 
         private AccountBalanceChangeContract Convert(IAccountBalanceChange arg)

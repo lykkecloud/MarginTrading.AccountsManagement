@@ -69,7 +69,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 RowKeyDateTimeFormat.Iso);
         }
 
-        public async Task<decimal> GetBalance(string accountId, DateTime date)
+        public async Task<decimal> GetBalanceAsync(string accountId, DateTime date)
         {
             return (await _tableStorage.WhereAsync(accountId, DateTime.MinValue,
                        date.Date.AddDays(1), ToIntervalOption.ExcludeTo))
