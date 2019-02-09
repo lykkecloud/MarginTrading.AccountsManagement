@@ -157,7 +157,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<decimal> GetBalance(string accountId, DateTime date)
+        public async Task<decimal> GetBalanceAsync(string accountId, DateTime date)
         {
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
