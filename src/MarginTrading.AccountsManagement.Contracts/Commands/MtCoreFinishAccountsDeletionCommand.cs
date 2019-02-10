@@ -29,7 +29,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         /// List of account id's to be unblocked.
         /// </summary>
         [NotNull]
-        [Key(1)]
+        [Key(2)]
         public List<string> FailedAccountIds { get; set; }
     }
 }

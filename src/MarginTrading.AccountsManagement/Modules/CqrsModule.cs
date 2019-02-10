@@ -136,7 +136,9 @@ namespace MarginTrading.AccountsManagement.Modules
                     typeof(WithdrawCommand),
                     typeof(DepositCommand),
                     typeof(StartGiveTemporaryCapitalInternalCommand),
-                    typeof(StartRevokeTemporaryCapitalInternalCommand))
+                    typeof(StartRevokeTemporaryCapitalInternalCommand),
+                    typeof(DeleteAccountsCommand)
+                )
                 .To(_contextNames.AccountsManagement)
                 .With(DefaultPipeline);
         }

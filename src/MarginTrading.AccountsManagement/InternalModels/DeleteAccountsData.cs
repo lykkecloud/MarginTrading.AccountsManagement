@@ -11,8 +11,8 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public List<string> AccountIds { get; set; }
         
         public string Comment { get; set; }
-        
-        public Dictionary<string, string> FailedAccountIds { get; set; }
+
+        public Dictionary<string, string> FailedAccountIds { get; } = new Dictionary<string, string>();
         
         public List<string> GetAccountsToDelete() => AccountIds.Except(FailedAccountIds.Keys).ToList();
 
