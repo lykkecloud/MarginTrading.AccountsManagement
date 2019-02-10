@@ -6,6 +6,7 @@ using Common;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -27,19 +28,22 @@ namespace MarginTrading.AccountsManagement.Controllers
         private readonly IConvertService _convertService;
         private readonly ISystemClock _systemClock;
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
+        private readonly ICqrsSender _cqrsSender;
 
         public AccountsController(
             IAccountManagementService accountManagementService,
             IAccuracyService accuracyService,
             IConvertService convertService,
             ISystemClock systemClock,
-            ISendBalanceCommandsService sendBalanceCommandsService)
+            ISendBalanceCommandsService sendBalanceCommandsService,
+            ICqrsSender cqrsSender)
         {
             _accountManagementService = accountManagementService;
             _accuracyService = accuracyService;
             _convertService = convertService;
             _systemClock = systemClock;
             _sendBalanceCommandsService = sendBalanceCommandsService;
+            _cqrsSender = cqrsSender;
         }
 
         #region CRUD
@@ -176,14 +180,19 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
-        /// Delete accounts. For test purposes only!
+        /// Delete accounts. For TEST purposes only!
         /// </summary>
-        [HttpDelete("{accountId}")]
-        public async Task Delete(List<string> accountIds)
+        [HttpPost("delete")]
+        public async Task Delete([Body] List<string> accountIds)
         {
             accountIds.RequiredNotNullOrEmpty(nameof(accountIds), $"{nameof(accountIds)} must be set.");
 
-            //todo send command
+            _cqrsSender.SendCommandToSelf(new DeleteAccountsCommand
+            {
+                OperationId = Guid.NewGuid().ToString("N"),
+                AccountIds = accountIds,
+                Comment = "Started from API for test purposes.",
+            });
         }
 
         #endregion CRUD

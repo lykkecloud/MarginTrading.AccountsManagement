@@ -11,6 +11,8 @@ using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
+using MarginTrading.AccountsManagement.Services;
+using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.ClosePosition;
 using MarginTrading.AccountsManagement.Workflow.DeleteAccounts;
@@ -56,6 +58,9 @@ namespace MarginTrading.AccountsManagement.Modules
         protected override void Load(ContainerBuilder builder)
         {
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>()
+                .SingleInstance();
+            builder.RegisterType<CqrsSender>().As<ICqrsSender>()
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
 
             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
