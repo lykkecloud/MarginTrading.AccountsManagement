@@ -81,7 +81,9 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 return;
             }
 
-            _chaosKitty.Meow(command.OperationId);
+            _chaosKitty.Meow($"{nameof(DeleteAccountsCommand)}: " +
+                "Save_OperationExecutionInfo: " +
+                $"{command.OperationId}");
 
             publisher.PublishEvent(new DeleteAccountsStartedInternalEvent(
                 operationId: command.OperationId,
@@ -109,7 +111,8 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             var validationFailedAccountIds = 
                 await DeleteAccountsSaga.ValidateAccountsAsync(executionInfo.Data.AccountIds, _accountsRepository);
 
-            foreach (var accountToDelete in executionInfo.Data.GetAccountsToDelete())
+            foreach (var accountToDelete in executionInfo.Data.GetAccountsToDelete()
+                .Except(validationFailedAccountIds.Keys))
             {
                 try
                 {
@@ -133,7 +136,9 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 }
             }
             
-            _chaosKitty.Meow(command.OperationId);
+            _chaosKitty.Meow($"{nameof(MarkAccountsAsDeletedInternalCommand)}: " +
+                             "Save_OperationExecutionInfo: " +
+                             $"{command.OperationId}");
 
             publisher.PublishEvent(new AccountsMarkedAsDeletedEvent(
                 operationId: command.OperationId,
@@ -159,7 +164,9 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 throw new Exception($"{nameof(FinishAccountsDeletionInternalCommand)} have state {executionInfo.Data.State.ToString()}, but [{DeleteAccountsState.Finished}] was expected. Throwing to retry in {(long) _settings.Cqrs.RetryDelay.TotalMilliseconds}ms.");
             }
             
-            _chaosKitty.Meow(command.OperationId);
+            _chaosKitty.Meow($"{nameof(FinishAccountsDeletionInternalCommand)}: " +
+                             "Save_OperationExecutionInfo: " +
+                             $"{command.OperationId}");
 
             publisher.PublishEvent(new AccountsDeletionFinishedEvent(
                 operationId: command.OperationId,
