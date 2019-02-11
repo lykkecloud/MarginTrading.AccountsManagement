@@ -22,6 +22,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
     {
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IAccountsRepository _accountsRepository;
+        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         public const string OperationName = "DeleteAccounts";
         private readonly IChaosKitty _chaosKitty;
         private readonly ISystemClock _systemClock;
@@ -31,6 +32,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
         public DeleteAccountsSaga(
             IOperationExecutionInfoRepository executionInfoRepository,
             IAccountsRepository accountsRepository,
+            IAccountBalanceChangesRepository accountBalanceChangesRepository,
             ISystemClock systemClock,
             IChaosKitty chaosKitty,
             CqrsContextNamesSettings contextNames,
@@ -38,6 +40,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
         {
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
+            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _systemClock = systemClock;
             _chaosKitty = chaosKitty;
             _contextNames = contextNames;
@@ -63,7 +66,8 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             if (executionInfo.Data.SwitchState(DeleteAccountsState.Initiated, DeleteAccountsState.Started))
             {
                 executionInfo.Data.AddFailedIfNotExist(
-                    await ValidateAccountsAsync(executionInfo.Data.AccountIds, _accountsRepository));
+                    await ValidateAccountsAsync(executionInfo.Data.AccountIds, _accountsRepository, 
+                        _accountBalanceChangesRepository, _systemClock.UtcNow.UtcDateTime));
 
                 sender.SendCommand(new BlockAccountsForDeletionCommand
                     {
@@ -217,10 +221,13 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
         /// </summary>
         /// <param name="accountIdsToValidate">Accounts to validate.</param>
         /// <param name="accountsRepository"></param>
+        /// <param name="accountBalanceChangesRepository"></param>
+        /// <param name="now"></param>
         /// <returns>Dictionary of failed accountIds with fail reason.</returns>
         public static async Task<Dictionary<string, string>> ValidateAccountsAsync(
             IEnumerable<string> accountIdsToValidate,
-            IAccountsRepository accountsRepository)
+            IAccountsRepository accountsRepository,
+            IAccountBalanceChangesRepository accountBalanceChangesRepository, DateTime now)
         {
             var failedAccounts = new Dictionary<string, string>();
             
@@ -236,7 +243,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
 
                 if (account.IsDeleted)
                 {
-                    failedAccounts.Add(accountId, $"Account [{account.Id}] is deleted. No operations are permitted.");
+                    failedAccounts.Add(accountId, $"Account [{accountId}] is deleted. No operations are permitted.");
                     continue;
                 }
 
@@ -244,6 +251,14 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 {
                     failedAccounts.Add(accountId, 
                         $"Account [{accountId}] balance is non-zero, so it cannot be deleted.");
+                    continue;
+                }
+
+                var todayTransactions = await accountBalanceChangesRepository.GetAsync(accountId, now.Date);
+                if (todayTransactions.Any())
+                {
+                    failedAccounts.Add(accountId, $"Account [{accountId}] had {todayTransactions.Count} transactions today. Please try to delete an account tomorrow.");
+                    continue;
                 }
             }
 
