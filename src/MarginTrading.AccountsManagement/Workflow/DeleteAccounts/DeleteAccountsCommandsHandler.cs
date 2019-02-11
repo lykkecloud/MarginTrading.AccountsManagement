@@ -24,6 +24,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
     {
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IAccountsRepository _accountsRepository;
+        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
         private readonly IChaosKitty _chaosKitty;
@@ -35,6 +36,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
         public DeleteAccountsCommandsHandler(
             IOperationExecutionInfoRepository executionInfoRepository,
             IAccountsRepository accountsRepository,
+            IAccountBalanceChangesRepository accountBalanceChangesRepository,
             ILog log,
             ISystemClock systemClock,
             IChaosKitty chaosKitty,
@@ -43,6 +45,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
         {
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
+            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _log = log;
             _systemClock = systemClock;
             _chaosKitty = chaosKitty;
@@ -109,7 +112,8 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             }
 
             var validationFailedAccountIds = 
-                await DeleteAccountsSaga.ValidateAccountsAsync(executionInfo.Data.AccountIds, _accountsRepository);
+                await DeleteAccountsSaga.ValidateAccountsAsync(executionInfo.Data.AccountIds, _accountsRepository, 
+                    _accountBalanceChangesRepository, _systemClock.UtcNow.UtcDateTime);
 
             foreach (var accountToDelete in executionInfo.Data.GetAccountsToDelete()
                 .Except(validationFailedAccountIds.Keys))
