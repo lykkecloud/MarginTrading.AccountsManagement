@@ -281,7 +281,21 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         private AccountEntity Convert(IAccount account)
         {
-            return _convertService.Convert<IAccount, AccountEntity>(account);
+            return new AccountEntity
+            {
+                Id = account.Id,
+                ClientId = account.ClientId,
+                TradingConditionId = account.TradingConditionId,
+                BaseAssetId = account.BaseAssetId,
+                Balance = account.Balance,
+                WithdrawTransferLimit = account.WithdrawTransferLimit,
+                LegalEntity = account.LegalEntity,
+                IsDisabled = account.IsDisabled,
+                IsWithdrawalDisabled = account.IsWithdrawalDisabled,
+                ModificationTimestamp = account.ModificationTimestamp,
+                TemporaryCapital = account.TemporaryCapital.ToJson(),
+                LastExecutedOperations = account.LastExecutedOperations.ToJson(),
+            };
         }
         
         #endregion
