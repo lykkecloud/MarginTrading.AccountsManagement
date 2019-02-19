@@ -1,3 +1,4 @@
+using System;
 using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Commands
@@ -7,5 +8,8 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Commands
     {
         [Key(0)]
         public string OperationId { get; set; }
+        
+        [Key(1)]
+        public DateTime Timestamp { get; set; }
     }
 }

@@ -22,19 +22,25 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [CanBeNull]
         [Key(0)]
         public string OperationId { get; set; }
+        
+        /// <summary>
+        /// Time of command creation
+        /// </summary>
+        [Key(1)]
+        public DateTime Timestamp { get; set; }
 
         /// <summary>
         /// List of account id's to be deleted.
         /// </summary>
         [NotNull]
-        [Key(1)]
+        [Key(2)]
         public List<string> AccountIds { get; set; }
         
         /// <summary>
         /// Any comment to the operation.
         /// </summary>
         [CanBeNull]
-        [Key(2)]
+        [Key(3)]
         public string Comment { get; set; }
     }
 }

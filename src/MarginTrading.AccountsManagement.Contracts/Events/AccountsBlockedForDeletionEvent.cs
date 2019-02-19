@@ -10,24 +10,17 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// </summary>
     [MessagePackObject]
     public class AccountsBlockedForDeletionEvent: BaseEvent
-    {
-        /// <summary>
-        /// List of blocked account id's.
-        /// </summary>
-        [Key(2)]
-        public List<string> BlockedAccountIds { get; }
-        
+    {   
         /// <summary>
         /// Dictionary of failed accounts with reason.
         /// </summary>
-        [Key(3)]
+        [Key(2)]
         public Dictionary<string, string> FailedAccountIds { get; }
         
         public AccountsBlockedForDeletionEvent([NotNull] string operationId, DateTime eventTimestamp, 
-            List<string> blockedAccountIds, Dictionary<string, string> failedAccountIds) 
+            Dictionary<string, string> failedAccountIds) 
             : base(operationId, eventTimestamp)
         {
-            BlockedAccountIds = blockedAccountIds;
             FailedAccountIds = failedAccountIds;
         }
     }

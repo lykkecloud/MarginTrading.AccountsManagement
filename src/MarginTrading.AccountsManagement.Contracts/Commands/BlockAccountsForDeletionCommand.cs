@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using MessagePack;
@@ -17,12 +18,18 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         [NotNull]
         [Key(0)]
         public string OperationId { get; set; }
+        
+        /// <summary>
+        /// Time of command creation
+        /// </summary>
+        [Key(1)]
+        public DateTime Timestamp { get; set; }
 
         /// <summary>
         /// List of account id's to be blocked.
         /// </summary>
         [NotNull]
-        [Key(1)]
+        [Key(2)]
         public List<string> AccountIds { get; set; }
     }
 }
