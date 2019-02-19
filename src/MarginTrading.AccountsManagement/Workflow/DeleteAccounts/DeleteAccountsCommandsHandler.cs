@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
@@ -9,10 +10,12 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Commands;
 using MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Events;
@@ -29,6 +32,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
         private readonly ISystemClock _systemClock;
         private readonly IChaosKitty _chaosKitty;
         private readonly IConvertService _convertService;
+        private readonly IEventSender _eventSender;
         private readonly AccountManagementSettings _settings;
         
         private string OperationName => DeleteAccountsSaga.OperationName;
@@ -41,6 +45,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             ISystemClock systemClock,
             IChaosKitty chaosKitty,
             IConvertService convertService,
+            IEventSender eventSender,
             AccountManagementSettings settings)
         {
             _executionInfoRepository = executionInfoRepository;
@@ -50,6 +55,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             _systemClock = systemClock;
             _chaosKitty = chaosKitty;
             _convertService = convertService;
+            _eventSender = eventSender;
             _settings = settings;
         }
 
@@ -84,13 +90,43 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 return;
             }
 
+            var failedAccounts = await ValidateAccountsAsync(executionInfo.Data.AccountIds);
+            
+            foreach (var accountToBlock in command.AccountIds.Except(failedAccounts.Keys))
+            {
+                try
+                {
+                    var account = (await _accountsRepository.GetAsync(accountToBlock))
+                        .RequiredNotNull(nameof(accountToBlock), $"Account {accountToBlock} does not exist.");
+
+                    var result = await _accountsRepository.UpdateAccountAsync(
+                        accountToBlock,
+                        account.TradingConditionId,
+                        true,
+                        true);
+            
+                    _eventSender.SendAccountChangedEvent(
+                        nameof(DeleteAccountsCommand),
+                        result,
+                        AccountChangedEventTypeContract.Updated,
+                        $"{command.OperationId}_{accountToBlock}",
+                        previousSnapshot: account);
+                }
+                catch (Exception exception)
+                {
+                    _log.Error(nameof(DeleteAccountsCommand), exception);
+                    failedAccounts.Add(accountToBlock, exception.Message);
+                }
+            }
+
             _chaosKitty.Meow($"{nameof(DeleteAccountsCommand)}: " +
                 "Save_OperationExecutionInfo: " +
                 $"{command.OperationId}");
 
             publisher.PublishEvent(new DeleteAccountsStartedInternalEvent(
                 operationId: command.OperationId,
-                eventTimestamp: _systemClock.UtcNow.UtcDateTime
+                eventTimestamp: _systemClock.UtcNow.UtcDateTime,
+                failedAccountIds: failedAccounts
             ));
         }
 
@@ -111,9 +147,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 throw new Exception($"{nameof(MarkAccountsAsDeletedInternalCommand)} have state {executionInfo.Data.State.ToString()}, but [{DeleteAccountsState.MtCoreAccountsBlocked}] was expected. Throwing to retry in {(long) _settings.Cqrs.RetryDelay.TotalMilliseconds}ms.");
             }
 
-            var validationFailedAccountIds = 
-                await DeleteAccountsSaga.ValidateAccountsAsync(executionInfo.Data.AccountIds, _accountsRepository, 
-                    _accountBalanceChangesRepository, _systemClock.UtcNow.UtcDateTime);
+            var validationFailedAccountIds = await ValidateAccountsAsync(executionInfo.Data.AccountIds);
 
             foreach (var accountToDelete in executionInfo.Data.GetAccountsToDelete()
                 .Except(validationFailedAccountIds.Keys))
@@ -137,6 +171,33 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                     _log.Error($"{nameof(DeleteAccountsCommandsHandler)}: {nameof(MarkAccountsAsDeletedInternalCommand)}",
                         exception, $"OperationId: [{command.OperationId}]");
                     validationFailedAccountIds.Add(accountToDelete, exception.Message);
+                }
+            }
+
+            foreach (var failedAccountId in executionInfo.Data.FailedAccountIds.Keys
+                .Concat(validationFailedAccountIds.Keys))
+            {
+                try
+                {
+                    var account = (await _accountsRepository.GetAsync(failedAccountId))
+                        .RequiredNotNull(nameof(failedAccountId), $"Account {failedAccountId} does not exist.");
+
+                    var result = await _accountsRepository.UpdateAccountAsync(
+                        failedAccountId,
+                        account.TradingConditionId,
+                        false,
+                        false);
+            
+                    _eventSender.SendAccountChangedEvent(
+                        nameof(MarkAccountsAsDeletedInternalCommand),
+                        result,
+                        AccountChangedEventTypeContract.Updated,
+                        $"{command.OperationId}_{failedAccountId}",
+                        previousSnapshot: account);
+                }
+                catch (Exception exception)
+                {
+                    _log.Error(nameof(MarkAccountsAsDeletedInternalCommand), exception);
                 }
             }
             
@@ -179,6 +240,50 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 failedAccountIds: executionInfo.Data.FailedAccountIds,
                 comment: executionInfo.Data.Comment
             ));
+        }
+
+        /// <summary>
+        /// Validate accounts for deletion.
+        /// </summary>
+        /// <param name="accountIdsToValidate">Accounts to validate.</param>
+        /// <returns>Dictionary of failed accountIds with fail reason.</returns>
+        private async Task<Dictionary<string, string>> ValidateAccountsAsync(
+            IEnumerable<string> accountIdsToValidate)
+        {
+            var failedAccounts = new Dictionary<string, string>();
+            
+            foreach (var accountId in accountIdsToValidate)
+            {
+                var account = await _accountsRepository.GetAsync(accountId);
+
+                if (account == null)
+                {
+                    failedAccounts.Add(accountId, $"Account [{accountId}] does not exist");
+                    continue;
+                }
+
+                if (account.IsDeleted)
+                {
+                    failedAccounts.Add(accountId, $"Account [{accountId}] is deleted. No operations are permitted.");
+                    continue;
+                }
+
+                if (account.Balance != 0)
+                {
+                    failedAccounts.Add(accountId, 
+                        $"Account [{accountId}] balance is non-zero, so it cannot be deleted.");
+                    continue;
+                }
+
+                var todayTransactions = await _accountBalanceChangesRepository.GetAsync(accountId, _systemClock.UtcNow.UtcDateTime.Date);
+                if (todayTransactions.Any())
+                {
+                    failedAccounts.Add(accountId, $"Account [{accountId}] had {todayTransactions.Count} transactions today. Please try to delete an account tomorrow.");
+                    continue;
+                }
+            }
+
+            return failedAccounts;
         }
     }
 }
