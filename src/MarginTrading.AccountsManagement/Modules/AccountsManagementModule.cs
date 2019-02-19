@@ -39,7 +39,10 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
             builder.RegisterInstance(_log).As<ILog>().SingleInstance();
             
-            builder.RegisterType<EventSender>().As<IEventSender>().SingleInstance();
+            builder.RegisterType<EventSender>()
+                .As<IEventSender>()
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
+                .SingleInstance();
             builder.RegisterChaosKitty(_settings.CurrentValue.MarginTradingAccountManagement.ChaosKitty);
 
             RegisterServices(builder);
