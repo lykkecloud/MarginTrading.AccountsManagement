@@ -228,15 +228,24 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             );
         }
 
-        public async Task<IAccount> EnsureAccountExistsAsync(string accountId)
+        /// <summary>
+        /// By valid it means account exists and not deleted.
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="skipDeleteValidation"></param>
+        /// <returns>Account</returns>
+        public async Task<IAccount> EnsureAccountValidAsync(string accountId, bool skipDeleteValidation = false)
         {
             var account = await GetByIdAsync(accountId);
-
-            if (account == null)
+            
+            account.RequiredNotNull(nameof(account), $"Account [{accountId}] does not exist");
+            
+            if (!skipDeleteValidation && account.IsDeleted)
             {
-                throw new ArgumentException($"Account [{accountId}] does not exist");
+                throw new ValidationException(
+                    $"Account [{account.Id}] is deleted. No operations are permitted.");
             }
-
+            
             return account;
         }
 
@@ -250,8 +259,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             await ValidateTradingConditionAsync(accountId, tradingConditionId);
 
-            var account = await EnsureAccountExistsAsync(accountId);
-            EnsureAccountNotDeleted(account);
+            var account = await EnsureAccountValidAsync(accountId, true);
 
             var result =
                 await _accountsRepository.UpdateAccountAsync(
@@ -277,8 +285,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new NotSupportedException("Account reset is not supported");
             }
 
-            var account = await EnsureAccountExistsAsync(accountId);
-            EnsureAccountNotDeleted(account);
+            var account = await EnsureAccountValidAsync(accountId, true);
 
             await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
                 _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
@@ -312,14 +319,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
 
         #region Helpers
-
-        public void EnsureAccountNotDeleted(IAccount account)
-        {
-            if (account.IsDeleted)
-            {
-                throw new ValidationException($"Account [{account.Id}] is deleted. No operations are permitted.");
-            }
-        }
 
         private async Task<IAccount> CreateAccount(string clientId, string baseAssetId, string tradingConditionId,
             string legalEntityId, string accountId = null)

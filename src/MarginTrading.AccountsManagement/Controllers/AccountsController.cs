@@ -222,8 +222,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginChargeManually([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeManuallyRequest request)
         {
-            var account = await _accountManagementService.EnsureAccountExistsAsync(accountId);
-            _accountManagementService.EnsureAccountNotDeleted(account);
+            var account = await _accountManagementService.EnsureAccountValidAsync(accountId);
 
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta.RequiredNotEqualsTo(default, nameof(request.AmountDelta)),
@@ -262,8 +261,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginDeposit([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            var account = await _accountManagementService.EnsureAccountExistsAsync(accountId);
-            _accountManagementService.EnsureAccountNotDeleted(account);
+            var account = await _accountManagementService.EnsureAccountValidAsync(accountId);
 
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
@@ -297,8 +295,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginWithdraw([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            var account = await _accountManagementService.EnsureAccountExistsAsync(accountId);
-            _accountManagementService.EnsureAccountNotDeleted(account);
+            var account = await _accountManagementService.EnsureAccountValidAsync(accountId);
 
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),

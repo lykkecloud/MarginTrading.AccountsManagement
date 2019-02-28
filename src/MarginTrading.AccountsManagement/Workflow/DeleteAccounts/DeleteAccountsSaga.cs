@@ -195,27 +195,13 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
         }
         
         /// <summary>
-        /// Account deletion is finished => generate final event
+        /// Account deletion is finished
         /// </summary>
         [UsedImplicitly]
-        private async Task Handle(AccountsDeletionFinishedEvent e, ICommandSender sender)
+        private Task Handle(AccountsDeletionFinishedEvent e, ICommandSender sender)
         {
-            var executionInfo = await _executionInfoRepository.GetAsync<DeleteAccountsData>(
-                OperationName,
-                e.OperationId
-            );
-
-            if (executionInfo == null)
-            {
-                return;
-            }
-
-            if (executionInfo.Data.State != DeleteAccountsState.Finished)
-            {
-                throw new Exception($"{nameof(AccountsDeletionFinishedEvent)} have state {executionInfo.Data.State.ToString()}, but [{DeleteAccountsState.Finished}] was expected. Throwing to retry in {(long) _settings.Cqrs.RetryDelay.TotalMilliseconds}ms.");
-            }
-            
-            await _executionInfoRepository.DeleteAsync(executionInfo);
+            //nothing to do
+            return Task.CompletedTask;
         }
     }
 }

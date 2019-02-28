@@ -114,7 +114,8 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 }
                 catch (Exception exception)
                 {
-                    _log.Error(nameof(DeleteAccountsCommand), exception);
+                    await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler), 
+                        nameof(DeleteAccountsCommand), exception);
                     failedAccounts.Add(accountToBlock, exception.Message);
                 }
             }
@@ -139,10 +140,11 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             var executionInfo = await _executionInfoRepository.GetAsync<DeleteAccountsData>(OperationName, 
                 command.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo == null || executionInfo.Data.State > DeleteAccountsState.MtCoreAccountsBlocked)
+            {
                 return;
-
-            if (executionInfo.Data.State != DeleteAccountsState.MtCoreAccountsBlocked)
+            }
+            if (executionInfo.Data.State < DeleteAccountsState.MtCoreAccountsBlocked)
             {
                 throw new Exception($"{nameof(MarkAccountsAsDeletedInternalCommand)} have state {executionInfo.Data.State.ToString()}, but [{DeleteAccountsState.MtCoreAccountsBlocked}] was expected. Throwing to retry in {(long) _settings.Cqrs.RetryDelay.TotalMilliseconds}ms.");
             }
@@ -168,8 +170,8 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 }
                 catch (Exception exception)
                 {
-                    _log.Error($"{nameof(DeleteAccountsCommandsHandler)}: {nameof(MarkAccountsAsDeletedInternalCommand)}",
-                        exception, $"OperationId: [{command.OperationId}]");
+                    await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler), nameof(MarkAccountsAsDeletedInternalCommand),
+                        $"OperationId: [{command.OperationId}]", exception);
                     validationFailedAccountIds.Add(accountToDelete, exception.Message);
                 }
             }
@@ -197,7 +199,8 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 }
                 catch (Exception exception)
                 {
-                    _log.Error(nameof(MarkAccountsAsDeletedInternalCommand), exception);
+                    await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler), 
+                        nameof(MarkAccountsAsDeletedInternalCommand), exception);
                 }
             }
             
@@ -221,10 +224,11 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             var executionInfo = await _executionInfoRepository.GetAsync<DeleteAccountsData>(OperationName, 
                 command.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo == null || executionInfo.Data.State > DeleteAccountsState.Finished)
+            {
                 return;
-
-            if (executionInfo.Data.State != DeleteAccountsState.Finished)
+            }
+            if (executionInfo.Data.State < DeleteAccountsState.Finished)
             {
                 throw new Exception($"{nameof(FinishAccountsDeletionInternalCommand)} have state {executionInfo.Data.State.ToString()}, but [{DeleteAccountsState.Finished}] was expected. Throwing to retry in {(long) _settings.Cqrs.RetryDelay.TotalMilliseconds}ms.");
             }

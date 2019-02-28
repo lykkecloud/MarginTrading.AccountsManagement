@@ -36,9 +36,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> GiveTemporaryCapital([FromBody][NotNull] GiveTemporaryCapitalRequest request)
         {
             request.RequiredNotNull(nameof(request));
-            var account = await _accountManagementService.EnsureAccountExistsAsync(request.AccountId
+            var account = await _accountManagementService.EnsureAccountValidAsync(request.AccountId
                 .RequiredNotNullOrWhiteSpace(nameof(request.AccountId)));
-            _accountManagementService.EnsureAccountNotDeleted(account);
 
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.Amount.RequiredGreaterThan(0, nameof(request.Amount)),
@@ -62,9 +61,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> RevokeTemporaryCapital([FromBody][NotNull] RevokeTemporaryCapitalRequest request)
         {
             request.RequiredNotNull(nameof(request));
-            var account = await _accountManagementService.EnsureAccountExistsAsync(request.AccountId
+            var account = await _accountManagementService.EnsureAccountValidAsync(request.AccountId
                 .RequiredNotNullOrWhiteSpace(nameof(request.AccountId)));
-            _accountManagementService.EnsureAccountNotDeleted(account);
 
             return await _accountManagementService.StartRevokeTemporaryCapital(
                 eventSourceId: request.EventSourceId.RequiredNotNullOrWhiteSpace(nameof(request.EventSourceId)),
