@@ -41,7 +41,7 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task<AccountStat> GetStat(string accountId);
 
-        Task<IAccount> EnsureAccountExistsAsync(string accountId);
+        Task<IAccount> EnsureAccountValidAsync(string accountId, bool skipDeleteValidation = false);
         
         #endregion
         
@@ -61,7 +61,5 @@ namespace MarginTrading.AccountsManagement.Services
             string additionalInfo);
         
         #endregion
-
-        void EnsureAccountNotDeleted(IAccount account);
     }
 }
