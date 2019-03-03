@@ -21,7 +21,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         /// Dictionary of failed accounts with reason.
         /// </summary>
         [Key(3)]
-        public Dictionary<string, string> FailedAccountIds { get; }
+        public Dictionary<string, string> FailedAccounts { get; }
         
         /// <summary>
         /// Comment that was passed at operation start.
@@ -30,11 +30,11 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
         public string Comment { get; }
         
         public AccountsDeletionFinishedEvent([NotNull] string operationId, DateTime eventTimestamp, 
-            List<string> deletedAccountIds, Dictionary<string, string> failedAccountIds, string comment) 
+            List<string> deletedAccountIds, Dictionary<string, string> failedAccounts, string comment) 
             : base(operationId, eventTimestamp)
         {
             DeletedAccountIds = deletedAccountIds;
-            FailedAccountIds = failedAccountIds;
+            FailedAccounts = failedAccounts;
             Comment = comment;
         }
     }
