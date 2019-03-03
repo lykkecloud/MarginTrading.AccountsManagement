@@ -21,30 +21,21 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
     internal class DeleteAccountsSaga
     {
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
-        private readonly IAccountsRepository _accountsRepository;
-        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         public const string OperationName = "DeleteAccounts";
         private readonly IChaosKitty _chaosKitty;
         private readonly ISystemClock _systemClock;
         private readonly CqrsContextNamesSettings _contextNames;
-        private readonly AccountManagementSettings _settings;
 
         public DeleteAccountsSaga(
             IOperationExecutionInfoRepository executionInfoRepository,
-            IAccountsRepository accountsRepository,
-            IAccountBalanceChangesRepository accountBalanceChangesRepository,
             ISystemClock systemClock,
             IChaosKitty chaosKitty,
-            CqrsContextNamesSettings contextNames,
-            AccountManagementSettings settings)
+            CqrsContextNamesSettings contextNames)
         {
             _executionInfoRepository = executionInfoRepository;
-            _accountsRepository = accountsRepository;
-            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _systemClock = systemClock;
             _chaosKitty = chaosKitty;
             _contextNames = contextNames;
-            _settings = settings;
         }
 
         /// <summary>

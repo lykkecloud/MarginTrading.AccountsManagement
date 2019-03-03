@@ -65,7 +65,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
         [UsedImplicitly]
         private async Task Handle(DeleteAccountsCommand command, IEventPublisher publisher)
         {
-            if (string.IsNullOrEmpty(command.OperationId))
+            if (string.IsNullOrWhiteSpace(command.OperationId))
             {
                 command.OperationId = Guid.NewGuid().ToString("N");
             }
@@ -120,8 +120,20 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 }
             }
 
+            if (!command.AccountIds.Except(failedAccounts.Keys).Any())
+            {
+                publisher.PublishEvent(new AccountsDeletionFinishedEvent(
+                    operationId: command.OperationId,
+                    eventTimestamp: _systemClock.UtcNow.UtcDateTime,
+                    deletedAccountIds: new List<string>(),
+                    failedAccounts: failedAccounts,
+                    comment: executionInfo.Data.Comment
+                ));
+                return;
+            }
+
             _chaosKitty.Meow($"{nameof(DeleteAccountsCommand)}: " +
-                "Save_OperationExecutionInfo: " +
+                "DeleteAccountsStartedInternalEvent: " +
                 $"{command.OperationId}");
 
             publisher.PublishEvent(new DeleteAccountsStartedInternalEvent(
@@ -205,7 +217,7 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             }
             
             _chaosKitty.Meow($"{nameof(MarkAccountsAsDeletedInternalCommand)}: " +
-                             "Save_OperationExecutionInfo: " +
+                             "AccountsMarkedAsDeletedEvent: " +
                              $"{command.OperationId}");
 
             publisher.PublishEvent(new AccountsMarkedAsDeletedEvent(
@@ -234,14 +246,14 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             }
             
             _chaosKitty.Meow($"{nameof(FinishAccountsDeletionInternalCommand)}: " +
-                             "Save_OperationExecutionInfo: " +
+                             "AccountsDeletionFinishedEvent: " +
                              $"{command.OperationId}");
 
             publisher.PublishEvent(new AccountsDeletionFinishedEvent(
                 operationId: command.OperationId,
                 eventTimestamp: _systemClock.UtcNow.UtcDateTime,
                 deletedAccountIds: executionInfo.Data.GetAccountsToDelete(),
-                failedAccountIds: executionInfo.Data.FailedAccountIds,
+                failedAccounts: executionInfo.Data.FailedAccountIds,
                 comment: executionInfo.Data.Comment
             ));
         }
