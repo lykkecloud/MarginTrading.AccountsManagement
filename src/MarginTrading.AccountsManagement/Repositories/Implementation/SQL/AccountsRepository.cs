@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
@@ -34,10 +35,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[LegalEntity] [nvarchar] (64) NOT NULL, " +
                                                  "[IsDisabled] [bit] NOT NULL, " +
                                                  "[IsWithdrawalDisabled] [bit] NOT NULL, " +
+                                                 "[IsDeleted] [bit] NOT NULL, " +
                                                  "[ModificationTimestamp] [DateTime] NOT NULL, " +
                                                  "[TemporaryCapital] [nvarchar] (MAX) NOT NULL, " +
                                                  "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL, " +
-                                                 "INDEX IX_{0}_Client (ClientId)" +
+                                                 "INDEX IX_{0} (ClientId, IsDeleted)" +
                                                  ");";
         
         private static Type DataType => typeof(IAccount);
@@ -80,27 +82,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null)
-        {
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                search = "%" + search + "%";
-            }
-            
-            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
-            {
-                var whereClause = "WHERE 1=1" +
-                                  (string.IsNullOrWhiteSpace(clientId) ? "" : " AND ClientId = @clientId")
-                    + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search");
-                var accounts = await conn.QueryAsync<AccountEntity>(
-                    $"SELECT * FROM {TableName} {whereClause}", 
-                    new { clientId, search });
-                
-                return accounts.ToList();
-            }
-        }
-
-        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null)
+        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null,
+            bool showDeleted = false)
         {
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -110,7 +93,30 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var whereClause = "WHERE 1=1"
-                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search");
+                                  + (string.IsNullOrWhiteSpace(clientId) ? "" : " AND ClientId = @clientId")
+                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search")
+                                  + (showDeleted ? "" : " AND IsDeleted = 0");
+                var accounts = await conn.QueryAsync<AccountEntity>(
+                    $"SELECT * FROM {TableName} {whereClause}", 
+                    new { clientId, search });
+                
+                return accounts.ToList();
+            }
+        }
+
+        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, bool showDeleted = false,
+            int? skip = null, int? take = null)
+        {
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = "%" + search + "%";
+            }
+            
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                var whereClause = "WHERE 1=1"
+                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search")
+                                  + (showDeleted ? "" : " AND IsDeleted = 0");
 
                 var paginationClause = $" ORDER BY [Id] OFFSET {skip ?? 0} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
                 var gridReader = await conn.QueryMultipleAsync(
@@ -172,6 +178,14 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                 if (isWithdrawalDisabled.HasValue)
                     a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
+            });
+        }
+
+        public async Task<IAccount> DeleteAsync(string accountId)
+        {
+            return await GetAccountAndUpdate(accountId, a =>
+            {
+                a.IsDeleted = true;
             });
         }
 
@@ -241,6 +255,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     if (account == null)
                     {
                         throw new ArgumentNullException(nameof(accountId), "Account does not exist");
+                    }
+
+                    if (account.IsDeleted)
+                    {
+                        throw new ValidationException("Account is deleted");
                     }
 
                     handler(account);

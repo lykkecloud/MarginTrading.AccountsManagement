@@ -14,6 +14,8 @@ namespace MarginTrading.AccountsManagement.Repositories
         [ItemCanBeNull]
         Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class;
         
-        Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class;
+        Task SaveAsync<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class;
+        
+        Task DeleteAsync<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class;
     }
 }

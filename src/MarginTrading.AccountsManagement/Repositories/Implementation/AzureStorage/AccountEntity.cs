@@ -70,7 +70,19 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             set
             {
                 _isWithdrawalDisabled = value;
-                MarkValueTypePropertyAsDirty(nameof(IsDisabled));
+                MarkValueTypePropertyAsDirty(nameof(IsWithdrawalDisabled));
+            }
+        }
+
+
+        private bool _isDeleted;
+        public bool IsDeleted
+        {
+            get => _isDeleted;
+            set
+            {
+                _isDeleted = value;
+                MarkValueTypePropertyAsDirty(nameof(IsDeleted));
             }
         }
 

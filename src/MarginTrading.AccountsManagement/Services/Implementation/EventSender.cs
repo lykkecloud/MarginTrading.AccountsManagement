@@ -18,19 +18,17 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
     {
         private readonly IConvertService _convertService;
         private readonly ISystemClock _systemClock;
-        private readonly ICqrsEngine _cqrsEngine;
+        public ICqrsEngine CqrsEngine { get; set; }//property injection
         private readonly CqrsContextNamesSettings _contextNames;
 
         public EventSender(
             IRabbitMqService rabbitMqService,
             IConvertService convertService,
             ISystemClock systemClock,
-            ICqrsEngine cqrsEngine,
             CqrsContextNamesSettings contextNames)
         {
             _convertService = convertService;
             _systemClock = systemClock;
-            _cqrsEngine = cqrsEngine;
             _contextNames = contextNames;
         }
 
@@ -46,7 +44,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 }
                 : null;
 
-            _cqrsEngine.PublishEvent(
+            CqrsEngine.PublishEvent(
                 new AccountChangedEvent(
                     account.ModificationTimestamp,
                     source,
