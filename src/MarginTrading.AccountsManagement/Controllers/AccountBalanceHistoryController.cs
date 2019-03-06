@@ -13,6 +13,7 @@ using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
@@ -21,10 +22,14 @@ namespace MarginTrading.AccountsManagement.Controllers
     public class AccountBalanceHistoryController : Controller, IAccountBalanceHistoryApi
     {
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
+        private readonly ISystemClock _systemClock;
 
-        public AccountBalanceHistoryController(IAccountBalanceChangesRepository accountBalanceChangesRepository)
+        public AccountBalanceHistoryController(
+            IAccountBalanceChangesRepository accountBalanceChangesRepository,
+            ISystemClock systemClock)
         {
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
+            _systemClock = systemClock;
         }
 
         /// <inheritdoc cref="IAccountBalanceHistoryApi" />
@@ -55,6 +60,16 @@ namespace MarginTrading.AccountsManagement.Controllers
             var data = await _accountBalanceChangesRepository.GetAsync(accountId, eventSourceId);
 
             return data.Select(Convert).ToArray();
+        }
+
+        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
+        [Route("~/api/balance/{accountId}")]
+        [HttpGet]
+        public async Task<decimal> GetBalanceOnDate([FromRoute] string accountId, [FromQuery] DateTime? date)
+        {
+            var targetDate = date ?? _systemClock.UtcNow.UtcDateTime.Date;
+            
+            return await _accountBalanceChangesRepository.GetBalanceAsync(accountId, targetDate);
         }
 
         private AccountBalanceChangeContract Convert(IAccountBalanceChange arg)

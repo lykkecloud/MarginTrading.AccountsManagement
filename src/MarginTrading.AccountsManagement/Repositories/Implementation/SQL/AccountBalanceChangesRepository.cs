@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -153,6 +154,20 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     await _log.WriteWarningAsync(nameof(AccountBalanceChangesRepository), nameof(AddAsync), null, msg);
                     throw new Exception(msg);
                 }
+            }
+        }
+
+        public async Task<decimal> GetBalanceAsync(string accountId, DateTime date)
+        {
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                return await conn.ExecuteScalarAsync<decimal>(
+                    $"SELECT TOP 1 Balance FROM {TableName} WHERE AccountId=@accountId AND ChangeTimestamp < @date ORDER BY ChangeTimestamp DESC",
+                    new
+                    {
+                        accountId,
+                        date = date.Date.AddDays(1),
+                    });
             }
         }
     }

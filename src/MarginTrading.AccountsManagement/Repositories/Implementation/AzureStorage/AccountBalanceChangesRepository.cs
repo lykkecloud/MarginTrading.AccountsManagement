@@ -69,6 +69,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 RowKeyDateTimeFormat.Iso);
         }
 
+        public async Task<decimal> GetBalanceAsync(string accountId, DateTime date)
+        {
+            return (await _tableStorage.WhereAsync(accountId, DateTime.MinValue,
+                       date.Date.AddDays(1), ToIntervalOption.ExcludeTo))
+                   .OrderByDescending(item => item.ChangeTimestamp).FirstOrDefault()?.Balance ?? 0;
+        }
+
         private AccountBalanceChange Convert(AccountBalanceChangeEntity arg)
         {
             return _convertService.Convert<AccountBalanceChange>(arg);
