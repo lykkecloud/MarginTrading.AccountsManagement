@@ -35,11 +35,14 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         protected override string ExchangeName => _settings.RabbitMqQueues.AccountHistory.ExchangeName;
         protected override string RoutingKey => nameof(AccountChangedEvent);
 
-        protected override Task HandleMessage(AccountChangedEvent accountChangedEvent)
+        protected override async Task HandleMessage(AccountChangedEvent accountChangedEvent)
         {
             var accountHistory = _convertService.Convert<AccountHistory>(accountChangedEvent.BalanceChange);
             
-            return _accountHistoryRepository.InsertAsync(accountHistory);
+            if (accountHistory.ChangeAmount != 0)
+            {
+                await _accountHistoryRepository.InsertAsync(accountHistory);
+            }
         }
     }
 }
