@@ -69,6 +69,20 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             {
                 command.OperationId = Guid.NewGuid().ToString("N");
             }
+
+            if (command.AccountIds == null || !command.AccountIds.Any())
+            {
+                publisher.PublishEvent(new AccountsDeletionFinishedEvent(
+                    operationId: command.OperationId,
+                    eventTimestamp: _systemClock.UtcNow.UtcDateTime,
+                    deletedAccountIds: new List<string>(),
+                    failedAccounts: new Dictionary<string, string>(),
+                    comment: command.Comment
+                ));
+                return;
+            }
+
+            command.AccountIds = command.AccountIds.Distinct().ToList();
             
             var executionInfo = await _executionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
