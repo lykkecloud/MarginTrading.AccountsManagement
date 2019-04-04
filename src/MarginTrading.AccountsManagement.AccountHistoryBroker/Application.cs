@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Common.Log;
 using Lykke.MarginTrading.BrokerBase;
 using Lykke.MarginTrading.BrokerBase.Models;
@@ -16,17 +17,19 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         private readonly IAccountHistoryRepository _accountHistoryRepository;
         private readonly Settings _settings;
         private readonly IConvertService _convertService;
+        private readonly ILog _log;
 
         public Application(
             IAccountHistoryRepository accountHistoryRepository, 
-            ILog logger,
+            ILog log,
             Settings settings, 
             CurrentApplicationInfo applicationInfo, 
             IConvertService convertService, 
             ISlackNotificationsSender slackNotificationsSender)
-            : base(logger, slackNotificationsSender, applicationInfo, MessageFormat.MessagePack)
+            : base(log, slackNotificationsSender, applicationInfo, MessageFormat.MessagePack)
         {
             _accountHistoryRepository = accountHistoryRepository;
+            _log = log;
             _settings = settings;
             _convertService = convertService;
         }
@@ -37,11 +40,19 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 
         protected override async Task HandleMessage(AccountChangedEvent accountChangedEvent)
         {
-            var accountHistory = _convertService.Convert<AccountHistory>(accountChangedEvent.BalanceChange);
-            
-            if (accountHistory.ChangeAmount != 0)
+            try
             {
-                await _accountHistoryRepository.InsertAsync(accountHistory);
+                var accountHistory = _convertService.Convert<AccountHistory>(accountChangedEvent.BalanceChange);
+
+                if (accountHistory.ChangeAmount != 0)
+                {
+                    await _accountHistoryRepository.InsertAsync(accountHistory);
+                }
+            }
+            catch (Exception exception)
+            {
+                await _log.WriteErrorAsync(nameof(AccountHistoryBroker), nameof(HandleMessage), exception);
+                throw;
             }
         }
     }
