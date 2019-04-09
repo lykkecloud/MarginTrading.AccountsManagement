@@ -32,7 +32,6 @@ namespace MarginTrading.AccountsManagement.Contracts.Commands
         /// <summary>
         /// List of account id's to be deleted.
         /// </summary>
-        [NotNull]
         [Key(2)]
         public List<string> AccountIds { get; set; }
         
