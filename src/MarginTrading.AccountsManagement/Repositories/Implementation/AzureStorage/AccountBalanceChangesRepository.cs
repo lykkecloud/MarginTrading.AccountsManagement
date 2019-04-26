@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using Common.Log;
+using Lykke.AzureStorage.Tables.Paging;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -11,6 +12,7 @@ using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.Extensions.Internal;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
@@ -20,7 +22,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         private readonly ISystemClock _systemClock;
         private readonly INoSQLTableStorage<AccountBalanceChangeEntity> _tableStorage;
 
-        public AccountBalanceChangesRepository(IReloadingManager<AccountManagementSettings> settings, 
+        public AccountBalanceChangesRepository(IReloadingManager<AccountManagementSettings> settings,
             ILog log,
             IConvertService convertService,
             ISystemClock systemClock,
@@ -31,6 +33,37 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             _tableStorage =
                 azureTableStorageFactoryService.Create<AccountBalanceChangeEntity>(
                     settings.Nested(s => s.Db.ConnectionString), "AccountHistory", log);
+        }
+
+        public async Task<PaginatedResponse<IAccountBalanceChange>> GetByPagesAsync(string accountId,
+            DateTime? @from = null, DateTime? to = null, AccountBalanceChangeReasonType? reasonType = null,
+            string assetPairId = null, int? skip = null, int? take = null, bool isAscendingOrder = true)
+        {
+            take = PaginationHelper.GetTake(take);
+
+            // TODO: Find a way to do paginated query
+            var data =
+                await _tableStorage.WhereAsync(
+                    accountId,
+                    from ?? DateTime.MinValue,
+                    to?.Date.AddDays(1) ?? DateTime.MaxValue,
+                    ToIntervalOption.IncludeTo,
+                    x => (reasonType == null || x.ReasonType == reasonType.ToString()) &&
+                         (assetPairId == null || x.Instrument == assetPairId));
+
+            if (isAscendingOrder)
+                data = data.OrderBy(item => item.ChangeTimestamp).Skip(skip ?? 0).Take(take.Value);
+            else                
+                data = data.OrderByDescending(item => item.ChangeTimestamp).Skip(skip ?? 0).Take(take.Value);
+
+            var contents = data.ToList();
+
+            return new PaginatedResponse<IAccountBalanceChange>(
+                contents: contents,
+                start: skip ?? 0,
+                size: take.Value,
+                totalSize: contents.Count
+            );
         }
 
         public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, DateTime? @from = null,

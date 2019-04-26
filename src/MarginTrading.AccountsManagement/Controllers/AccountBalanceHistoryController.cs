@@ -33,6 +33,32 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <inheritdoc cref="IAccountBalanceHistoryApi" />
+        [Route("by-pages/{accountId}")]
+        [HttpGet]
+        public async Task<PaginatedResponseContract<AccountBalanceChangeContract>> ByPages(
+            string accountId,
+            [FromQuery] DateTime? @from = null, 
+            [FromQuery] DateTime? to = null,
+            [FromQuery] AccountBalanceChangeReasonTypeContract? reasonType = null,
+            [FromQuery] string assetPairId = null,
+            [FromQuery] int? skip = null,
+            [FromQuery] int? take = null,
+            [FromQuery] bool isAscendingOrder = true)
+        {
+            var data = await _accountBalanceChangesRepository.GetByPagesAsync(
+                accountId, 
+                from: @from?.ToUniversalTime(),
+                to: to?.ToUniversalTime(),
+                reasonType: reasonType?.ToType<AccountBalanceChangeReasonType>(),
+                assetPairId: assetPairId,
+                skip: skip,
+                take: take,
+                isAscendingOrder: isAscendingOrder);
+            
+            return this.Convert(data);
+        }
+
+        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
         [Route("by-account/{accountId}")]
         [HttpGet]
         public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount(
@@ -78,6 +104,16 @@ namespace MarginTrading.AccountsManagement.Controllers
                 arg.ChangeAmount, arg.Balance, arg.WithdrawTransferLimit, arg.Comment, 
                 Enum.Parse<AccountBalanceChangeReasonTypeContract>(arg.ReasonType.ToString()),
                 arg.EventSourceId, arg.LegalEntity, arg.AuditLog, arg.Instrument, arg.TradingDate);
+        }
+
+        private PaginatedResponseContract<AccountBalanceChangeContract> Convert(PaginatedResponse<IAccountBalanceChange> data)
+        {
+            return new PaginatedResponseContract<AccountBalanceChangeContract>(
+                contents: data.Contents.Select(Convert).ToList(),
+                start: data.Start,
+                size: data.Size,
+                totalSize: data.TotalSize
+            );
         }
     }
 }
