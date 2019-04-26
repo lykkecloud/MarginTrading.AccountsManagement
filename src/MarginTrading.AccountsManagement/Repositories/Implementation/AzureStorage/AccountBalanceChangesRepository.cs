@@ -36,7 +36,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         }
 
         public async Task<PaginatedResponse<IAccountBalanceChange>> GetByPagesAsync(string accountId,
-            DateTime? @from = null, DateTime? to = null, AccountBalanceChangeReasonType? reasonType = null,
+            DateTime? @from = null, DateTime? to = null, AccountBalanceChangeReasonType[] reasonTypes = null,
             string assetPairId = null, int? skip = null, int? take = null, bool isAscendingOrder = true)
         {
             take = PaginationHelper.GetTake(take);
@@ -48,7 +48,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                     from ?? DateTime.MinValue,
                     to?.Date.AddDays(1) ?? DateTime.MaxValue,
                     ToIntervalOption.IncludeTo,
-                    x => (reasonType == null || x.ReasonType == reasonType.ToString()) &&
+                    x => (reasonTypes == null || reasonTypes.Any(t => t.ToString() == x.ReasonType)) &&
                          (assetPairId == null || x.Instrument == assetPairId));
 
             if (isAscendingOrder)

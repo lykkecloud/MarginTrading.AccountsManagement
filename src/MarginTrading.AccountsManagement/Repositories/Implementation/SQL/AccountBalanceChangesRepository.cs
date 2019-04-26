@@ -71,7 +71,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         }
 
         public async Task<PaginatedResponse<IAccountBalanceChange>> GetByPagesAsync(string accountId,
-            DateTime? @from = null, DateTime? to = null, AccountBalanceChangeReasonType? reasonType = null, 
+            DateTime? @from = null, DateTime? to = null, AccountBalanceChangeReasonType[] reasonTypes = null, 
             string assetPairId = null, int? skip = null, int? take = null, bool isAscendingOrder = true)
         {
             take = PaginationHelper.GetTake(take);
@@ -80,12 +80,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                 + (!string.IsNullOrWhiteSpace(accountId) ? " AND AccountId=@accountId" : "")
                                 + (from != null ? " AND ChangeTimestamp > @from" : "")
                                 + (to != null ? " AND ChangeTimestamp < @to" : "")
-                                + (reasonType != null ? " AND ReasonType = @reasonType" : "")
+                                + (reasonTypes != null && reasonTypes.Any() ? " AND ReasonType IN @types" : "")
                                 + (!string.IsNullOrWhiteSpace(assetPairId) ? " AND Instrument=@assetPairId" : "");
 
             var sorting = isAscendingOrder ? "ASC" : "DESC";
             var paginationClause = $" ORDER BY [ChangeTimestamp] {sorting} OFFSET {skip ?? 0} ROWS FETCH NEXT {take} ROWS ONLY";
-            
+
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var gridReader = await conn.QueryMultipleAsync(
@@ -94,7 +94,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                         accountId, 
                         from, 
                         to, 
-                        reasonType = reasonType.ToString(),
+                        types = reasonTypes.Select(x => x.ToString()),
                         assetPairId
                     });
 
