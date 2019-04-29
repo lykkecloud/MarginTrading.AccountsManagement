@@ -19,7 +19,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         Task<PaginatedResponseContract<AccountBalanceChangeContract>> ByPages([NotNull] string accountId,
             [CanBeNull] [Query] DateTime? @from = null,
             [CanBeNull] [Query] DateTime? to = null,
-            [CanBeNull] [Query] AccountBalanceChangeReasonTypeContract[] reasonTypes = null,
+            [CanBeNull] [Query(CollectionFormat.Multi)] AccountBalanceChangeReasonTypeContract[] reasonTypes = null,
             [CanBeNull] [Query] string assetPairId = null,
             [CanBeNull] [Query] int? skip = null,
             [CanBeNull] [Query] int? take = null,
