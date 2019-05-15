@@ -106,9 +106,16 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 
             if (executionInfo == null)
                 return;
+            
+            var account = await _accountsRepository.GetAsync(executionInfo.Data.AccountId);
 
-            publisher.PublishEvent(new WithdrawalFailedEvent(command.OperationId,
-                _systemClock.UtcNow.UtcDateTime, command.Reason));
+            publisher.PublishEvent(new WithdrawalFailedEvent(
+                command.OperationId,
+                _systemClock.UtcNow.UtcDateTime, 
+                command.Reason,
+                executionInfo.Data.AccountId,
+                account?.ClientId,
+                executionInfo.Data.Amount));
         }
 
         /// <summary>
