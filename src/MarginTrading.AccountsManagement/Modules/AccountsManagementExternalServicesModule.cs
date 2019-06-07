@@ -24,14 +24,21 @@ namespace MarginTrading.AccountsManagement.Modules
         protected override void Load(ContainerBuilder builder)
         {
             // todo register external services here
-            var settingsServiceClientGenerator = HttpClientGenerator
+            var settingsClientGeneratorBuilder = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl)
                 .WithServiceName<LykkeErrorResponse>(
-                    $"MT Settings [{_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl}]")
-                .Create();
+                    $"MT Settings [{_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl}]");
             
-            builder.RegisterInstance(settingsServiceClientGenerator.Generate<IAssetsApi>());
-            builder.RegisterInstance(settingsServiceClientGenerator.Generate<ITradingConditionsApi>());
+            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MarginTradingSettingsServiceClient.ApiKey))
+            {
+                settingsClientGeneratorBuilder = settingsClientGeneratorBuilder
+                    .WithApiKey(_settings.CurrentValue.MarginTradingSettingsServiceClient.ApiKey);
+            }
+
+            var settingsClientGenerator = settingsClientGeneratorBuilder.Create();
+
+            builder.RegisterInstance(settingsClientGenerator.Generate<IAssetsApi>());
+            builder.RegisterInstance(settingsClientGenerator.Generate<ITradingConditionsApi>());
 
             var mtCoreClientGenerator = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.MtBackendServiceClient.ServiceUrl)
@@ -39,11 +46,11 @@ namespace MarginTrading.AccountsManagement.Modules
                 .WithServiceName<LykkeErrorResponse>(
                     $"MT Trading Core [{_settings.CurrentValue.MtBackendServiceClient.ServiceUrl}]")
                 .Create();
-            
+
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IOrdersApi>());
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IPositionsApi>());
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IAccountsApi>());
-            
+
             builder.Populate(_services);
         }
     }
