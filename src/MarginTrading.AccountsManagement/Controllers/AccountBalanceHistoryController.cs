@@ -12,12 +12,14 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
     /// <inheritdoc cref="IAccountBalanceHistoryApi" />
+    [Authorize]
     [Route("api/balance-history")]
     public class AccountBalanceHistoryController : Controller, IAccountBalanceHistoryApi
     {

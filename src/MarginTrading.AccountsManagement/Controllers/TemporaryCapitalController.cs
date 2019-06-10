@@ -6,6 +6,7 @@ using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.SettingsService.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.AccountsManagement.Controllers
@@ -13,6 +14,7 @@ namespace MarginTrading.AccountsManagement.Controllers
     /// <summary>
     /// Manage user temporary capital
     /// </summary>
+    [Authorize]
     [Route("api/temporary-capital")]
     public class TemporaryCapitalController : Controller, ITemporaryCapitalController
     {

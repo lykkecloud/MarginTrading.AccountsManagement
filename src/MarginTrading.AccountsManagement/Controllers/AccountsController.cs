@@ -20,6 +20,7 @@ using Refit;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize]
     [Route("api/accounts")]
     public class AccountsController : Controller, IAccountsApi
     {

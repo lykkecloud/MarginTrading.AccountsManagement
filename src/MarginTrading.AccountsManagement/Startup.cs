@@ -18,6 +18,8 @@ using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
 using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common.Startup;
+using Lykke.Snow.Common.Startup.ApiKey;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -65,6 +67,11 @@ namespace MarginTrading.AccountsManagement
                         options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                         options.SerializerSettings.Converters.Add(new StringEnumConverter());
                     });
+                
+                var appSettings = Configuration.LoadSettings<AppSettings>(
+                    throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation());
+                
+                services.AddApiKeyAuth(appSettings.CurrentValue.MarginTradingAccountManagementServiceClient);
 
                 services.AddSwaggerGen(options =>
                 {
@@ -73,11 +80,14 @@ namespace MarginTrading.AccountsManagement
                         "MarginTrading.AccountsManagement.Contracts.xml");
                     options.IncludeXmlComments(contractsXmlPath);
                     options.OperationFilter<CustomOperationIdOperationFilter>();
+                    if (!string.IsNullOrWhiteSpace(appSettings.CurrentValue.MarginTradingAccountManagementServiceClient?.ApiKey))
+                    {
+                        options.OperationFilter<ApiKeyHeaderOperationFilter>();
+                    }
                 });
 
                 var builder = new ContainerBuilder();
-                var appSettings = Configuration.LoadSettings<AppSettings>(
-                    throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation());
+                
                 Log = CreateLog(Configuration, appSettings);
 
                 builder.RegisterModule(new AccountsManagementModule(appSettings, Log));
@@ -116,6 +126,7 @@ namespace MarginTrading.AccountsManagement
                 app.UseLykkeMiddleware(ServiceName, ex => new ErrorResponse {ErrorMessage = ex.Message});
 #endif
 
+                app.UseAuthentication();
                 app.UseMvc();
                 app.UseSwagger();
                 app.UseSwaggerUI(a => a.SwaggerEndpoint("/swagger/v1/swagger.json", "Main Swagger"));
