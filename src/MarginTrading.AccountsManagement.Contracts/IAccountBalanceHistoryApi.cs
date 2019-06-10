@@ -13,11 +13,24 @@ namespace MarginTrading.AccountsManagement.Contracts
     public interface IAccountBalanceHistoryApi
     {
         /// <summary>
+        /// Get account balance change history paginated, by account Id, and optionally by dates and asset pair
+        /// </summary>
+        [Get("/api/balance-history/by-pages/{accountId}")]
+        Task<PaginatedResponseContract<AccountBalanceChangeContract>> ByPages([NotNull] string accountId,
+            [CanBeNull] [Query] DateTime? @from = null,
+            [CanBeNull] [Query] DateTime? to = null,
+            [CanBeNull] [Query(CollectionFormat.Multi)] AccountBalanceChangeReasonTypeContract[] reasonTypes = null,
+            [CanBeNull] [Query] string assetPairId = null,
+            [CanBeNull] [Query] int? skip = null,
+            [CanBeNull] [Query] int? take = null,
+            [CanBeNull] [Query] bool isAscendingOrder = true);
+
+        /// <summary>
         /// Get account balance change history by account Id, and optionally by dates
         /// </summary>
         [Get("/api/balance-history/by-account/{accountId}")]
         Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount([NotNull] string accountId,
-            [CanBeNull] [Query] DateTime? @from = null, 
+            [CanBeNull] [Query] DateTime? @from = null,
             [CanBeNull] [Query] DateTime? to = null,
             [CanBeNull] [Query] AccountBalanceChangeReasonTypeContract? reasonType = null);
 
@@ -26,7 +39,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         [Get("/api/balance-history/{accountId}")]
         Task<AccountBalanceChangeContract[]> ByAccountAndEventSource(
-            [NotNull] string accountId, 
+            [NotNull] string accountId,
             [CanBeNull][Query] string eventSourceId = null);
 
         /// <summary>

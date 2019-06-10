@@ -32,7 +32,37 @@ namespace MarginTrading.AccountsManagement.Controllers
             _systemClock = systemClock;
         }
 
-        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
+        /// <summary>
+        /// Get account balance change history paginated, by account Id, and optionally by dates and asset pair
+        /// </summary>
+        [Route("by-pages/{accountId}")]
+        [HttpGet]
+        public async Task<PaginatedResponseContract<AccountBalanceChangeContract>> ByPages(
+            string accountId,
+            [FromQuery] DateTime? @from = null, 
+            [FromQuery] DateTime? to = null,
+            [FromQuery] AccountBalanceChangeReasonTypeContract[] reasonTypes = null,
+            [FromQuery] string assetPairId = null,
+            [FromQuery] int? skip = null,
+            [FromQuery] int? take = null,
+            [FromQuery] bool isAscendingOrder = true)
+        {
+            var data = await _accountBalanceChangesRepository.GetByPagesAsync(
+                accountId, 
+                from: @from?.ToUniversalTime(),
+                to: to?.ToUniversalTime(),
+                reasonTypes: reasonTypes?.Select(x => x.ToType<AccountBalanceChangeReasonType>()).ToArray(),
+                assetPairId: assetPairId,
+                skip: skip,
+                take: take,
+                isAscendingOrder: isAscendingOrder);
+            
+            return this.Convert(data);
+        }
+
+        /// <summary>
+        /// Get account balance change history by account Id, and optionally by dates
+        /// </summary>
         [Route("by-account/{accountId}")]
         [HttpGet]
         public async Task<Dictionary<string, AccountBalanceChangeContract[]>> ByAccount(
@@ -50,7 +80,9 @@ namespace MarginTrading.AccountsManagement.Controllers
             return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }
 
-        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
+        /// <summary>
+        /// Get account balance change history by account Id and eventSourceId (like Withdraw or Deposit)
+        /// </summary>
         [Route("{accountId}")]
         [HttpGet]
         public async Task<AccountBalanceChangeContract[]> ByAccountAndEventSource(
@@ -62,7 +94,9 @@ namespace MarginTrading.AccountsManagement.Controllers
             return data.Select(Convert).ToArray();
         }
 
-        /// <inheritdoc cref="IAccountBalanceHistoryApi" />
+        /// <summary>
+        /// Get account balance on a particular date
+        /// </summary>
         [Route("~/api/balance/{accountId}")]
         [HttpGet]
         public async Task<decimal> GetBalanceOnDate([FromRoute] string accountId, [FromQuery] DateTime? date)
@@ -78,6 +112,16 @@ namespace MarginTrading.AccountsManagement.Controllers
                 arg.ChangeAmount, arg.Balance, arg.WithdrawTransferLimit, arg.Comment, 
                 Enum.Parse<AccountBalanceChangeReasonTypeContract>(arg.ReasonType.ToString()),
                 arg.EventSourceId, arg.LegalEntity, arg.AuditLog, arg.Instrument, arg.TradingDate);
+        }
+
+        private PaginatedResponseContract<AccountBalanceChangeContract> Convert(PaginatedResponse<IAccountBalanceChange> data)
+        {
+            return new PaginatedResponseContract<AccountBalanceChangeContract>(
+                contents: data.Contents.Select(Convert).ToList(),
+                start: data.Start,
+                size: data.Size,
+                totalSize: data.TotalSize
+            );
         }
     }
 }
