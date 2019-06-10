@@ -91,16 +91,6 @@ namespace MarginTrading.AccountsManagement.Controllers
                 clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)), showDeleted));
         }
 
-        public Task<PaginatedResponseContract<AccountContract>> ListByPages(string search = null, int? skip = null, int? take = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<AccountContract>> GetByClient(string clientId)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// Gets account by clientId and accountId
         /// </summary>
