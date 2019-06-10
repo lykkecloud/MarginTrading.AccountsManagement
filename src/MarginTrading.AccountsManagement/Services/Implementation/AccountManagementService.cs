@@ -268,6 +268,31 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
+        public async Task EraseAccount(string accountId)
+        {
+            var account = await _accountsRepository.GetAsync(accountId);
+
+            accountId.RequiredNotNull(nameof(account), "Account does not exist.");
+            
+            if ((await _ordersApi.ListAsync(accountId)).Any())
+            {
+                throw new ValidationException($"There are open orders on account {accountId}. Please close them before deleting the account.");
+            }
+
+            if ((await _positionsApi.ListAsync(accountId)).Any())
+            {
+                throw new ValidationException($"There are open positions on account {accountId}. Please close them before deleting the account.");
+            }
+
+            // ReSharper disable once PossibleNullReferenceException
+            if (!account.IsDeleted)
+            {
+                throw new ValidationException($"Account should be deleted first.");
+            }
+
+            await _accountsRepository.EraseAsync(accountId);
+        }
+
         public async Task ResetAccountAsync(string accountId)
         {
             if (_settings.Behavior?.BalanceResetIsEnabled != true)

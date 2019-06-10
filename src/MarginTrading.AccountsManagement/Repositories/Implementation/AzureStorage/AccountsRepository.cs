@@ -83,6 +83,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return account;
         }
 
+        public Task EraseAsync(string accountId)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IAccount> UpdateBalanceAsync(string operationId, string accountId,
             decimal amountDelta, bool changeLimit)
         {

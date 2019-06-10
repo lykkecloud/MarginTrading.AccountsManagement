@@ -18,7 +18,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// Gets all accounts
         /// </summary>
         [Get("/api/accounts/")]
-        Task<List<AccountContract>> List([Query] string search = null);
+        Task<List<AccountContract>> List([Query] string search = null, bool showDeleted = false);
         
         /// <summary>
         /// Gets all accounts, optionally paginated. Both skip and take must be set or unset.
@@ -135,6 +135,14 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// <returns></returns>
         [Post("/api/accounts/{accountId}/reset")]
         Task Reset(string accountId);
+
+        /// <summary>
+        /// Unrecoverable account deletion. Caution - all the history will be erased!!!
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [Delete("erase")]
+        Task Erase([NotNull] string accountId);
 
         /// <summary>
         /// Get account statistics for the current trading day

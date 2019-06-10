@@ -27,19 +27,22 @@ namespace MarginTrading.AccountsManagement.Controllers
         private readonly IConvertService _convertService;
         private readonly ISystemClock _systemClock;
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
+        private readonly ICqrsSender _cqrsSender;
 
         public AccountsController(
             IAccountManagementService accountManagementService,
             IAccuracyService accuracyService,
             IConvertService convertService,
             ISystemClock systemClock,
-            ISendBalanceCommandsService sendBalanceCommandsService)
+            ISendBalanceCommandsService sendBalanceCommandsService,
+            ICqrsSender cqrsSender)
         {
             _accountManagementService = accountManagementService;
             _accuracyService = accuracyService;
             _convertService = convertService;
             _systemClock = systemClock;
             _sendBalanceCommandsService = sendBalanceCommandsService;
+            _cqrsSender = cqrsSender;
         }
 
         #region CRUD
@@ -49,9 +52,9 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        public Task<List<AccountContract>> List([FromQuery] string search = null)
+        public Task<List<AccountContract>> List([FromQuery] string search = null, bool showDeleted = false)
         {
-            return Convert(_accountManagementService.ListAsync(search));
+            return Convert(_accountManagementService.ListAsync(search, showDeleted));
         }
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpGet]
         [Route("by-pages")]
         public Task<PaginatedResponseContract<AccountContract>> ListByPages([FromQuery] string search = null,
-            [FromQuery] int? skip = null, [FromQuery] int? take = null)
+            [FromQuery] int? skip = null, [FromQuery] int? take = null, bool showDeleted = false)
         {
             if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
             {
@@ -71,8 +74,8 @@ namespace MarginTrading.AccountsManagement.Controllers
             {
                 throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
-            
-            return Convert(_accountManagementService.ListByPagesAsync(search, skip, take));
+
+            return Convert(_accountManagementService.ListByPagesAsync(search, showDeleted, skip: skip, take: take));
         }
 
         /// <summary>
@@ -80,10 +83,20 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpGet]
         [Route("{clientId}")]
-        public Task<List<AccountContract>> GetByClient([NotNull] string clientId)
+        public Task<List<AccountContract>> GetByClient([NotNull] string clientId, bool showDeleted = false)
         {
             return Convert(_accountManagementService.GetByClientAsync(
-                clientId.RequiredNotNullOrWhiteSpace(nameof(clientId))));
+                clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)), showDeleted));
+        }
+
+        public Task<PaginatedResponseContract<AccountContract>> ListByPages(string search = null, int? skip = null, int? take = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<AccountContract>> GetByClient(string clientId)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -175,7 +188,35 @@ namespace MarginTrading.AccountsManagement.Controllers
             return Convert(result);
         }
 
-        
+        /// <summary>
+        /// Unrecoverable account deletion. Caution - all the history will be erased!!!
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [HttpDelete("erase")]
+        public async Task Erase([NotNull] string accountId)
+        {
+            accountId.RequiredNotNullOrEmpty(nameof(accountId), $"{nameof(accountId)} must be set.");
+
+            await _accountManagementService.EraseAccount(accountId);
+        }
+
+        /// <summary>
+        /// Delete accounts. For TEST purposes only!
+        /// </summary>
+        [HttpPost("delete")]
+        public async Task Delete([Body] List<string> accountIds)
+        {
+            accountIds.RequiredNotNullOrEmpty(nameof(accountIds), $"{nameof(accountIds)} must be set.");
+
+            _cqrsSender.SendCommandToSelf(new DeleteAccountsCommand
+            {
+                OperationId = Guid.NewGuid().ToString("N"),
+                Timestamp = _systemClock.UtcNow.UtcDateTime,
+                AccountIds = accountIds,
+                Comment = "Started from API for test purposes.",
+            });
+        }
 
         #endregion CRUD
 
@@ -203,7 +244,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginChargeManually([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeManuallyRequest request)
         {
-            var account = await _accountManagementService.ValidateAccountId(accountId);
+            var account = await _accountManagementService.EnsureAccountValidAsync(accountId);
 
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta.RequiredNotEqualsTo(default, nameof(request.AmountDelta)),
@@ -242,7 +283,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginDeposit([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            var account = await _accountManagementService.ValidateAccountId(accountId);
+            var account = await _accountManagementService.EnsureAccountValidAsync(accountId);
 
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
@@ -276,7 +317,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> BeginWithdraw([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            var account = await _accountManagementService.ValidateAccountId(accountId);
+            var account = await _accountManagementService.EnsureAccountValidAsync(accountId);
 
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
