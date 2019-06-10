@@ -6,6 +6,7 @@ using Common;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -19,6 +20,7 @@ using Refit;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize]
     [Route("api/accounts")]
     public class AccountsController : Controller, IAccountsApi
     {
@@ -74,7 +76,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             {
                 throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
-
+            
             return Convert(_accountManagementService.ListByPagesAsync(search, showDeleted, skip: skip, take: take));
         }
 
@@ -194,7 +196,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// <param name="accountId"></param>
         /// <returns></returns>
         [HttpDelete("erase")]
-        public async Task Erase([NotNull] string accountId)
+        public async Task Erase(string accountId)
         {
             accountId.RequiredNotNullOrEmpty(nameof(accountId), $"{nameof(accountId)} must be set.");
 

@@ -6,6 +6,7 @@ using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.SettingsService.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.AccountsManagement.Controllers
@@ -13,6 +14,7 @@ namespace MarginTrading.AccountsManagement.Controllers
     /// <summary>
     /// Manage user temporary capital
     /// </summary>
+    [Authorize]
     [Route("api/temporary-capital")]
     public class TemporaryCapitalController : Controller, ITemporaryCapitalController
     {
@@ -36,7 +38,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> GiveTemporaryCapital([FromBody][NotNull] GiveTemporaryCapitalRequest request)
         {
             request.RequiredNotNull(nameof(request));
-            var account = await _accountManagementService.ValidateAccountId(request.AccountId
+            var account = await _accountManagementService.EnsureAccountValidAsync(request.AccountId
                 .RequiredNotNullOrWhiteSpace(nameof(request.AccountId)));
 
             var amount = await _accuracyService.ToAccountAccuracy(
@@ -61,7 +63,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<string> RevokeTemporaryCapital([FromBody][NotNull] RevokeTemporaryCapitalRequest request)
         {
             request.RequiredNotNull(nameof(request));
-            await _accountManagementService.ValidateAccountId(request.AccountId);
+            var account = await _accountManagementService.EnsureAccountValidAsync(request.AccountId
+                .RequiredNotNullOrWhiteSpace(nameof(request.AccountId)));
 
             return await _accountManagementService.StartRevokeTemporaryCapital(
                 eventSourceId: request.EventSourceId.RequiredNotNullOrWhiteSpace(nameof(request.EventSourceId)),

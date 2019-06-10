@@ -51,7 +51,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 
                 _chaosKitty.Meow(e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -84,7 +84,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 
                 _chaosKitty.Meow(e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -107,7 +107,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 
                 _chaosKitty.Meow(e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -134,7 +134,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 
                 _chaosKitty.Meow(e.BalanceChange.Id);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -161,7 +161,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                 
                 _chaosKitty.Meow(e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
         

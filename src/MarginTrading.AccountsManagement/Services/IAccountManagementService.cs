@@ -29,18 +29,19 @@ namespace MarginTrading.AccountsManagement.Services
         
         #region Get
         
-        Task<IReadOnlyList<IAccount>> ListAsync(string search);
+        Task<IReadOnlyList<IAccount>> ListAsync(string search, bool showDeleted = false);
 
-        Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search, int? skip = null, int? take = null);
+        Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search, bool showDeleted = false, int? skip = null,
+            int? take = null);
         
-        Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId);
+        Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId, bool showDeleted = false);
         
         [ItemCanBeNull]
         Task<IAccount> GetByIdAsync(string accountId);
 
         Task<AccountStat> GetStat(string accountId);
 
-        Task<IAccount> ValidateAccountId(string accountId);
+        Task<IAccount> EnsureAccountValidAsync(string accountId, bool skipDeleteValidation = false);
         
         #endregion
         

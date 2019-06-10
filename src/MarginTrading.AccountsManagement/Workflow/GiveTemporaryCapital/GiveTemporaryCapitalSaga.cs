@@ -75,7 +75,7 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                     "Save_OperationExecutionInfo: " +
                     $"{e.OperationId}");
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
         
@@ -106,7 +106,7 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                 _chaosKitty.Meow($"{nameof(AccountChangedEvent)}: " +
                                  "Save_OperationExecutionInfo:" + e.BalanceChange.Id);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -138,7 +138,7 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                 _chaosKitty.Meow($"{nameof(AccountBalanceChangeFailedEvent)}: " +
                                  "Save_OperationExecutionInfo:" + e.OperationId);
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -153,7 +153,7 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
             if (executionInfo != null && executionInfo.Data.SwitchState(TemporaryCapitalState.ChargedOnAccount, 
                     TemporaryCapitalState.Succeded))
             {
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
@@ -172,7 +172,7 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
             {
                 executionInfo.Data.FailReason = e.FailReason;
                 
-                await _executionInfoRepository.Save(executionInfo);
+                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
     }

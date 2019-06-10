@@ -53,7 +53,7 @@ namespace MarginTrading.AccountsManagement.TestClient
 
         private static async Task Run()
         {
-            var clientGenerator = HttpClientGenerator.BuildForUrl("http://localhost:5007")
+            var clientGenerator = HttpClientGenerator.BuildForUrl("http://localhost:5000")
                 .WithApiKey("TestClient")
                 .WithRetriesStrategy(new LinearRetryStrategy(TimeSpan.FromSeconds(10), 12))
                 .Create();
@@ -79,13 +79,14 @@ namespace MarginTrading.AccountsManagement.TestClient
         {
             var client = clientGenerator.Generate<IAccountBalanceHistoryApi>();
             var history = await client.ByAccount("AA0011").Dump();
-            var res = await client.ByAccountAndEventSource("AA0011");
             var record = history?.FirstOrDefault();
             if (record != null)
             {
-                var historyByAccount = await client.ByAccount(record.Value.Key).Dump();
-                var historyByAccountAndEvent = await client.ByAccountAndEventSource(record.Value.Key)
-                    .Dump();
+                var account = record.Value.Key;
+                var historyByAccount = await client.ByAccount(account).Dump();
+                var historyByAccountAndEvent = await client.ByAccountAndEventSource(account).Dump();
+                var date = record.Value.Value.FirstOrDefault()?.ChangeTimestamp ?? DateTime.UtcNow;
+                var balance = await client.GetBalanceOnDate(account, date).Dump();
             }
             
         }

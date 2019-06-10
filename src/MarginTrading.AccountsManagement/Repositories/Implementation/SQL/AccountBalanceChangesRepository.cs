@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -66,6 +67,46 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     _log?.WriteErrorAsync(nameof(AccountBalanceChangesRepository), "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
+            }
+        }
+
+        public async Task<PaginatedResponse<IAccountBalanceChange>> GetByPagesAsync(string accountId,
+            DateTime? @from = null, DateTime? to = null, AccountBalanceChangeReasonType[] reasonTypes = null, 
+            string assetPairId = null, int? skip = null, int? take = null, bool isAscendingOrder = true)
+        {
+            take = PaginationHelper.GetTake(take);
+
+            var whereClause = "WHERE 1=1 " 
+                                + (!string.IsNullOrWhiteSpace(accountId) ? " AND AccountId=@accountId" : "")
+                                + (from != null ? " AND ChangeTimestamp > @from" : "")
+                                + (to != null ? " AND ChangeTimestamp < @to" : "")
+                                + (reasonTypes != null && reasonTypes.Any() ? " AND ReasonType IN @types" : "")
+                                + (!string.IsNullOrWhiteSpace(assetPairId) ? " AND Instrument=@assetPairId" : "");
+
+            var sorting = isAscendingOrder ? "ASC" : "DESC";
+            var paginationClause = $" ORDER BY [ChangeTimestamp] {sorting} OFFSET {skip ?? 0} ROWS FETCH NEXT {take} ROWS ONLY";
+
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                var gridReader = await conn.QueryMultipleAsync(
+                    $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName} {whereClause}", new
+                    {
+                        accountId, 
+                        from, 
+                        to, 
+                        types = reasonTypes.Select(x => x.ToString()),
+                        assetPairId
+                    });
+
+                var contents = (await gridReader.ReadAsync<AccountBalanceChangeEntity>()).ToList();
+                var totalCount = await gridReader.ReadSingleAsync<int>();
+
+                return new PaginatedResponse<IAccountBalanceChange>(
+                    contents: contents, 
+                    start: skip ?? 0, 
+                    size: contents.Count, 
+                    totalSize: totalCount
+                );
             }
         }
         
@@ -153,6 +194,20 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     await _log.WriteWarningAsync(nameof(AccountBalanceChangesRepository), nameof(AddAsync), null, msg);
                     throw new Exception(msg);
                 }
+            }
+        }
+
+        public async Task<decimal> GetBalanceAsync(string accountId, DateTime date)
+        {
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                return await conn.ExecuteScalarAsync<decimal>(
+                    $"SELECT TOP 1 Balance FROM {TableName} WHERE AccountId=@accountId AND ChangeTimestamp < @date ORDER BY ChangeTimestamp DESC",
+                    new
+                    {
+                        accountId,
+                        date = date.Date.AddDays(1),
+                    });
             }
         }
     }

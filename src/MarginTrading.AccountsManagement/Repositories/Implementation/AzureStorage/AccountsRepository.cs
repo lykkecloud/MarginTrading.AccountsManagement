@@ -37,11 +37,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             await _tableStorage.InsertAsync(Convert(account));
         }
 
-        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null)
+        public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null,
+            bool showDeleted = false)
         {
             var filter = string.IsNullOrEmpty(search)
                 ? null
-                : new Func<AccountEntity, bool>(account => account.Id.Contains(search));
+                : new Func<AccountEntity, bool>(account => account.Id.Contains(search)
+                                                           && showDeleted || !account.IsDeleted);
 
             var accounts = string.IsNullOrEmpty(clientId)
                 ? await _tableStorage.GetDataAsync(filter)
@@ -50,7 +52,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return accounts.ToList();
         }
 
-        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null)
+        public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, bool showDeleted = false,
+            int? skip = null, int? take = null)
         {
             /*var data = (await _tableStorage.ExecuteQueryWithPaginationAsync(
                 new TableQuery<AccountEntity>()
@@ -147,6 +150,21 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
 
                     if (isWithdrawalDisabled.HasValue)
                         a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
+
+                    return a;
+                });
+
+            return account;
+        }
+
+        public async Task<IAccount> DeleteAsync(string accountId)
+        {
+            var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;
+
+            var account = await _tableStorage.MergeAsync(pk,
+                AccountEntity.GenerateRowKey(accountId), a =>
+                {
+                    a.IsDeleted = true;
 
                     return a;
                 });

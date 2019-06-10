@@ -11,9 +11,11 @@ namespace MarginTrading.AccountsManagement.Repositories
     {
         Task AddAsync(IAccount account);
         
-        Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null);
+        Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null,
+            bool showDeleted = false);
         
-        Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, int? skip = null, int? take = null);
+        Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, bool showDeleted = false,
+            int? skip = null, int? take = null);
         
         [ItemCanBeNull]
         Task<IAccount> GetAsync(string accountId);
@@ -31,6 +33,8 @@ namespace MarginTrading.AccountsManagement.Repositories
 
         Task<IAccount> UpdateAccountAsync(string accountId, string tradingConditionId,
             bool? isDisabled, bool? isWithdrawalDisabled);
+        
+        Task<IAccount> DeleteAsync(string accountId);
 
         Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId,
             Func<string, List<TemporaryCapital>, TemporaryCapital, bool, List<TemporaryCapital>> handler,

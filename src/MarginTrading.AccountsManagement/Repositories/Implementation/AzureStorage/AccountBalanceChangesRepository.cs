@@ -20,7 +20,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         private readonly ISystemClock _systemClock;
         private readonly INoSQLTableStorage<AccountBalanceChangeEntity> _tableStorage;
 
-        public AccountBalanceChangesRepository(IReloadingManager<AccountManagementSettings> settings, 
+        public AccountBalanceChangesRepository(IReloadingManager<AccountManagementSettings> settings,
             ILog log,
             IConvertService convertService,
             ISystemClock systemClock,
@@ -31,6 +31,37 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             _tableStorage =
                 azureTableStorageFactoryService.Create<AccountBalanceChangeEntity>(
                     settings.Nested(s => s.Db.ConnectionString), "AccountHistory", log);
+        }
+
+        public async Task<PaginatedResponse<IAccountBalanceChange>> GetByPagesAsync(string accountId,
+            DateTime? @from = null, DateTime? to = null, AccountBalanceChangeReasonType[] reasonTypes = null,
+            string assetPairId = null, int? skip = null, int? take = null, bool isAscendingOrder = true)
+        {
+            take = PaginationHelper.GetTake(take);
+
+            // TODO: Find a way to do paginated query
+            var data =
+                await _tableStorage.WhereAsync(
+                    accountId,
+                    from ?? DateTime.MinValue,
+                    to?.Date.AddDays(1) ?? DateTime.MaxValue,
+                    ToIntervalOption.IncludeTo,
+                    x => (reasonTypes == null || reasonTypes.Any(t => t.ToString() == x.ReasonType)) &&
+                         (assetPairId == null || x.Instrument == assetPairId));
+
+            if (isAscendingOrder)
+                data = data.OrderBy(item => item.ChangeTimestamp).Skip(skip ?? 0).Take(take.Value);
+            else                
+                data = data.OrderByDescending(item => item.ChangeTimestamp).Skip(skip ?? 0).Take(take.Value);
+
+            var contents = data.ToList();
+
+            return new PaginatedResponse<IAccountBalanceChange>(
+                contents: contents,
+                start: skip ?? 0,
+                size: take.Value,
+                totalSize: contents.Count
+            );
         }
 
         public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, DateTime? @from = null,
@@ -67,6 +98,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             // ReSharper disable once RedundantArgumentDefaultValue
             await _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.ChangeTimestamp,
                 RowKeyDateTimeFormat.Iso);
+        }
+
+        public async Task<decimal> GetBalanceAsync(string accountId, DateTime date)
+        {
+            return (await _tableStorage.WhereAsync(accountId, DateTime.MinValue,
+                       date.Date.AddDays(1), ToIntervalOption.ExcludeTo))
+                   .OrderByDescending(item => item.ChangeTimestamp).FirstOrDefault()?.Balance ?? 0;
         }
 
         private AccountBalanceChange Convert(AccountBalanceChangeEntity arg)
