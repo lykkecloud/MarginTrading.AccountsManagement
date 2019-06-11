@@ -59,7 +59,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 DELETE [dbo].[Trades] WHERE AccountId = @AccountId;
                 DELETE [dbo].[Deals] WHERE AccountId = @AccountId;
                 DELETE [dbo].[Activities] WHERE AccountId = @AccountId;
-                DELETE [dbo].[MarginTradingAccounts] WHERE Id = @AccountId;
           
                 COMMIT TRANSACTION
             END;";

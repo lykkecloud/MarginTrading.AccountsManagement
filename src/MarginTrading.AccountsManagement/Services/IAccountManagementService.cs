@@ -61,7 +61,5 @@ namespace MarginTrading.AccountsManagement.Services
             string additionalInfo);
         
         #endregion
-
-        Task EraseAccount(string accountId);
     }
 }

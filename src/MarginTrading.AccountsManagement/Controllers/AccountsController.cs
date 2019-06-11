@@ -181,19 +181,6 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
-        /// Unrecoverable account deletion. Caution - all the history will be erased!!!
-        /// </summary>
-        /// <param name="accountId"></param>
-        /// <returns></returns>
-        [HttpDelete("erase")]
-        public async Task Erase(string accountId)
-        {
-            accountId.RequiredNotNullOrEmpty(nameof(accountId), $"{nameof(accountId)} must be set.");
-
-            await _accountManagementService.EraseAccount(accountId);
-        }
-
-        /// <summary>
         /// Delete accounts. For TEST purposes only!
         /// </summary>
         [HttpPost("delete")]

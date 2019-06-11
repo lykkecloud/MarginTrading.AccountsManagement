@@ -137,14 +137,6 @@ namespace MarginTrading.AccountsManagement.Contracts
         Task Reset(string accountId);
 
         /// <summary>
-        /// Unrecoverable account deletion. Caution - all the history will be erased!!!
-        /// </summary>
-        /// <param name="accountId"></param>
-        /// <returns></returns>
-        [Delete("erase")]
-        Task Erase([NotNull] string accountId);
-
-        /// <summary>
         /// Get account statistics for the current trading day
         /// </summary>
         /// <param name="accountId"></param>
