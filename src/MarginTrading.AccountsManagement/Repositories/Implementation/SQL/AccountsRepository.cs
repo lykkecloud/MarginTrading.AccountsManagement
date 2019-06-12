@@ -44,7 +44,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "INDEX IX_{0} (ClientId, IsDeleted)" +
                                                  ");";
 
-        private const string DeleteProcName = "DeleteAccount";
+        private const string DeleteProcName = "DeleteAccountData";
         private readonly string DeleteProcCreateScript = $@"CREATE OR ALTER PROCEDURE [dbo].[{DeleteProcName}] (
         @AccountId NVARCHAR(128)
         )
