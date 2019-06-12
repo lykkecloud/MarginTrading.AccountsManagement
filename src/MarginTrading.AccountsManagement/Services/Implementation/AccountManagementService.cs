@@ -290,17 +290,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
                 _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
                 "Reset account Api");
-                
+            
             await _accountsRepository.EraseAsync(accountId);
-
-            if (!account.IsDeleted)
-            {
-                _eventSender.SendAccountChangedEvent(
-                    nameof(ResetAccountAsync),
-                    account,
-                    AccountChangedEventTypeContract.Reset,
-                    $"{account}_{_systemClock.UtcNow.UtcDateTime:O}");   
-            }
         }
 
         public async Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,

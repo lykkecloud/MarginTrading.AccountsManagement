@@ -24,10 +24,5 @@
         /// The account was deleted
         /// </summary>
         Deleted = 6,
-        
-        /// <summary>
-        /// The account was reset
-        /// </summary>
-        Reset = 7,
     }
 }
