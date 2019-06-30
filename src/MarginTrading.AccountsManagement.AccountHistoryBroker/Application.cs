@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using Lykke.MarginTrading.BrokerBase;
 using Lykke.MarginTrading.BrokerBase.Models;
@@ -9,6 +10,7 @@ using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
 using MarginTrading.AccountsManagement.Contracts.Events;
+using MarginTrading.AccountsManagement.Contracts.Models;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 {
@@ -16,22 +18,19 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
     {
         private readonly IAccountHistoryRepository _accountHistoryRepository;
         private readonly Settings _settings;
-        private readonly IConvertService _convertService;
         private readonly ILog _log;
 
         public Application(
             IAccountHistoryRepository accountHistoryRepository, 
             ILog log,
             Settings settings, 
-            CurrentApplicationInfo applicationInfo, 
-            IConvertService convertService, 
+            CurrentApplicationInfo applicationInfo,
             ISlackNotificationsSender slackNotificationsSender)
             : base(log, slackNotificationsSender, applicationInfo, MessageFormat.MessagePack)
         {
             _accountHistoryRepository = accountHistoryRepository;
             _log = log;
             _settings = settings;
-            _convertService = convertService;
         }
 
         protected override BrokerSettingsBase Settings => _settings;
@@ -42,7 +41,15 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         {
             try
             {
-                var accountHistory = _convertService.Convert<AccountHistory>(accountChangedEvent.BalanceChange);
+                if (accountChangedEvent.BalanceChange == null)
+                {
+                    await _log.WriteWarningAsync(nameof(HandleMessage), 
+                        "No history event with BalanceChange=null is permitted to be written",
+                        accountChangedEvent.ToJson());
+                    return;
+                }
+                
+                var accountHistory = Map(accountChangedEvent.BalanceChange);
 
                 if (accountHistory.ChangeAmount != 0)
                 {
@@ -54,6 +61,25 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
                 await _log.WriteErrorAsync(nameof(AccountHistoryBroker), nameof(HandleMessage), exception);
                 throw;
             }
+        }
+
+        private static AccountHistory Map(AccountBalanceChangeContract accountBalanceChangeContract)
+        {
+            return new AccountHistory(
+                id: accountBalanceChangeContract.Id,
+                changeAmount: accountBalanceChangeContract.ChangeAmount,
+                accountId: accountBalanceChangeContract.AccountId,
+                changeTimestamp: accountBalanceChangeContract.ChangeTimestamp,
+                clientId: accountBalanceChangeContract.ClientId,
+                balance: accountBalanceChangeContract.Balance,
+                withdrawTransferLimit: accountBalanceChangeContract.WithdrawTransferLimit,
+                comment: accountBalanceChangeContract.Comment,
+                reasonType: accountBalanceChangeContract.ReasonType.ToType<AccountBalanceChangeReasonType>(),
+                eventSourceId: accountBalanceChangeContract.EventSourceId,
+                legalEntity: accountBalanceChangeContract.LegalEntity,
+                auditLog: accountBalanceChangeContract.AuditLog,
+                instrument: accountBalanceChangeContract.Instrument,
+                tradingDate: accountBalanceChangeContract.TradingDate);
         }
     }
 }
