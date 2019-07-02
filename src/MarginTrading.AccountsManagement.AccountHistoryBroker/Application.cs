@@ -43,7 +43,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
             {
                 if (accountChangedEvent.BalanceChange == null)
                 {
-                    await _log.WriteWarningAsync(nameof(HandleMessage), 
+                    await _log.WriteInfoAsync(nameof(HandleMessage), 
                         "No history event with BalanceChange=null is permitted to be written",
                         accountChangedEvent.ToJson());
                     return;
