@@ -24,6 +24,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 {
     internal class AccountsRepository : IAccountsRepository
     {
+        #region SQL
+
         private const string TableName = "MarginTradingAccounts";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  "[Id] [nvarchar] (64) NOT NULL PRIMARY KEY, " +
@@ -41,6 +43,27 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL, " +
                                                  "INDEX IX_{0} (ClientId, IsDeleted)" +
                                                  ");";
+
+        private const string DeleteProcName = "DeleteAccountData";
+        private readonly string DeleteProcCreateScript = $@"CREATE OR ALTER PROCEDURE [dbo].[{DeleteProcName}] (
+        @AccountId NVARCHAR(128)
+        )
+        AS
+            BEGIN
+                SET NOCOUNT ON;
+                BEGIN TRANSACTION
+          
+                DELETE [dbo].[AccountHistory] WHERE AccountId = @AccountId;
+                DELETE [dbo].[OrdersHistory] WHERE AccountId = @AccountId;
+                DELETE [dbo].[PositionsHistory] WHERE AccountId = @AccountId;
+                DELETE [dbo].[Trades] WHERE AccountId = @AccountId;
+                DELETE [dbo].[Deals] WHERE AccountId = @AccountId;
+                DELETE [dbo].[Activities] WHERE AccountId = @AccountId;
+          
+                COMMIT TRANSACTION
+            END;";
+
+        #endregion SQL
         
         private static Type DataType => typeof(IAccount);
         private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
@@ -64,10 +87,14 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
-                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
+                try
+                {
+                    conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+                    conn.Execute(DeleteProcCreateScript);
+                }
                 catch (Exception ex)
                 {
-                    _log?.WriteErrorAsync(nameof(AccountsRepository), "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync(nameof(AccountsRepository), "Initialization", null, ex);
                     throw;
                 }
             }
@@ -215,6 +242,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                 a.TemporaryCapital = result.ToJson();
             });
+        }
+
+        public async Task EraseAsync(string accountId)
+        {
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                await conn.ExecuteAsync(DeleteProcName, new
+                {
+                    AccountId = accountId,
+                }, commandType: CommandType.StoredProcedure);
+            }
         }
 
         #region Private Methods

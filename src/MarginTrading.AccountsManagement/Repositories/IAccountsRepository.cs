@@ -20,6 +20,8 @@ namespace MarginTrading.AccountsManagement.Repositories
         [ItemCanBeNull]
         Task<IAccount> GetAsync(string accountId);
 
+        Task EraseAsync(string accountId);
+
         /// <summary>
         /// Updates the account if the operation has not yet been executed. 
         /// </summary>

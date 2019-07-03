@@ -290,6 +290,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
                 _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
                 "Reset account Api");
+            
+            await _accountsRepository.EraseAsync(accountId);
         }
 
         public async Task<string> StartGiveTemporaryCapital(string eventSourceId, string accountId, decimal amount,
