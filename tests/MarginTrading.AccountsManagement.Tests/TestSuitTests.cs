@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using FluentAssertions;
 using JetBrains.Annotations;
 using NUnit.Framework;
 

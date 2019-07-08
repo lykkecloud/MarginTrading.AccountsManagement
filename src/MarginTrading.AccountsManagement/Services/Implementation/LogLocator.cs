@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using Common.Log;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation

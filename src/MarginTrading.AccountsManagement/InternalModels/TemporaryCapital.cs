@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using Lykke.AzureStorage.Tables.Entity.Annotation;
 using MessagePack;
 

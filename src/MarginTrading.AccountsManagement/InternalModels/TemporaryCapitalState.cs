@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 namespace MarginTrading.AccountsManagement.InternalModels
 {
     public enum TemporaryCapitalState

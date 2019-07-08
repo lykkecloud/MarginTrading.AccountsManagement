@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System;
 using Lykke.AzureStorage.Tables;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using Microsoft.WindowsAzure.Storage.Table;

@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System;
 using System.Net;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using Microsoft.AspNetCore.Mvc;

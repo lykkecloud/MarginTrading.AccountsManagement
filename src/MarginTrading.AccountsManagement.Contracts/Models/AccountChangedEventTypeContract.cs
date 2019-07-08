@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.AccountsManagement.Contracts.Models
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.AccountsManagement.Contracts.Models
 {
     /// <summary>
     /// What happened to the account

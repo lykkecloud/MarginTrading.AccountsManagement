@@ -1,4 +1,6 @@
-﻿using Autofac;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Lykke.HttpClientGenerator;
 using Lykke.SettingsReader;

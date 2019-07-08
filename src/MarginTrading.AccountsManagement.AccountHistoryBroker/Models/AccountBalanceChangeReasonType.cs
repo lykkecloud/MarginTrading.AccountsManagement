@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Models
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Models
 {
     public enum AccountBalanceChangeReasonType
     {

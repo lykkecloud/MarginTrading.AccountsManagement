@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using Microsoft.Extensions.Configuration;
 
 namespace MarginTrading.AccountsManagement.Extensions
