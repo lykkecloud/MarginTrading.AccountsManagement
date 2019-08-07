@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -67,10 +68,21 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             
             using (var conn = new SqlConnection(_settings.Db.ConnString))
             {
+                SqlTransaction transaction = null;
                 try
                 {
-                        await conn.ExecuteAsync(
-                            $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
+                    if (conn.State == ConnectionState.Closed)
+                    {
+                        await conn.OpenAsync();
+                    }
+                    
+                    //Account history insertion trigger needs Snapshot level of isolation
+                    transaction = conn.BeginTransaction(IsolationLevel.Snapshot);
+
+                    await conn.ExecuteAsync(
+                        $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity, transaction);
+                    
+                    transaction.Commit();
                 }
                 catch (Exception ex)
                 {
@@ -78,6 +90,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                            "Entity <IAccountTransactionsReport>: \n" +
                            entity.ToJson();
                     _log?.WriteWarningAsync(nameof(AccountHistoryRepository), nameof(InsertAsync), null, msg);
+                    transaction?.Rollback();
                     throw new Exception(msg);
                 }
             }
