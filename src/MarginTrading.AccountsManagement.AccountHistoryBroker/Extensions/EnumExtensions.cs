@@ -3,7 +3,7 @@
 
 using System;
 
-namespace MarginTrading.AccountsManagement.AccountHistoryBroker
+namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Extensions
 {
     public static class EnumExtensions
     {
