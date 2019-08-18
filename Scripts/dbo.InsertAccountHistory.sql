@@ -26,6 +26,9 @@ BEGIN
     (@Id, @AccountId, @ChangeTimestamp, @ClientId, @ChangeAmount, @Balance, @WithdrawTransferLimit, @Comment,
      @ReasonType, @EventSourceId, @LegalEntity, @AuditLog, @Instrument, @TradingDate)
 
+    /*
+    CAUTION: The same calculation logic is duplicated here and in SP_InsertDeal
+    */
     IF @reasonType = 'Swap'
         BEGIN   
             UPDATE [dbo].[Deals]
