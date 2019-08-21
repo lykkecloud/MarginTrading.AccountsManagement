@@ -42,7 +42,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                 {
                     await conn.OpenAsync();
                 }
-                var transaction = conn.BeginTransaction();
+                var transaction = conn.BeginTransaction(IsolationLevel.Serializable);
                 
                 try
                 {
