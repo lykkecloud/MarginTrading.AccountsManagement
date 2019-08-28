@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <AssemblyName>MarginTrading.AccountsManagement.AccountHistoryBroker</AssemblyName>
@@ -49,5 +49,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.AccountsManagement.Contracts\MarginTrading.AccountsManagement.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
   </ItemGroup>
 </Project>

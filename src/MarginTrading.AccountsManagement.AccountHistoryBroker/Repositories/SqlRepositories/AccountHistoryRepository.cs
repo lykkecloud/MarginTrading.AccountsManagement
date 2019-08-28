@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using Common;
 using Common.Log;
 using Dapper;
 using Lykke.Logs.MsSql.Extensions;
+using MarginTrading.AccountsManagement.AccountHistoryBroker.Extensions;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
 
@@ -16,30 +18,6 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
 {
     public class AccountHistoryRepository : IAccountHistoryRepository
     {
-        private const string TableName = "AccountHistory";
-
-        private const string CreateTableScript = "CREATE TABLE [{0}](" +
-                                                 "[Oid] [bigint] NOT NULL IDENTITY (1,1) PRIMARY KEY," +
-                                                 "[Id] [nvarchar] (128) NOT NULL UNIQUE, " +
-                                                 "[AccountId] [nvarchar] (64) NOT NULL," +
-                                                 "[ChangeTimestamp] [datetime] NOT NULL," +
-                                                 "[ClientId] [nvarchar] (64) NOT NULL, " +
-                                                 "[ChangeAmount] decimal (24, 12) NOT NULL, " +
-                                                 "[Balance] decimal (24, 12) NOT NULL, " +
-                                                 "[WithdrawTransferLimit] decimal (24, 12) NOT NULL, " +
-                                                 "[Comment] [nvarchar] (MAX) NULL, " +
-                                                 "[ReasonType] [nvarchar] (64) NULL, " +
-                                                 "[EventSourceId] [nvarchar] (128) NULL, " +
-                                                 "[LegalEntity] [nvarchar] (64) NULL, " +
-                                                 "[AuditLog] [nvarchar] (MAX) NULL, " +
-                                                 "[Instrument] [nvarchar] (64) NULL, " +
-                                                 "[TradingDate] [datetime] NULL" +
-                                                 ");";
-        
-        private static Type DataType => typeof(IAccountHistory);
-        private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
-        private static readonly string GetFields = string.Join(",", DataType.GetProperties().Select(x => "@" + x.Name));
-
         private readonly Settings _settings;
         private readonly ILog _log;
         private readonly IConvertService _convertService;
@@ -50,15 +28,8 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             _settings = settings;
             _convertService = convertService;
             
-            using (var conn = new SqlConnection(_settings.Db.ConnString))
-            {
-                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
-                catch (Exception ex)
-                {
-                    _log?.WriteErrorAsync(nameof(AccountHistoryRepository), "CreateTableIfDoesntExists", null, ex);
-                    throw;
-                }
-            }
+            _settings.Db.ConnString.InitializeSqlObject("dbo.AccountHistory.sql", log);
+            _settings.Db.ConnString.InitializeSqlObject("dbo.InsertAccountHistory.sql", log);
         }
 
         public async Task InsertAsync(IAccountHistory obj)
@@ -67,18 +38,32 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             
             using (var conn = new SqlConnection(_settings.Db.ConnString))
             {
+                if (conn.State == ConnectionState.Closed)
+                {
+                    await conn.OpenAsync();
+                }
+                var transaction = conn.BeginTransaction(IsolationLevel.Serializable);
+                
                 try
                 {
-                        await conn.ExecuteAsync(
-                            $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
+                    await conn.ExecuteAsync("[dbo].[SP_InsertAccountHistory]",
+                        entity, 
+                        transaction,
+                        commandType: CommandType.StoredProcedure);
+                    
+                    transaction.Commit();
                 }
                 catch (Exception ex)
                 {
+                    transaction.Rollback();
+                    
                     var msg = $"Error {ex.Message} \n" +
-                           "Entity <IAccountTransactionsReport>: \n" +
+                           "Entity <AccountHistoryEntity>: \n" +
                            entity.ToJson();
-                    _log?.WriteWarningAsync(nameof(AccountHistoryRepository), nameof(InsertAsync), null, msg);
-                    throw new Exception(msg);
+                    _log?.WriteError(nameof(AccountHistoryRepository), nameof(InsertAsync), 
+                        new Exception(msg));
+                    
+                    throw;
                 }
             }
         }
