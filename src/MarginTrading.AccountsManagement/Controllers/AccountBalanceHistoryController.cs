@@ -74,13 +74,15 @@ namespace MarginTrading.AccountsManagement.Controllers
             string accountId,
             [FromQuery] DateTime? @from = null, 
             [FromQuery] DateTime? to = null,
-            [FromQuery] AccountBalanceChangeReasonTypeContract? reasonType = null)
+            [FromQuery] AccountBalanceChangeReasonTypeContract? reasonType = null,
+            [FromQuery] bool filterByTradingDay = false)
         {
             var data = await _accountBalanceChangesRepository.GetAsync(
                 accountId, 
-                from: @from?.ToUniversalTime(),
+                @from: @from?.ToUniversalTime(),
                 to: to?.ToUniversalTime(),
-                reasonType: reasonType?.ToType<AccountBalanceChangeReasonType>());
+                reasonType: reasonType?.ToType<AccountBalanceChangeReasonType>(), 
+                filterByTradingDay: filterByTradingDay);
             
             return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }
