@@ -116,7 +116,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public async Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, DateTime? @from = null,
             DateTime? to = null, AccountBalanceChangeReasonType? reasonType = null, bool filterByTradingDay = false)
         {
-            var timeFilterField = filterByTradingDay ? "TradingDay" : "ChangeTimestamp";
+            var timeFilterField = filterByTradingDay ? "TradingDate" : "ChangeTimestamp";
             var whereClause = "WHERE 1=1 " + (!string.IsNullOrWhiteSpace(accountId) ? " AND AccountId=@accountId" : "")
                                        + (from != null ? $" AND {timeFilterField} > @from" : "")
                                        + (to != null ? $" AND {timeFilterField} < @to" : "")
