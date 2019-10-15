@@ -118,7 +118,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             var timeFilterField = filterByTradingDay ? "TradingDate" : "ChangeTimestamp";
             var whereClause = "WHERE 1=1 " + (!string.IsNullOrWhiteSpace(accountId) ? " AND AccountId=@accountId" : "")
-                                       + (from != null ? $" AND {timeFilterField} > @from" : "")
+                                       + (from != null ? $" AND {timeFilterField} >= @from" : "")
                                        + (to != null ? $" AND {timeFilterField} < @to" : "")
                                        + (reasonType != null ? " AND ReasonType = @reasonType" : "");
             
