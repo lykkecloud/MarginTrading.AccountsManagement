@@ -308,7 +308,8 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                     continue;
                 }
 
-                var todayTransactions = await _accountBalanceChangesRepository.GetAsync(accountId, _systemClock.UtcNow.UtcDateTime.Date);
+                var todayTransactions = await _accountBalanceChangesRepository.GetAsync(accountId, 
+                    _systemClock.UtcNow.UtcDateTime.Date);
                 if (todayTransactions.Any())
                 {
                     failedAccounts.Add(accountId, $"Account [{accountId}] had {todayTransactions.Count} transactions today. Please try to delete an account tomorrow.");
