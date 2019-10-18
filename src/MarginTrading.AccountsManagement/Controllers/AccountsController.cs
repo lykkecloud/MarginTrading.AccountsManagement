@@ -17,6 +17,7 @@ using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Services;
+using MarginTrading.SettingsService.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Internal;
 using Refit;
@@ -33,6 +34,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         private readonly ISystemClock _systemClock;
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
         private readonly ICqrsSender _cqrsSender;
+        private readonly IScheduleSettingsApi _scheduleSettingsApi;
 
         public AccountsController(
             IAccountManagementService accountManagementService,
@@ -40,7 +42,8 @@ namespace MarginTrading.AccountsManagement.Controllers
             IConvertService convertService,
             ISystemClock systemClock,
             ISendBalanceCommandsService sendBalanceCommandsService,
-            ICqrsSender cqrsSender)
+            ICqrsSender cqrsSender,
+            IScheduleSettingsApi scheduleSettingsApi)
         {
             _accountManagementService = accountManagementService;
             _accuracyService = accuracyService;
@@ -48,6 +51,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             _systemClock = systemClock;
             _sendBalanceCommandsService = sendBalanceCommandsService;
             _cqrsSender = cqrsSender;
+            _scheduleSettingsApi = scheduleSettingsApi;
         }
 
         #region CRUD
@@ -249,18 +253,6 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// Starts the operation of depositing funds to the client's account. Amount should be positive.
         /// </summary>
         [HttpPost]
-        [Route("{clientId}/{accountId}/balance/deposit")]
-        [Obsolete("Use a two-parameter BeginDeposit.")]
-        public async Task<string> BeginDeposit([NotNull] string clientId, [NotNull] string accountId,
-            [FromBody][NotNull] AccountChargeRequest request)
-        {
-            return await BeginDeposit(accountId, request);
-        }
-
-        /// <summary>
-        /// Starts the operation of depositing funds to the client's account. Amount should be positive.
-        /// </summary>
-        [HttpPost]
         [Route("{accountId}/balance/deposit")]
         public async Task<string> BeginDeposit([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
@@ -283,34 +275,106 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// Starts the operation of withdrawing funds to the client's account. Amount should be positive.
         /// </summary>
         [HttpPost]
-        [Route("{clientId}/{accountId}/balance/withdraw")]
-        [Obsolete("Use a two-parameter BeginWithdraw.")]
-        public async Task<string> BeginWithdraw([NotNull] string clientId, [NotNull] string accountId,
-            [FromBody][NotNull] AccountChargeRequest request)
-        {
-            return await BeginWithdraw(accountId, request);
-        }
-
-        /// <summary>
-        /// Starts the operation of withdrawing funds to the client's account. Amount should be positive.
-        /// </summary>
-        [HttpPost]
         [Route("{accountId}/balance/withdraw")]
         public async Task<string> BeginWithdraw([NotNull] string accountId,
             [FromBody][NotNull] AccountChargeRequest request)
         {
-            var account = await _accountManagementService.EnsureAccountValidAsync(accountId);
+            var result = await TryBeginWithdraw(accountId, request);
+
+            if (result.Error != WithdrawalErrorContract.None)
+            {
+                throw new Exception($"Error: {result.Error.ToString()}. Details: {result.ErrorDetails}");
+            }
+
+            return result.OperationId;
+        }
+        
+        /// <summary>
+        /// Tries to start the operation of withdrawing funds to the client's account. Amount should be positive.
+        /// </summary>
+        [HttpPost]
+        [Route("~/api/v2/accounts/{accountId}/balance/withdraw")]
+        public async Task<WithdrawalResponse> TryBeginWithdraw([NotNull] string accountId,
+            [FromBody][NotNull] AccountChargeRequest request)
+        {
+            if (string.IsNullOrEmpty(request.OperationId))
+            {
+                return new WithdrawalResponse
+                {
+                    Amount = request.AmountDelta,
+                    Error = WithdrawalErrorContract.InvalidRequest,
+                    ErrorDetails = "OperationID is missing"
+                };
+            }
+            
+            IAccount account;
+
+            try
+            {
+                account = await _accountManagementService.EnsureAccountValidAsync(accountId);
+            }
+            catch (Exception e)
+            {
+                return new WithdrawalResponse
+                {
+                    Amount = request.AmountDelta,
+                    Error = WithdrawalErrorContract.InvalidAccount,
+                    ErrorDetails = e.Message
+                };
+            }
 
             var amount = await _accuracyService.ToAccountAccuracy(
-                request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
-                account.BaseAssetId, nameof(BeginWithdraw));
-            
-            return await _sendBalanceCommandsService.WithdrawAsync(
-                accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: amount,
-                operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason,
-                auditLog: request.AdditionalInfo);
+                request.AmountDelta,
+                account.BaseAssetId, 
+                nameof(BeginWithdraw));
+
+            if (amount <= 0)
+            {
+                return new WithdrawalResponse
+                {
+                    Amount = amount,
+                    Error = WithdrawalErrorContract.InvalidAmount
+                };
+            }
+
+            var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
+
+            if (!platformInfo.IsTradingEnabled)
+            {
+                return new WithdrawalResponse
+                {
+                    Amount = amount,
+                    Error = WithdrawalErrorContract.OutOfTradingHours,
+                    ErrorDetails =
+                        $"Last trading day: {platformInfo.LastTradingDay}, next will start: {platformInfo.NextTradingDayStart}"
+                };
+            }
+
+            try
+            {
+                var operationId = await _sendBalanceCommandsService.WithdrawAsync(
+                    accountId: accountId,
+                    amountDelta: amount,
+                    operationId: request.OperationId,
+                    reason: request.Reason,
+                    auditLog: request.AdditionalInfo);
+                
+                return new WithdrawalResponse
+                {
+                    Amount = amount,
+                    OperationId = operationId,
+                    Error = WithdrawalErrorContract.None
+                };
+            }
+            catch (Exception e)
+            {
+                return new WithdrawalResponse
+                {
+                    Amount = amount,
+                    Error = WithdrawalErrorContract.UnknownError,
+                    ErrorDetails = e.Message
+                };
+            }
         }
         
         #endregion Deposit/Withdraw/ChargeManually
