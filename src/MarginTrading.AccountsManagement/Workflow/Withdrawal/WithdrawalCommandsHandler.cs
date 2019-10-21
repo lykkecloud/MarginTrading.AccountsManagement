@@ -20,6 +20,7 @@ using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
 using Microsoft.Extensions.Internal;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
+using MarginTrading.SettingsService.Contracts;
 
 namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 {
@@ -30,7 +31,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
-        
+        private readonly IScheduleSettingsApi _scheduleSettingsApi;
+
         private const string OperationName = "Withdraw";
 
         public WithdrawalCommandsHandler(
@@ -38,13 +40,15 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             IAccountBalanceChangesRepository accountBalanceChangesRepository,
             IAccountsRepository accountsRepository,
             IOperationExecutionInfoRepository executionInfoRepository,
-            IChaosKitty chaosKitty)
+            IChaosKitty chaosKitty,
+            IScheduleSettingsApi scheduleSettingsApi)
         {
             _systemClock = systemClock;
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
+            _scheduleSettingsApi = scheduleSettingsApi;
         }
 
         /// <summary>
@@ -80,6 +84,15 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         : "Account balance is not enough"));
                 
                 return;
+            }
+
+            var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
+
+            if (!platformInfo.IsTradingEnabled)
+            {
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime,
+                    $"Platform is our of trading hours. Last trading day: {platformInfo.LastTradingDay}, next will start: {platformInfo.NextTradingDayStart}"));
             }
 
             if (account.IsWithdrawalDisabled)

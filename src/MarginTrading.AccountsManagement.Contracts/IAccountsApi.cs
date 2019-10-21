@@ -76,15 +76,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         [Patch("/api/accounts/{accountId}")]
         Task<AccountContract> Change(string accountId, [Body] ChangeAccountRequest request);
-        
-        /// <summary>
-        /// Starts the operation of manually charging the client's account.
-        /// Amount is absolute, i.e. negative value goes for charging.
-        /// </summary>
-        [Post("/api/accounts/{clientId}/{accountId}/balance")]
-        [Obsolete("Use a two-parameter BeginChargeManually.")]
-        Task<string> BeginChargeManually(string clientId, string accountId, [Body] AccountChargeManuallyRequest request);
-        
+
         /// <summary>
         /// Starts the operation of manually charging the client's account.
         /// Amount is absolute, i.e. negative value goes for charging.
@@ -95,28 +87,21 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// <summary>
         /// Starts the operation of depositing funds to the client's account. Amount should be positive.
         /// </summary>
-        [Post("/api/accounts/{clientId}/{accountId}/balance/deposit")]
-        [Obsolete("Use a two-parameter BeginDeposit.")]
-        Task<string> BeginDeposit(string clientId, string accountId, [Body] AccountChargeRequest request);
-
-        /// <summary>
-        /// Starts the operation of depositing funds to the client's account. Amount should be positive.
-        /// </summary>
         [Post("/api/accounts/{accountId}/balance/deposit")]
         Task<string> BeginDeposit(string accountId, [Body] AccountChargeRequest request);
-        
-        /// <summary>
-        /// Starts the operation of withdrawing funds to the client's account. Amount should be positive.
-        /// </summary>
-        [Post("/api/accounts/{clientId}/{accountId}/balance/withdraw")]
-        [Obsolete("Use a two-parameter BeginWithdraw.")]
-        Task<string> BeginWithdraw(string clientId, string accountId, [Body] AccountChargeRequest request);
-        
+
         /// <summary>
         /// Starts the operation of withdrawing funds to the client's account. Amount should be positive.
         /// </summary>
         [Post("/api/accounts/{accountId}/balance/withdraw")]
+        [Obsolete("Use TryBeginWithdraw method (v2)")]
         Task<string> BeginWithdraw(string accountId, [Body] AccountChargeRequest request);
+        
+        /// <summary>
+        /// Starts the operation of withdrawing funds to the client's account. Amount should be positive.
+        /// </summary>
+        [Post("/api/v2/accounts/{accountId}/balance/withdraw")]
+        Task<WithdrawalResponse> TryBeginWithdraw(string accountId, [Body] AccountChargeRequest request);
 
         /// <summary>
         /// Creates default accounts for client by trading condition id.
