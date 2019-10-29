@@ -58,9 +58,9 @@ BEGIN
                                                  + ISNULL(closingOnBehalf.ChangeAmount, 0.0) / ABS(deal.CloseOrderVolume))
                                                  * ABS(deal.Volume))) amount
                      FROM [dbo].[Deals] deal
-                              JOIN [dbo].[AccountHistory] openingOnBehalf
+                              LEFT OUTER JOIN [dbo].[AccountHistory] openingOnBehalf
                                    ON deal.OpenTradeId = openingOnBehalf.EventSourceId AND openingOnBehalf.ReasonType = 'OnBehalf'
-                              LEFT JOIN [dbo].[AccountHistory] closingOnBehalf
+                              LEFT OUTER JOIN [dbo].[AccountHistory] closingOnBehalf
                                         ON deal.CloseTradeId = closingOnBehalf.EventSourceId AND closingOnBehalf.ReasonType = 'OnBehalf'
                      WHERE deal.OpenTradeId = @EventSourceId OR deal.CloseTradeId = @EventSourceId
                  ) data
