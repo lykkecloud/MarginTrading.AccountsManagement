@@ -52,17 +52,6 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                 
                 try
                 {
-                    if (string.IsNullOrWhiteSpace(obj.EventSourceId) && new[]
-                    {
-                        AccountBalanceChangeReasonType.Swap,
-                        AccountBalanceChangeReasonType.Commission,
-                        AccountBalanceChangeReasonType.OnBehalf,
-                        AccountBalanceChangeReasonType.Tax,
-                    }.Contains(obj.ReasonType))
-                    {
-                        throw new Exception($"EventSourceId was null, with reason type {obj.ReasonType}");
-                    }
-
                     await conn.ExecuteAsync($"INSERT INTO [dbo].[AccountHistory] ({GetColumns}) VALUES ({GetFields})",
                         entity,
                         transaction);
@@ -89,6 +78,17 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             {
                 try
                 {
+                    if (string.IsNullOrWhiteSpace(obj.EventSourceId) && new[]
+                    {
+                        AccountBalanceChangeReasonType.Swap,
+                        AccountBalanceChangeReasonType.Commission,
+                        AccountBalanceChangeReasonType.OnBehalf,
+                        AccountBalanceChangeReasonType.Tax,
+                    }.Contains(obj.ReasonType))
+                    {
+                        throw new Exception($"EventSourceId was null, with reason type {obj.ReasonType}");
+                    }
+
                     using (var conn = new SqlConnection(_settings.Db.ConnString))
                     {
                         await conn.ExecuteAsync("[dbo].[SP_UpdateDealCommissionParamsOnAccountHistory]",
@@ -103,9 +103,12 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                 }
                 catch (Exception exception)
                 {
-                    await _log?.WriteErrorAsync(nameof(AccountHistoryRepository), nameof(InsertAsync), 
-                        new Exception($"Failed to calculate commissions for eventSourceId {obj.EventSourceId} with reasonType {obj.ReasonType}, skipping.", 
-                            exception));
+                    if (_log != null)
+                    {
+                        await _log.WriteErrorAsync(nameof(AccountHistoryRepository), nameof(InsertAsync),
+                            new Exception($"Failed to calculate commissions for eventSourceId {obj.EventSourceId} with reasonType {obj.ReasonType}, skipping.",
+                                exception));
+                    }
                 }        
             });
         }
