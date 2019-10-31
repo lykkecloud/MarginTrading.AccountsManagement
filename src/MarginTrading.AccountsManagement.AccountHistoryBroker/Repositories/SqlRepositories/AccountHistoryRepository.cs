@@ -22,6 +22,12 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
         private readonly ILog _log;
         private readonly IConvertService _convertService;
 
+        private static readonly string GetColumns =
+            string.Join(",", typeof(IAccountHistory).GetProperties().Select(x => x.Name));
+
+        private static readonly string GetFields =
+            string.Join(",", typeof(IAccountHistory).GetProperties().Select(x => "@" + x.Name));
+
         public AccountHistoryRepository(Settings settings, ILog log, IConvertService convertService)
         {
             _log = log;
@@ -29,7 +35,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             _convertService = convertService;
             
             _settings.Db.ConnString.InitializeSqlObject("dbo.AccountHistory.sql", log);
-            _settings.Db.ConnString.InitializeSqlObject("dbo.InsertAccountHistory.sql", log);
+            _settings.Db.ConnString.InitializeSqlObject("dbo.SP_UpdateDealCommissionParamsOnAccountHistory.sql", log);
         }
 
         public async Task InsertAsync(IAccountHistory obj)
@@ -46,10 +52,9 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                 
                 try
                 {
-                    await conn.ExecuteAsync("[dbo].[SP_InsertAccountHistory]",
-                        entity, 
-                        transaction,
-                        commandType: CommandType.StoredProcedure);
+                    await conn.ExecuteAsync($"INSERT INTO [dbo].[AccountHistory] ({GetColumns}) VALUES ({GetFields})",
+                        entity,
+                        transaction);
                     
                     transaction.Commit();
                 }
@@ -66,6 +71,46 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                     throw;
                 }
             }
+            
+#pragma warning disable 4014
+            Task.Run(async () =>
+#pragma warning restore 4014
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(obj.EventSourceId) && new[]
+                    {
+                        AccountBalanceChangeReasonType.Swap,
+                        AccountBalanceChangeReasonType.Commission,
+                        AccountBalanceChangeReasonType.OnBehalf,
+                        AccountBalanceChangeReasonType.Tax,
+                    }.Contains(obj.ReasonType))
+                    {
+                        throw new Exception($"EventSourceId was null, with reason type {obj.ReasonType}");
+                    }
+
+                    using (var conn = new SqlConnection(_settings.Db.ConnString))
+                    {
+                        await conn.ExecuteAsync("[dbo].[SP_UpdateDealCommissionParamsOnAccountHistory]",
+                            new
+                            {
+                                ChangeAmount = obj.ChangeAmount,
+                                ReasonType = obj.ReasonType.ToString(),
+                                EventSourceId = obj.EventSourceId,
+                            },
+                            commandType: CommandType.StoredProcedure);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    if (_log != null)
+                    {
+                        await _log.WriteErrorAsync(nameof(AccountHistoryRepository), nameof(InsertAsync),
+                            new Exception($"Failed to calculate commissions for eventSourceId {obj.EventSourceId} with reasonType {obj.ReasonType}, skipping.",
+                                exception));
+                    }
+                }        
+            });
         }
     }
 }
