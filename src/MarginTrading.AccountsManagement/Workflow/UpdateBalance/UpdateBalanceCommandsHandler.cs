@@ -103,6 +103,8 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                     tradingDate: command.TradingDay);
 
                 var convertedAccount = Convert(account);
+                
+                await _executionInfoRepository.SaveAsync(executionInfo);
 
                 publisher.PublishEvent(
                     new AccountChangedEvent(
@@ -113,8 +115,6 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                         change,
                         command.OperationId)
                 );
-                
-                await _executionInfoRepository.SaveAsync(executionInfo);
             }
         }
 
