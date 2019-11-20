@@ -13,8 +13,12 @@ BEGIN
     IF @reasonType = 'Swap'
         BEGIN
             UPDATE [dbo].[DealCommissionParams]
-            SET [OvernightFees] =
-                    (SELECT CONVERT(DECIMAL(24,13), SUM(swapHistory.SwapValue / ABS(swapHistory.Volume)) * ABS(deal.Volume))
+            SET [OvernightFees] = data.amount
+            FROM (
+                     SELECT DISTINCT deal.DealId,
+                                     CONVERT(DECIMAL(24,13), 
+                                         SUM(swapHistory.SwapValue / ABS(swapHistory.Volume)) 
+                                             * ABS(deal.Volume)) amount
                      FROM dbo.[Deals] AS deal,
                           dbo.PositionsHistory AS position,
                           dbo.OvernightSwapHistory AS swapHistory
@@ -22,9 +26,8 @@ BEGIN
                        AND deal.DealId = position.DealId
                        AND position.Id = swapHistory.PositionId AND swapHistory.IsSuccess = 1
                      GROUP BY deal.DealId, ABS(deal.Volume)
-                    )
-            FROM dbo.PositionsHistory AS position
-            WHERE [dbo].[DealCommissionParams].DealId = position.DealId AND position.Id = @EventSourceId
+                    ) data
+            WHERE [dbo].[DealCommissionParams].DealId = data.DealId
         END
 
     IF @reasonType = 'Commission'
