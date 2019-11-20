@@ -80,7 +80,6 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
                 {
                     if (string.IsNullOrWhiteSpace(obj.EventSourceId) && new[]
                     {
-                        AccountBalanceChangeReasonType.Swap,
                         AccountBalanceChangeReasonType.Commission,
                         AccountBalanceChangeReasonType.OnBehalf,
                         AccountBalanceChangeReasonType.Tax,
