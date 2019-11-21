@@ -10,23 +10,6 @@ BEGIN
     /*
     CAUTION: similar calculation logic is duplicated here and in SP_UpdateDealCommissionParamsOnDeal
     */
-    IF @reasonType = 'Swap'
-        BEGIN
-            UPDATE [dbo].[DealCommissionParams]
-            SET [OvernightFees] =
-                    (SELECT CONVERT(DECIMAL(24,13), SUM(swapHistory.SwapValue / ABS(swapHistory.Volume)) * ABS(deal.Volume))
-                     FROM dbo.[Deals] AS deal,
-                          dbo.PositionsHistory AS position,
-                          dbo.OvernightSwapHistory AS swapHistory
-                     WHERE position.Id = @EventSourceId
-                       AND deal.DealId = position.DealId
-                       AND position.Id = swapHistory.PositionId AND swapHistory.IsSuccess = 1
-                     GROUP BY deal.DealId, ABS(deal.Volume)
-                    )
-            FROM dbo.PositionsHistory AS position
-            WHERE [dbo].[DealCommissionParams].DealId = position.DealId AND position.Id = @EventSourceId
-        END
-
     IF @reasonType = 'Commission'
         BEGIN
             UPDATE [dbo].[DealCommissionParams]

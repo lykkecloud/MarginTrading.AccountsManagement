@@ -8,7 +8,7 @@ using Lykke.Cqrs;
 
 namespace MarginTrading.AccountsManagement.Modules
 {
-    internal class AutofacDependencyResolver : IDependencyResolver
+    public class AutofacDependencyResolver : IDependencyResolver
     {
         private readonly IComponentContext _context;
 
