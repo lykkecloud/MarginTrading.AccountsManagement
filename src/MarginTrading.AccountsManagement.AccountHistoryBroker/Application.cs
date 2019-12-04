@@ -39,7 +39,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 
         protected override BrokerSettingsBase Settings => _settings;
         protected override string ExchangeName => _settings.RabbitMqQueues.AccountHistory.ExchangeName;
-        protected override string RoutingKey => nameof(AccountChangedEvent);
+        public override string RoutingKey => nameof(AccountChangedEvent);
 
         protected override async Task HandleMessage(AccountChangedEvent accountChangedEvent)
         {
