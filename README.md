@@ -61,7 +61,8 @@ Settings schema is:
     "Db": {
       "StorageMode": "SqlServer",
       "ConnectionString": "data connection string",
-      "LogsConnString": "logs connection string"
+      "LogsConnString": "logs connection string",
+      "LongRunningSqlTimeoutSec": 20
     },
     "RabbitMq": {
       "NegativeProtection": {
