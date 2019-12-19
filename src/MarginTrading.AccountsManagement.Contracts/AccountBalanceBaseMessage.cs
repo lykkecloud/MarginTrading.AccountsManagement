@@ -32,7 +32,7 @@ namespace MarginTrading.AccountsManagement.Contracts
             OperationId = operationId ?? throw new ArgumentNullException(nameof(operationId));
             this.AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             this.Amount = amount;
-            this.Reason = reason ?? throw new ArgumentNullException(nameof(reason));
+            this.Reason = reason;
             
             EventTimestamp = DateTime.UtcNow;
         }
