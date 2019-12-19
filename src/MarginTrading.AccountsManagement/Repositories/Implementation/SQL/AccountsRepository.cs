@@ -251,10 +251,14 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
-                await conn.ExecuteAsync(DeleteProcName, new
-                {
-                    AccountId = accountId,
-                }, commandType: CommandType.StoredProcedure);
+                await conn.ExecuteAsync(
+                    DeleteProcName,
+                    new
+                    {
+                        AccountId = accountId,
+                    },
+                    commandType: CommandType.StoredProcedure,
+                    commandTimeout: _settings.Db.LongRunningSqlTimeoutSec);
             }
         }
 
