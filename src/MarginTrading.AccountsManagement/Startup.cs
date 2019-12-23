@@ -23,6 +23,8 @@ using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
 using Lykke.Snow.Common.Startup;
 using Lykke.Snow.Common.Startup.ApiKey;
+using Lykke.Snow.Common.Startup.Hosting;
+using Lykke.Snow.Common.Startup.Log;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -35,6 +37,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -92,6 +95,8 @@ namespace MarginTrading.AccountsManagement
                 var builder = new ContainerBuilder();
                 
                 Log = CreateLog(Configuration, appSettings);
+
+                services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(Log));
 
                 builder.RegisterModule(new AccountsManagementModule(appSettings, Log));
                 builder.RegisterModule(new AccountsManagementExternalServicesModule(appSettings));
@@ -155,6 +160,7 @@ namespace MarginTrading.AccountsManagement
             try
             {
                 // NOTE: Service not yet receives and processes requests here
+                await Program.Host.WriteLogsAsync(Environment, LogLocator.Log);
 
                 await Log.WriteMonitorAsync("", "", "Started");
             }
