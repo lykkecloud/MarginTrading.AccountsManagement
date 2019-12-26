@@ -8,10 +8,12 @@ using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
 using Lykke.Messaging;
 using Lykke.Messaging.RabbitMq;
+using Lykke.Messaging.Serialization;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Modules;
 using MarginTrading.AccountsManagement.Settings;
 using Moq;
+using AutofacDependencyResolver = Lykke.Cqrs.AutofacDependencyResolver;
 
 namespace MarginTrading.AccountsManagement.TestClient
 {
@@ -36,7 +38,7 @@ namespace MarginTrading.AccountsManagement.TestClient
         {
             var rabbitMqConventionEndpointResolver = new RabbitMqConventionEndpointResolver(
                 "RabbitMq",
-                "messagepack",
+                SerializationFormat.MessagePack,
                 environment: _settings.EnvironmentName);
             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
             {
