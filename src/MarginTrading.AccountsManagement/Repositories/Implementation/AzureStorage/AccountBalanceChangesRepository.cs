@@ -84,14 +84,15 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 .OrderByDescending(item => item.ChangeTimestamp).ToList();
         }
 
-        public async Task<decimal> GetRealizedDailyPnl(string accountId)
+        public async Task<decimal> GetRealizedPnlAndCompensationsForToday(string accountId)
         {
             return (await _tableStorage.WhereAsync(accountId,
                     //TODO rethink the way trading day's start & end are selected 
                     _systemClock.UtcNow.UtcDateTime.Date,
                     DateTime.MaxValue,
                     ToIntervalOption.IncludeTo,
-                    x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL.ToString()))
+                    x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL.ToString() ||
+                         x.ReasonType == AccountBalanceChangeReasonType.CompensationPayments.ToString()))
                 .Sum(x => x.ChangeAmount);
         }
 

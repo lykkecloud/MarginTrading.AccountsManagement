@@ -97,7 +97,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                         accountId, 
                         from, 
                         to, 
-                        types = reasonTypes.Select(x => x.ToString()),
+                        types = reasonTypes?.Select(x => x.ToString()),
                         assetPairId
                     });
 
@@ -152,11 +152,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<decimal> GetRealizedDailyPnl(string accountId)
+        public async Task<decimal> GetRealizedPnlAndCompensationsForToday(string accountId)
         {
             var whereClause = "WHERE AccountId=@accountId"
                               + " AND ChangeTimestamp > @from"
-                              + " AND ReasonType = @reasonType";
+                              + " AND ReasonType IN @reasonTypes";
+
+            var reasonTypes = new[]
+            {
+                AccountBalanceChangeReasonType.RealizedPnL.ToString(),
+                AccountBalanceChangeReasonType.CompensationPayments.ToString()
+            };
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
@@ -166,7 +172,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                         accountId,
                         //TODO rethink the way trading day's start & end are selected 
                         from = _systemClock.UtcNow.UtcDateTime.Date,
-                        reasonType = AccountBalanceChangeReasonType.RealizedPnL.ToString(),
+                        reasonTypes = reasonTypes,
                     }) ?? 0;
             }
         }
