@@ -105,14 +105,14 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                 .Where(x => string.IsNullOrEmpty(c.RevokeEventSourceId) || x.Id == c.RevokeEventSourceId)
                 .ToList();
             
-            var realisedDailyPnl = await _accountBalanceChangesRepository.GetRealizedDailyPnl(c.AccountId);
+            var accountableTransactionsSumForToday = await _accountBalanceChangesRepository.GetRealizedPnlAndCompensationsForToday(c.AccountId);
             var amountToRevoke = temporaryCapitalToRevoke.Select(x => x.Amount).Sum();
-            if (account.Balance - realisedDailyPnl < amountToRevoke)
+            if (account.Balance - accountableTransactionsSumForToday < amountToRevoke)
             {
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
                     _systemClock.UtcNow.UtcDateTime,
                     $"Account {c.AccountId} balance {account.Balance}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}."
-                    + (realisedDailyPnl > 0 ? $" Taking into account current realized daily PnL {realisedDailyPnl}{account.BaseAssetId}." : ""),
+                    + (accountableTransactionsSumForToday > 0 ? $" Taking into account the sum of the current realized daily PnL and compensation payments {accountableTransactionsSumForToday}{account.BaseAssetId}." : ""),
                     c.RevokeEventSourceId));
                 return;
             }
