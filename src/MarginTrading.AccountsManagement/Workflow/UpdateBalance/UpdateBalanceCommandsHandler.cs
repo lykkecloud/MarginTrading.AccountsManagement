@@ -2,7 +2,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
@@ -28,6 +30,7 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         private readonly IChaosKitty _chaosKitty;
         private readonly ISystemClock _systemClock;
         private readonly IConvertService _convertService;
+        private readonly ILog _log;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
 
         private const string OperationName = "UpdateBalance";
@@ -37,13 +40,15 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             IAccountsRepository accountsRepository,
             IChaosKitty chaosKitty, 
             ISystemClock systemClock,
-            IConvertService convertService)
+            IConvertService convertService,
+            ILog log)
         {
             _negativeProtectionService = negativeProtectionService;
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
             _systemClock = systemClock;
             _convertService = convertService;
+            _log = log;
             _executionInfoRepository = executionInfoRepository;
         }
 
@@ -74,8 +79,11 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                         amountDelta: command.AmountDelta,
                         changeLimit: false);
                 }
-                catch (Exception ex)
+                catch (ValidationException ex)
                 {
+                    await _log.WriteWarningAsync(nameof(UpdateBalanceCommandsHandler),
+                        nameof(UpdateBalanceInternalCommand), ex.Message);
+                    
                     publisher.PublishEvent(new AccountBalanceChangeFailedEvent(command.OperationId,
                         _systemClock.UtcNow.UtcDateTime, ex.Message, command.Source));
                 

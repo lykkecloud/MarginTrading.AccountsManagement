@@ -299,12 +299,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
                     if (account == null)
                     {
-                        throw new ArgumentNullException(nameof(accountId), "Account does not exist");
+                        throw new ValidationException( $"Account with ID {accountId} does not exist");
                     }
 
                     if (account.IsDeleted)
                     {
-                        throw new ValidationException("Account is deleted");
+                        throw new ValidationException($"Account with ID {accountId} is deleted");
                     }
 
                     handler(account);
