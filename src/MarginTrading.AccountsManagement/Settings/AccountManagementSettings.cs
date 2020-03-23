@@ -46,5 +46,7 @@ namespace MarginTrading.AccountsManagement.Settings
         
         [Optional]
         public bool UseSerilog { get; set; }
+        
+        public CacheSettings Cache { get; set; }
     }
 }

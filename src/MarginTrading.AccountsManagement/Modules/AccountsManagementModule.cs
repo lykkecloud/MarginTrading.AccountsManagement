@@ -39,6 +39,7 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterInstance(_settings.Nested(s => s.MarginTradingAccountManagement)).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement.Cqrs.ContextNames).SingleInstance();
+            builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement.Cache).SingleInstance();
             builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
             builder.RegisterInstance(_log).As<ILog>().SingleInstance();
             
@@ -87,9 +88,9 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterType<TradingConditionsService>().As<ITradingConditionsService>().SingleInstance();
             builder.RegisterType<NegativeProtectionService>().As<INegativeProtectionService>().SingleInstance();
             builder.RegisterType<AccuracyService>().As<IAccuracyService>().SingleInstance();
-            
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
             builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance(); 
+            builder.RegisterType<AccountBalanceCache>().As<IAccountBalanceCache>().SingleInstance();
         }
     }
 }

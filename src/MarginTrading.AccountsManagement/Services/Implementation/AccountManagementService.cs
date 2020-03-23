@@ -8,16 +8,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
-using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Extensions;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.Backend.Contracts;
-using Microsoft.CodeAnalysis.Operations;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -26,37 +22,31 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
     internal class AccountManagementService : IAccountManagementService
     {
         private readonly IAccountsRepository _accountsRepository;
-        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly ITradingConditionsService _tradingConditionsService;
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
-        private readonly IOrdersApi _ordersApi;
-        private readonly IPositionsApi _positionsApi;
         private readonly AccountManagementSettings _settings;
         private readonly IEventSender _eventSender;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
+        private readonly IAccountBalanceCache _accountBalanceCache;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
-            IAccountBalanceChangesRepository accountBalanceChangesRepository,
             ITradingConditionsService tradingConditionsService,
             ISendBalanceCommandsService sendBalanceCommandsService,
-            IOrdersApi ordersApi,
-            IPositionsApi positionsApi,
             AccountManagementSettings settings,
             IEventSender eventSender, 
             ILog log,
-            ISystemClock systemClock)
+            ISystemClock systemClock, 
+            IAccountBalanceCache accountBalanceCache)
         {
             _accountsRepository = accountsRepository;
-            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _tradingConditionsService = tradingConditionsService;
             _sendBalanceCommandsService = sendBalanceCommandsService;
-            _ordersApi = ordersApi;
-            _positionsApi = positionsApi;
             _settings = settings;
             _eventSender = eventSender;
             _log = log;
             _systemClock = systemClock;
+            _accountBalanceCache = accountBalanceCache;
         }
 
 
@@ -196,11 +186,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public async Task<AccountStat> GetStat(string accountId)
         {
-            var accountHistory = (await _accountBalanceChangesRepository.GetAsync(
-                accountId: accountId,
-                //TODO rethink the way trading day's start & end are selected 
-                @from: _systemClock.UtcNow.UtcDateTime.Date)).ToList();
-
+            var accountHistory =
+                await _accountBalanceCache.GetByStartDateAsync(accountId, _systemClock.UtcNow.UtcDateTime.Date);
             var sortedHistory = accountHistory.OrderByDescending(x => x.ChangeTimestamp).ToList();
             var firstEvent = sortedHistory.LastOrDefault();
             var account = await _accountsRepository.GetAsync(accountId);
