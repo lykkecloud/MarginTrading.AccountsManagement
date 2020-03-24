@@ -86,7 +86,7 @@ namespace MarginTrading.AccountsManagement.Modules
 
             // Sagas & command handlers
             builder.RegisterAssemblyTypes(GetType().Assembly)
-                .Where(t => t.Name.EndsWith("Saga") || t.Name.EndsWith("CommandsHandler"))
+                .Where(t => t.Name.EndsWith("Saga") || t.Name.EndsWith("CommandsHandler") || t.Name.EndsWith("Projection"))
                 .AsSelf();
 
             builder.Register(ctx => CreateEngine(ctx, messagingEngine))
