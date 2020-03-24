@@ -209,10 +209,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var accountHistory =
                 await _accountBalanceChangesRepository.GetAsync(accountId, _systemClock.UtcNow.UtcDateTime.Date);
-            
-            var sortedHistory = accountHistory.OrderByDescending(x => x.ChangeTimestamp).ToList();
-            
-            var firstEvent = sortedHistory.LastOrDefault();
+
+            var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
             var result = new AccountStat(
                 accountId: accountId,
