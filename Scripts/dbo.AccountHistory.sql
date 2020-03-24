@@ -24,3 +24,25 @@ IF NOT EXISTS(SELECT 'X'
             INDEX IX_AccountHistory_ReasonType_EventSourceId (ReasonType, EventSourceId)
         );
     END;
+
+IF NOT EXISTS(
+        SELECT 'X'
+        FROM sys.indexes
+        WHERE name = 'IX_AccountHistory_AccountId_ChangeTimestamp'
+          AND object_id = OBJECT_ID('dbo.AccountHistory'))
+    BEGIN
+        CREATE INDEX IX_AccountHistory_AccountId_ChangeTimestamp
+            ON AccountHistory (AccountId, ChangeTimestamp) INCLUDE
+            (Id,
+             ClientId, 
+             ChangeAmount, 
+             Balance, 
+             WithdrawTransferLimit, 
+             Comment, 
+             ReasonType, 
+             EventSourceId, 
+             LegalEntity, 
+             AuditLog, 
+             Instrument, 
+             TradingDate)
+    END;

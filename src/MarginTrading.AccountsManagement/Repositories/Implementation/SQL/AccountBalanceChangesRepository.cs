@@ -92,7 +92,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var gridReader = await conn.QueryMultipleAsync(
-                    $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName} {whereClause}", new
+                    $"SELECT {GetColumns} FROM {TableName} WITH (NOLOCK) {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName} {whereClause}", new
                     {
                         accountId, 
                         from, 
@@ -125,7 +125,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
-                    $"SELECT * FROM {TableName} {whereClause}", new
+                    $"SELECT {GetColumns} FROM {TableName} WITH (NOLOCK) {whereClause}", new
                     {
                         accountId, 
                         from, 
@@ -145,7 +145,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var data = await conn.QueryAsync<AccountBalanceChangeEntity>(
-                    $"SELECT * FROM {TableName} {whereClause}", 
+                    $"SELECT {GetColumns} FROM {TableName} WITH (NOLOCK) {whereClause}", 
                     new { accountId, eventSourceId });
 
                 return data.ToList();
@@ -167,7 +167,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 return await conn.QuerySingleAsync<decimal?>(
-                    $"SELECT SUM(ChangeAmount) FROM {TableName} {whereClause}", new
+                    $"SELECT SUM(ChangeAmount) FROM {TableName} WITH (NOLOCK) {whereClause}", new
                     {
                         accountId,
                         //TODO rethink the way trading day's start & end are selected 

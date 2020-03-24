@@ -70,9 +70,6 @@
     <PackageReference Include="morelinq" Version="2.10.0" />
   </ItemGroup>
   <ItemGroup>
-    <DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.1.1" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\MarginTrading.AccountsManagement.Contracts\MarginTrading.AccountsManagement.Contracts.csproj" />
   </ItemGroup>
   <ProjectExtensions>

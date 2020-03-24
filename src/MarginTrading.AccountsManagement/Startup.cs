@@ -73,10 +73,10 @@ namespace MarginTrading.AccountsManagement
                         options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                         options.SerializerSettings.Converters.Add(new StringEnumConverter());
                     });
-                
+
                 var appSettings = Configuration.LoadSettings<AppSettings>(
                     throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation());
-                
+
                 services.AddApiKeyAuth(appSettings.CurrentValue.MarginTradingAccountManagementServiceClient);
 
                 services.AddSwaggerGen(options =>
