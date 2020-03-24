@@ -336,12 +336,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentNullException(nameof(accountId));
             
             _statsCache.Remove(GetStatsCacheKey(accountId));
-            
-            _log.Info($"The account statistics cache has been wiped for account id = {accountId}");
+
+            _log.WriteInfo(
+                nameof(AccountManagementService), 
+                nameof(ClearStatsCache),
+                $"The account statistics cache has been wiped for account id = {accountId}");
         }
 
         #endregion
-
 
         #region Helpers
 
