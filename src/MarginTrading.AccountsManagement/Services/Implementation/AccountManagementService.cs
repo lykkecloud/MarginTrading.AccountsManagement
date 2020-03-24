@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -335,6 +336,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentNullException(nameof(accountId));
             
             _statsCache.Remove(GetStatsCacheKey(accountId));
+            
+            _log.Info($"The account statistics cache has been wiped for account id = {accountId}");
         }
 
         #endregion
