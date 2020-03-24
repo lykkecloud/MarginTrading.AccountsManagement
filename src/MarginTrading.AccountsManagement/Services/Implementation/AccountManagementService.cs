@@ -14,6 +14,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -28,7 +29,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IEventSender _eventSender;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
-        private readonly IAccountBalanceCache _accountBalanceCache;
+        private readonly IMemoryCache _statsCache;
+        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
+        private readonly CacheSettings _cacheSettings;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
@@ -37,7 +40,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             IEventSender eventSender, 
             ILog log,
             ISystemClock systemClock, 
-            IAccountBalanceCache accountBalanceCache)
+            IMemoryCache statsCache, 
+            IAccountBalanceChangesRepository accountBalanceChangesRepository, 
+            CacheSettings cacheSettings)
         {
             _accountsRepository = accountsRepository;
             _tradingConditionsService = tradingConditionsService;
@@ -46,7 +51,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _eventSender = eventSender;
             _log = log;
             _systemClock = systemClock;
-            _accountBalanceCache = accountBalanceCache;
+            _statsCache = statsCache;
+            _accountBalanceChangesRepository = accountBalanceChangesRepository;
+            _cacheSettings = cacheSettings;
         }
 
 
@@ -184,29 +191,40 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return _accountsRepository.GetAsync(accountId);
         }
 
-        public async Task<AccountStat> GetStat(string accountId)
+        public async ValueTask<AccountStat> GetStat(string accountId)
         {
-            var accountHistory =
-                await _accountBalanceCache.GetByStartDateAsync(accountId, _systemClock.UtcNow.UtcDateTime.Date);
-            var sortedHistory = accountHistory.OrderByDescending(x => x.ChangeTimestamp).ToList();
-            var firstEvent = sortedHistory.LastOrDefault();
+            if (string.IsNullOrEmpty(accountId))
+                throw new ArgumentNullException(nameof(accountId));
+            
+            if (_statsCache.TryGetValue(GetStatsCacheKey(accountId), out AccountStat cachedData))
+            {
+                return cachedData;
+            }
+            
             var account = await _accountsRepository.GetAsync(accountId);
             
             if (account == null)
                 return null;
+
+            var accountHistory =
+                await _accountBalanceChangesRepository.GetAsync(accountId, _systemClock.UtcNow.UtcDateTime.Date);
             
-            return new AccountStat(
+            var sortedHistory = accountHistory.OrderByDescending(x => x.ChangeTimestamp).ToList();
+            
+            var firstEvent = sortedHistory.LastOrDefault();
+
+            var result = new AccountStat(
                 accountId: accountId,
                 created: _systemClock.UtcNow.UtcDateTime,
                 realisedPnl: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL)
-                    .Sum(x => x.ChangeAmount),// todo recheck!
+                    .Sum(x => x.ChangeAmount), // todo recheck!
                 depositAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Deposit)
                     .Sum(x => x.ChangeAmount),
                 withdrawalAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Withdraw)
                     .Sum(x => x.ChangeAmount),
                 commissionAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Commission)
                     .Sum(x => x.ChangeAmount),
-                otherAmount: accountHistory.Where(x => !new []
+                otherAmount: accountHistory.Where(x => !new[]
                 {
                     AccountBalanceChangeReasonType.RealizedPnL,
                     AccountBalanceChangeReasonType.Deposit,
@@ -216,6 +234,10 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 accountBalance: account.Balance,
                 prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance
             );
+
+            _statsCache.Set(GetStatsCacheKey(accountId), result, _cacheSettings.ExpirationPeriod);
+
+            return result;
         }
 
         /// <summary>
@@ -305,6 +327,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 revokeEventSourceId, 
                 comment, 
                 additionalInfo);
+        }
+
+        public void ClearStatsCache(string accountId)
+        {
+            if (string.IsNullOrEmpty(accountId))
+                throw new ArgumentNullException(nameof(accountId));
+            
+            _statsCache.Remove(GetStatsCacheKey(accountId));
         }
 
         #endregion
@@ -426,6 +456,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
 
             return result;
+        }
+
+        private string GetStatsCacheKey(string accountId)
+        {
+            return accountId;
         }
 
         #endregion

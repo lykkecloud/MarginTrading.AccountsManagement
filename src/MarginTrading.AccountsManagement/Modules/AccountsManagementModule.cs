@@ -90,7 +90,6 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterType<AccuracyService>().As<IAccuracyService>().SingleInstance();
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
             builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance(); 
-            builder.RegisterType<AccountBalanceCache>().As<IAccountBalanceCache>().SingleInstance();
         }
     }
 }

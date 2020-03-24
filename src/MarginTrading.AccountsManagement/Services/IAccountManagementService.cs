@@ -42,7 +42,7 @@ namespace MarginTrading.AccountsManagement.Services
         [ItemCanBeNull]
         Task<IAccount> GetByIdAsync(string accountId);
 
-        Task<AccountStat> GetStat(string accountId);
+        ValueTask<AccountStat> GetStat(string accountId);
 
         Task<IAccount> EnsureAccountValidAsync(string accountId, bool skipDeleteValidation = false);
         
@@ -62,7 +62,9 @@ namespace MarginTrading.AccountsManagement.Services
         Task<string> StartRevokeTemporaryCapital(string eventSourceId, string accountId, string revokeEventSourceId,
             string comment,
             string additionalInfo);
-        
+
+        void ClearStatsCache(string accountId);
+
         #endregion
     }
 }
