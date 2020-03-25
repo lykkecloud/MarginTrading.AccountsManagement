@@ -196,8 +196,10 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             if (string.IsNullOrEmpty(accountId))
                 throw new ArgumentNullException(nameof(accountId));
+
+            var onDate = _systemClock.UtcNow.UtcDateTime.Date;
             
-            if (_statsCache.TryGetValue(GetStatsCacheKey(accountId), out AccountStat cachedData))
+            if (_statsCache.TryGetValue(GetStatsCacheKey(accountId, onDate), out AccountStat cachedData))
             {
                 return cachedData;
             }
@@ -207,8 +209,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             if (account == null)
                 return null;
 
-            var accountHistory =
-                await _accountBalanceChangesRepository.GetAsync(accountId, _systemClock.UtcNow.UtcDateTime.Date);
+            var accountHistory = await _accountBalanceChangesRepository.GetAsync(accountId, onDate);
 
             var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
@@ -234,7 +235,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance
             );
 
-            _statsCache.Set(GetStatsCacheKey(accountId), result, _cacheSettings.ExpirationPeriod);
+            _statsCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
 
             return result;
         }
@@ -332,13 +333,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             if (string.IsNullOrEmpty(accountId))
                 throw new ArgumentNullException(nameof(accountId));
+
+            var cacheKey = GetStatsCacheKey(accountId, _systemClock.UtcNow.UtcDateTime.Date);
             
-            _statsCache.Remove(GetStatsCacheKey(accountId));
+            _statsCache.Remove(cacheKey);
 
             _log.WriteInfo(
                 nameof(AccountManagementService), 
                 nameof(ClearStatsCache),
-                $"The account statistics cache has been wiped for account id = {accountId}");
+                $"The account statistics cache has been wiped for key = {cacheKey}");
         }
 
         #endregion
@@ -461,9 +464,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
-        private string GetStatsCacheKey(string accountId)
+        private string GetStatsCacheKey(string accountId, DateTime date)
         {
-            return accountId;
+            var dateText = date.ToString("yyyy-MM-dd");
+            
+            return $"{accountId}:{dateText}";
         }
 
         #endregion
