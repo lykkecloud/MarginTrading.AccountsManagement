@@ -46,10 +46,11 @@ namespace MarginTrading.AccountsManagement
 {
     public class Startup
     {
+        private IReloadingManager<AppSettings> _mtSettingsManager;
         public static string ServiceName { get; } = PlatformServices.Default.Application.ApplicationName;
 
         private IHostingEnvironment Environment { get; }
-        private IContainer ApplicationContainer { get; set; }
+        private ILifetimeScope ApplicationContainer { get; set; }
         private IConfigurationRoot Configuration { get; }
         [CanBeNull] private ILog Log { get; set; }
         
@@ -63,21 +64,22 @@ namespace MarginTrading.AccountsManagement
             Environment = env;
         }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
             try
             {
-                services.AddMvc()
-                    .AddJsonOptions(options =>
+                services
+                    .AddControllers()
+                    .AddNewtonsoftJson(options =>
                     {
                         options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                         options.SerializerSettings.Converters.Add(new StringEnumConverter());
                     });
 
-                var appSettings = Configuration.LoadSettings<AppSettings>(
+                _mtSettingsManager = Configuration.LoadSettings<AppSettings>(
                     throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation());
 
-                services.AddApiKeyAuth(appSettings.CurrentValue.MarginTradingAccountManagementServiceClient);
+                services.AddApiKeyAuth(_mtSettingsManager.CurrentValue.MarginTradingAccountManagementServiceClient);
 
                 services.AddSwaggerGen(options =>
                 {
@@ -86,26 +88,19 @@ namespace MarginTrading.AccountsManagement
                         "MarginTrading.AccountsManagement.Contracts.xml");
                     options.IncludeXmlComments(contractsXmlPath);
                     options.OperationFilter<CustomOperationIdOperationFilter>();
-                    if (!string.IsNullOrWhiteSpace(appSettings.CurrentValue.MarginTradingAccountManagementServiceClient?.ApiKey))
+                    if (!string.IsNullOrWhiteSpace(_mtSettingsManager.CurrentValue.MarginTradingAccountManagementServiceClient?.ApiKey))
                     {
-                        options.OperationFilter<ApiKeyHeaderOperationFilter>();
+                        options.AddApiKeyAwareness();
                     }
                 });
 
-                var builder = new ContainerBuilder();
+                services.AddMemoryCache();
                 
-                Log = CreateLog(Configuration, appSettings);
+                Log = CreateLog(Configuration, _mtSettingsManager);
 
                 services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(Log));
 
-                builder.RegisterModule(new AccountsManagementModule(appSettings, Log));
-                builder.RegisterModule(new AccountsManagementExternalServicesModule(appSettings));
-                builder.RegisterModule(new CqrsModule(appSettings.CurrentValue.MarginTradingAccountManagement.Cqrs, Log));
-
-                builder.Populate(services);
-
-                ApplicationContainer = builder.Build();
-                return new AutofacServiceProvider(ApplicationContainer);
+                services.AddApplicationInsightsTelemetry();
             }
             catch (Exception ex)
             {
@@ -113,12 +108,21 @@ namespace MarginTrading.AccountsManagement
                 throw;
             }
         }
+        
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            builder.RegisterModule(new AccountsManagementModule(_mtSettingsManager, Log));
+            builder.RegisterModule(new AccountsManagementExternalServicesModule(_mtSettingsManager));
+            builder.RegisterModule(new CqrsModule(_mtSettingsManager.CurrentValue.MarginTradingAccountManagement.Cqrs, Log));
+        }
 
         [UsedImplicitly]
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
         {
             try
             {
+                ApplicationContainer = app.ApplicationServices.GetAutofacRoot();
+                
                 if (env.IsDevelopment())
                 {
                     app.UseDeveloperExceptionPage();
@@ -134,8 +138,13 @@ namespace MarginTrading.AccountsManagement
                 app.UseLykkeMiddleware(ServiceName, ex => new ErrorResponse {ErrorMessage = ex.Message});
 #endif
 
+                app.UseRouting();
                 app.UseAuthentication();
-                app.UseMvc();
+                app.UseAuthorization();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                });
                 app.UseSwagger();
                 app.UseSwaggerUI(a => a.SwaggerEndpoint("/swagger/v1/swagger.json", "Main Swagger"));
 
@@ -160,7 +169,7 @@ namespace MarginTrading.AccountsManagement
             try
             {
                 // NOTE: Service not yet receives and processes requests here
-                await Program.Host.WriteLogsAsync(Environment, LogLocator.Log);
+                Program.AppHost.WriteLogs(Environment, LogLocator.Log);
 
                 await Log.WriteMonitorAsync("", "", "Started");
             }

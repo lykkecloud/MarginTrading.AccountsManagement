@@ -2,14 +2,15 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Autofac.Extensions.DependencyInjection;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Services.Implementation;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.AccountsManagement
@@ -17,7 +18,7 @@ namespace MarginTrading.AccountsManagement
     [UsedImplicitly]
     internal sealed class Program
     {
-        internal static IWebHost Host { get; private set; }
+        internal static IHost AppHost { get; private set; }
 
         public static async Task Main()
         {
@@ -42,13 +43,20 @@ namespace MarginTrading.AccountsManagement
                         .AddEnvironmentVariables()
                         .Build();
 
-                    Host = WebHost.CreateDefaultBuilder()
-                        .UseConfiguration(configuration)
-                        .UseStartup<Startup>()
-                        .UseApplicationInsights()
+                    AppHost = Host.CreateDefaultBuilder()
+                        .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                        .ConfigureWebHostDefaults(webBuilder =>
+                        {
+                            webBuilder.ConfigureKestrel(serverOptions =>
+                                {
+                                    // Set properties and call methods on options
+                                })
+                                .UseConfiguration(configuration)
+                                .UseStartup<Startup>();
+                        })
                         .Build();
 
-                    await Host.RunAsync();
+                    await AppHost.RunAsync();
                 }
                 catch (Exception e)
                 {
