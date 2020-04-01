@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -149,7 +148,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 try
                 {
-                    var account = await CreateAccount(@group.Key, baseAssetId, tradingConditionId, legalEntity);
+                    var account = await CreateAccount(group.Key, baseAssetId, tradingConditionId, legalEntity);
                     result.Add(account);
                 }
                 catch (Exception e)
@@ -213,6 +212,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
+            var disposableCapital = await GetAccountDisposableCapitalAsync(account);
+
             var result = new AccountStat(
                 accountId: accountId,
                 created: _systemClock.UtcNow.UtcDateTime,
@@ -232,7 +233,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     AccountBalanceChangeReasonType.Commission,
                 }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
                 accountBalance: account.Balance,
-                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance
+                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance,
+                disposableCapital: disposableCapital
             );
 
             _statsCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
@@ -259,6 +261,19 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
             
             return account;
+        }
+        
+        public async Task<decimal> GetAccountDisposableCapitalAsync(IAccount account)
+        {
+            if (account == null)
+                return 0;
+            
+            var temporaryCapital = account.GetTemporaryCapital();
+
+            var compensationsCapital =
+                await _accountBalanceChangesRepository.GetRealizedPnlAndCompensationsForToday(account.Id);
+
+            return account.Balance - compensationsCapital - temporaryCapital;
         }
 
         #endregion

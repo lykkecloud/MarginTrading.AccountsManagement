@@ -67,10 +67,16 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         /// </summary>
         [Key(8)]
         public decimal PrevEodAccountBalance { get; }
+        
+        /// <summary>
+        /// The available balance for account
+        /// </summary>
+        [Key(9)]
+        public decimal DisposableCapital { get; }
 
         public AccountStatContract([NotNull] string accountId, DateTime created, decimal realisedPnl,
             decimal depositAmount, decimal withdrawalAmount, decimal commissionAmount, decimal otherAmount,
-            decimal accountBalance, decimal prevEodAccountBalance)
+            decimal accountBalance, decimal prevEodAccountBalance, decimal disposableCapital)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Created = created;
@@ -81,6 +87,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             OtherAmount = otherAmount;
             AccountBalance = accountBalance;
             PrevEodAccountBalance = prevEodAccountBalance;
+            DisposableCapital = disposableCapital;
         }
     }
 }
