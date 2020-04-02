@@ -217,14 +217,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var result = new AccountStat(
                 accountId: accountId,
                 created: _systemClock.UtcNow.UtcDateTime,
-                realisedPnl: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL)
-                    .Sum(x => x.ChangeAmount), // todo recheck!
-                depositAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Deposit)
-                    .Sum(x => x.ChangeAmount),
-                withdrawalAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Withdraw)
-                    .Sum(x => x.ChangeAmount),
-                commissionAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Commission)
-                    .Sum(x => x.ChangeAmount),
+                realisedPnl: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.RealizedPnL),
+                unRealisedPnl: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.UnrealizedDailyPnL),
+                depositAmount: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.Deposit),
+                withdrawalAmount: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.Withdraw),
+                commissionAmount: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.Commission),
                 otherAmount: accountHistory.Where(x => !new[]
                 {
                     AccountBalanceChangeReasonType.RealizedPnL,
