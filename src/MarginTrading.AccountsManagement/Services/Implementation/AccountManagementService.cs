@@ -212,7 +212,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
-            var disposableCapital = await GetAccountDisposableCapitalAsync(account);
+            var accountCapital = await GetAccountCapitalAsync(account);
 
             var result = new AccountStat(
                 accountId: accountId,
@@ -231,7 +231,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
                 accountBalance: account.Balance,
                 prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance,
-                disposableCapital: disposableCapital
+                disposableCapital: accountCapital.Disposable
             );
 
             _statsCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
@@ -260,17 +260,17 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return account;
         }
         
-        public async Task<decimal> GetAccountDisposableCapitalAsync(IAccount account)
+        public async Task<AccountCapital> GetAccountCapitalAsync(IAccount account)
         {
             if (account == null)
-                return 0;
+                throw new ArgumentNullException(nameof(account));
             
             var temporaryCapital = account.GetTemporaryCapital();
 
             var compensationsCapital =
                 await _accountBalanceChangesRepository.GetRealizedPnlAndCompensationsForToday(account.Id);
-
-            return account.Balance - compensationsCapital - temporaryCapital;
+            
+            return new AccountCapital(account.Balance, temporaryCapital, compensationsCapital, account.BaseAssetId);
         }
 
         #endregion

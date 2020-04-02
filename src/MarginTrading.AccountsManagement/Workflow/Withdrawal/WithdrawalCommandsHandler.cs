@@ -68,15 +68,17 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
 
-            var accountDisposableCapital = await _accountManagementService.GetAccountDisposableCapitalAsync(account);
+            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account);
             
-            if (account == null || accountDisposableCapital < command.Amount)
+            if (account == null || accountCapital.Disposable < command.Amount)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime, account == null
                         ? $"Account {command.AccountId} not found."
-                        : $"Account {account.Id} balance {account.Balance}{account.BaseAssetId} is not enough to withdraw {command.Amount}{account.BaseAssetId}."));
-                
+                        : $"Account {account.Id} balance {accountCapital.Value}{accountCapital.AssetId} is not enough to withdraw {command.Amount}{accountCapital.AssetId}."
+                          + (accountCapital.Compensations + accountCapital.Temporary != 0
+                              ? $" Taking into account the sum of the current realized daily PnL and compensation payments {accountCapital.Compensations}{accountCapital.AssetId}, and temporary capital {accountCapital.Temporary}{accountCapital.AssetId}."
+                              : "")));
                 return;
             }
 
