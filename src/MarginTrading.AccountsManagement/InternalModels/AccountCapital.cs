@@ -14,7 +14,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public decimal Compensations { get; }
         
         public decimal Disposable { get; }
-        
+
         public string AssetId { get; }
 
         private const string NegativeValueErrorMessage = "Value can't be negative";
@@ -23,16 +23,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         {
             if (value < 0)
                 throw new ArgumentException(NegativeValueErrorMessage, nameof(value));
-            
-            if (temporary < 0)
-                throw new ArgumentException(NegativeValueErrorMessage, nameof(temporary));
-            
-            if (compensations < 0)
-                throw new ArgumentException(NegativeValueErrorMessage, nameof(compensations));
-            
-            if (value < (temporary + compensations))
-                throw new ArgumentException("Temporary capital and compensations can't be greater than capital in total");
-            
+
             if (string.IsNullOrWhiteSpace(assetId))
                 throw new ArgumentNullException(nameof(assetId));
             
@@ -40,8 +31,10 @@ namespace MarginTrading.AccountsManagement.InternalModels
             Temporary = temporary;
             Compensations = compensations;
             AssetId = assetId;
-            
-            Disposable = value - temporary - compensations;
+            Disposable = Math.Max(0,
+                Value - (
+                    Math.Max(0, Temporary) + 
+                    Math.Max(0, Compensations)));
         }
     }
 }
