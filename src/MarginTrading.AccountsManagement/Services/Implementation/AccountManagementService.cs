@@ -8,7 +8,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -149,7 +148,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 try
                 {
-                    var account = await CreateAccount(@group.Key, baseAssetId, tradingConditionId, legalEntity);
+                    var account = await CreateAccount(group.Key, baseAssetId, tradingConditionId, legalEntity);
                     result.Add(account);
                 }
                 catch (Exception e)
@@ -213,17 +212,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
+            var accountCapital = await GetAccountCapitalAsync(account);
+
             var result = new AccountStat(
                 accountId: accountId,
                 created: _systemClock.UtcNow.UtcDateTime,
-                realisedPnl: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.RealizedPnL)
-                    .Sum(x => x.ChangeAmount), // todo recheck!
-                depositAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Deposit)
-                    .Sum(x => x.ChangeAmount),
-                withdrawalAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Withdraw)
-                    .Sum(x => x.ChangeAmount),
-                commissionAmount: accountHistory.Where(x => x.ReasonType == AccountBalanceChangeReasonType.Commission)
-                    .Sum(x => x.ChangeAmount),
+                realisedPnl: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.RealizedPnL),
+                unRealisedPnl: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.UnrealizedDailyPnL),
+                depositAmount: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.Deposit),
+                withdrawalAmount: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.Withdraw),
+                commissionAmount: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.Commission),
                 otherAmount: accountHistory.Where(x => !new[]
                 {
                     AccountBalanceChangeReasonType.RealizedPnL,
@@ -232,7 +230,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     AccountBalanceChangeReasonType.Commission,
                 }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
                 accountBalance: account.Balance,
-                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance
+                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance,
+                disposableCapital: accountCapital.Disposable
             );
 
             _statsCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
@@ -259,6 +258,19 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
             
             return account;
+        }
+        
+        public async Task<AccountCapital> GetAccountCapitalAsync(IAccount account)
+        {
+            if (account == null)
+                throw new ArgumentNullException(nameof(account));
+            
+            var temporaryCapital = account.GetTemporaryCapital();
+
+            var compensationsCapital =
+                await _accountBalanceChangesRepository.GetRealizedPnlAndCompensationsForToday(account.Id);
+            
+            return new AccountCapital(account.Balance, temporaryCapital, compensationsCapital, account.BaseAssetId);
         }
 
         #endregion

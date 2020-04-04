@@ -436,7 +436,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             }
 
             var stat = await _accountManagementService.GetStat(accountId);
-
+            
             return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }
 

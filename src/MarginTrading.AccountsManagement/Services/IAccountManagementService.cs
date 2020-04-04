@@ -45,6 +45,8 @@ namespace MarginTrading.AccountsManagement.Services
         ValueTask<AccountStat> GetStat(string accountId);
 
         Task<IAccount> EnsureAccountValidAsync(string accountId, bool skipDeleteValidation = false);
+
+        Task<AccountCapital> GetAccountCapitalAsync(IAccount account);
         
         #endregion
         

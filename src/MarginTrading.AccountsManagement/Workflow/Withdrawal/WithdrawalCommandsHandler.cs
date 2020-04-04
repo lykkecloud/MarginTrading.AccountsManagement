@@ -1,25 +1,18 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
-using MarginTrading.AccountsManagement.Infrastructure;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
-using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
 using Microsoft.Extensions.Internal;
-using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using MarginTrading.SettingsService.Contracts;
 
 namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
@@ -27,28 +20,28 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
     internal class WithdrawalCommandsHandler
     {
         private readonly ISystemClock _systemClock;
-        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
         private readonly IScheduleSettingsApi _scheduleSettingsApi;
+        private readonly IAccountManagementService _accountManagementService;
 
         private const string OperationName = "Withdraw";
 
         public WithdrawalCommandsHandler(
             ISystemClock systemClock,
-            IAccountBalanceChangesRepository accountBalanceChangesRepository,
             IAccountsRepository accountsRepository,
             IOperationExecutionInfoRepository executionInfoRepository,
             IChaosKitty chaosKitty,
-            IScheduleSettingsApi scheduleSettingsApi)
+            IScheduleSettingsApi scheduleSettingsApi, 
+            IAccountManagementService accountManagementService)
         {
             _systemClock = systemClock;
-            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
             _scheduleSettingsApi = scheduleSettingsApi;
+            _accountManagementService = accountManagementService;
         }
 
         /// <summary>
@@ -74,19 +67,18 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     lastModified: _systemClock.UtcNow.UtcDateTime));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
-            var temporaryCapital = account?.TemporaryCapital.Sum(x => x.Amount) ?? default;
-            var accountableTransactionsSumForToday =
-                await _accountBalanceChangesRepository.GetRealizedPnlAndCompensationsForToday(command.AccountId);
-            if (account == null || account.Balance - accountableTransactionsSumForToday - temporaryCapital < command.Amount)
+
+            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account);
+            
+            if (account == null || accountCapital.Disposable < command.Amount)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime, account == null
                         ? $"Account {command.AccountId} not found."
-                        : $"Account {account.Id} balance {account.Balance}{account.BaseAssetId} is not enough to withdraw {command.Amount}{account.BaseAssetId}."
-                          + (accountableTransactionsSumForToday + temporaryCapital != 0
-                              ? $" Taking into account the sum of the current realized daily PnL and compensation payments {accountableTransactionsSumForToday}{account.BaseAssetId}, and temporary capital {temporaryCapital}{account.BaseAssetId}."
+                        : $"Account {account.Id} balance {accountCapital.Value}{accountCapital.AssetId} is not enough to withdraw {command.Amount}{accountCapital.AssetId}."
+                          + (accountCapital.Compensations + accountCapital.Temporary != 0
+                              ? $" Taking into account the sum of the current realized daily PnL and compensation payments {accountCapital.Compensations}{accountCapital.AssetId}, and temporary capital {accountCapital.Temporary}{accountCapital.AssetId}."
                               : "")));
-                
                 return;
             }
 
