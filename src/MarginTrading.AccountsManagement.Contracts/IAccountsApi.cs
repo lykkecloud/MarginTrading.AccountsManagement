@@ -28,7 +28,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         [Get("/api/accounts/by-pages")]
         Task<PaginatedResponseContract<AccountContract>> ListByPages([Query] [CanBeNull] string search = null,
-            [Query] [CanBeNull] int? skip = null, [Query] [CanBeNull] int? take = null, bool showDeleted = false);
+            [Query] [CanBeNull] int? skip = null, [Query] [CanBeNull] int? take = null, bool showDeleted = false, bool isAscendingOrder = true);
 
         /// <summary>
         /// Gets all accounts by <paramref name="clientId"/>
