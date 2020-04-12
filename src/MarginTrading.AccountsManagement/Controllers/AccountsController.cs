@@ -72,7 +72,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpGet]
         [Route("by-pages")]
         public Task<PaginatedResponseContract<AccountContract>> ListByPages([FromQuery] string search = null,
-            [FromQuery] int? skip = null, [FromQuery] int? take = null, bool showDeleted = false)
+            [FromQuery] int? skip = null, [FromQuery] int? take = null, bool showDeleted = false, bool isAscendingOrder = true)
         {
             if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
             {
@@ -84,7 +84,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
             
-            return Convert(_accountManagementService.ListByPagesAsync(search, showDeleted, skip: skip, take: take));
+            return Convert(_accountManagementService.ListByPagesAsync(search, showDeleted, skip: skip, take: take, isAscendingOrder: isAscendingOrder));
         }
 
         /// <summary>

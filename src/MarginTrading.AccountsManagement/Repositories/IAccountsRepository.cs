@@ -18,7 +18,7 @@ namespace MarginTrading.AccountsManagement.Repositories
             bool showDeleted = false);
         
         Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, bool showDeleted = false,
-            int? skip = null, int? take = null);
+            int? skip = null, int? take = null, bool isAscendingOrder = true);
         
         [ItemCanBeNull]
         Task<IAccount> GetAsync(string accountId);

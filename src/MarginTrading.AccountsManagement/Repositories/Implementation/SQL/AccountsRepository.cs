@@ -135,7 +135,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         }
 
         public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, bool showDeleted = false,
-            int? skip = null, int? take = null)
+            int? skip = null, int? take = null, bool isAscendingOrder = true)
         {
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -148,7 +148,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                   + (string.IsNullOrWhiteSpace(search) ? "" : " AND Id LIKE @search")
                                   + (showDeleted ? "" : " AND IsDeleted = 0");
 
-                var paginationClause = $" ORDER BY [Id] OFFSET {skip ?? 0} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
+                var paginationClause = $" ORDER BY [Id] {(isAscendingOrder ? "ASC" : "DESC")} OFFSET {skip ?? 0} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
                 var gridReader = await conn.QueryMultipleAsync(
                     $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName} {whereClause}",
                     new {search});

@@ -176,9 +176,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         }
 
         public Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search, bool showDeleted = false,
-            int? skip = null, int? take = null)
+            int? skip = null, int? take = null, bool isAscendingOrder = true)
         {
-            return _accountsRepository.GetByPagesAsync(search, showDeleted, skip: skip, take: take);
+            return _accountsRepository.GetByPagesAsync(search, showDeleted, skip: skip, take: take, isAscendingOrder: isAscendingOrder);
         }
 
         public Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId, bool showDeleted = false)

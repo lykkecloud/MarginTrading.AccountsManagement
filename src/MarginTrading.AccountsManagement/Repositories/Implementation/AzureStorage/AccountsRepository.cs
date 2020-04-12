@@ -56,7 +56,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         }
 
         public async Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, bool showDeleted = false,
-            int? skip = null, int? take = null)
+            int? skip = null, int? take = null, bool isAscendingOrder = true)
         {
             /*var data = (await _tableStorage.ExecuteQueryWithPaginationAsync(
                 new TableQuery<AccountEntity>()
