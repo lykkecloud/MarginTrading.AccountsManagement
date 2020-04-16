@@ -7,7 +7,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
 {
     public readonly struct AccountCapital
     {
-        public decimal Value { get; }
+        public decimal Balance { get; }
         
         public decimal Temporary { get; }
         
@@ -17,22 +17,17 @@ namespace MarginTrading.AccountsManagement.InternalModels
 
         public string AssetId { get; }
 
-        private const string NegativeValueErrorMessage = "Value can't be negative";
-
-        public AccountCapital(decimal value, decimal temporary, decimal compensations, string assetId)
+        public AccountCapital(decimal balance, decimal temporary, decimal compensations, string assetId)
         {
-            if (value < 0)
-                throw new ArgumentException(NegativeValueErrorMessage, nameof(value));
-
             if (string.IsNullOrWhiteSpace(assetId))
                 throw new ArgumentNullException(nameof(assetId));
             
-            Value = value;
+            Balance = balance;
             Temporary = temporary;
             Compensations = compensations;
             AssetId = assetId;
             Disposable = Math.Max(0,
-                Value - (
+                Balance - (
                     Math.Max(0, Temporary) + 
                     Math.Max(0, Compensations)));
         }
