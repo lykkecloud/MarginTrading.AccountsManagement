@@ -5,7 +5,7 @@
     <AssemblyName>MarginTrading.AccountsManagement</AssemblyName>
     <RootNamespace>MarginTrading.AccountsManagement</RootNamespace>
     <NoWarn>$(NoWarn);1591</NoWarn>
-    <Version>1.15.14</Version>
+    <Version>1.15.17</Version>
     <LangVersion>latest</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>
