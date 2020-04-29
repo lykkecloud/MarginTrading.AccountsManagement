@@ -109,6 +109,7 @@ namespace MarginTrading.AccountsManagement
             }
         }
         
+        [UsedImplicitly]
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.RegisterModule(new AccountsManagementModule(_mtSettingsManager, Log));
