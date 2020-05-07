@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using Autofac;
 using Common.Log;
@@ -71,7 +72,7 @@ namespace MarginTrading.AccountsManagement.Modules
 
             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
             {
-                Uri = _settings.ConnectionString
+                Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
             };
             var messagingEngine = new MessagingEngine(_log,
                 new TransportResolver(new Dictionary<string, TransportInfo>
