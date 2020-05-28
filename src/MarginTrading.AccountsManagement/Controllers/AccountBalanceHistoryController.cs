@@ -5,16 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
-using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Extensions;
-using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
-using MarginTrading.AccountsManagement.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Internal;
@@ -54,13 +50,13 @@ namespace MarginTrading.AccountsManagement.Controllers
         {
             var data = await _accountBalanceChangesRepository.GetByPagesAsync(
                 accountId, 
-                from: @from?.ToUniversalTime(),
-                to: to?.ToUniversalTime(),
-                reasonTypes: reasonTypes?.Select(x => x.ToType<AccountBalanceChangeReasonType>()).ToArray(),
-                assetPairId: assetPairId,
-                skip: skip,
-                take: take,
-                isAscendingOrder: isAscendingOrder);
+                @from?.ToUniversalTime(),
+                to?.ToUniversalTime(),
+                reasonTypes?.Select(x => x.ToType<AccountBalanceChangeReasonType>()).ToArray(),
+                assetPairId,
+                skip,
+                take,
+                isAscendingOrder);
             
             return this.Convert(data);
         }
@@ -79,10 +75,10 @@ namespace MarginTrading.AccountsManagement.Controllers
         {
             var data = await _accountBalanceChangesRepository.GetAsync(
                 accountId, 
-                @from: @from?.ToUniversalTime(),
-                to: to?.ToUniversalTime(),
-                reasonType: reasonType?.ToType<AccountBalanceChangeReasonType>(), 
-                filterByTradingDay: filterByTradingDay);
+                @from?.ToUniversalTime(),
+                to?.ToUniversalTime(),
+                reasonType?.ToType<AccountBalanceChangeReasonType>(), 
+                filterByTradingDay);
             
             return data.GroupBy(i => i.AccountId).ToDictionary(g => g.Key, g => g.Select(Convert).ToArray());
         }
@@ -124,10 +120,10 @@ namespace MarginTrading.AccountsManagement.Controllers
         private PaginatedResponseContract<AccountBalanceChangeContract> Convert(PaginatedResponse<IAccountBalanceChange> data)
         {
             return new PaginatedResponseContract<AccountBalanceChangeContract>(
-                contents: data.Contents.Select(Convert).ToList(),
-                start: data.Start,
-                size: data.Size,
-                totalSize: data.TotalSize
+                data.Contents.Select(Convert).ToList(),
+                data.Start,
+                data.Size,
+                data.TotalSize
             );
         }
     }

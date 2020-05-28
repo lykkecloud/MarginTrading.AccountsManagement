@@ -4,7 +4,6 @@
 using System;
 using Lykke.AzureStorage.Tables;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.AzureRepositories
 {

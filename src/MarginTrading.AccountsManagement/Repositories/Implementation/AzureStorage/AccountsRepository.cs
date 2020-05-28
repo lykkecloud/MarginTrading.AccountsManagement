@@ -4,19 +4,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using AutoMapper;
 using AzureStorage;
 using Common.Log;
-using Lykke.AzureStorage.Tables.Paging;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStorage
 {
@@ -72,13 +69,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 })).ToList();
             */
             //TODO refactor before using azure impl
-            var data = await GetAllAsync(clientId: null, search: search);
+            var data = await GetAllAsync(null, search);
             
             return new PaginatedResponse<IAccount>(
-                contents: take.HasValue ? data.OrderBy(x => x.Id).Skip(skip ?? 0).Take(PaginationHelper.GetTake(take)).ToList() : data,
-                start: skip ?? 0,
-                size: take ?? data.Count,
-                totalSize: data.Count
+                take.HasValue ? data.OrderBy(x => x.Id).Skip(skip ?? 0).Take(PaginationHelper.GetTake(take)).ToList() : data,
+                skip ?? 0,
+                take ?? data.Count,
+                data.Count
             );
         }
 

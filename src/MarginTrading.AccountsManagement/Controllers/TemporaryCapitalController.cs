@@ -6,9 +6,7 @@ using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Extensions;
-using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
-using MarginTrading.SettingsService.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,12 +47,12 @@ namespace MarginTrading.AccountsManagement.Controllers
                 account.BaseAssetId, nameof(GiveTemporaryCapital));
 
             return await _accountManagementService.StartGiveTemporaryCapital(
-                eventSourceId: request.EventSourceId.RequiredNotNullOrWhiteSpace(nameof(request.EventSourceId)),
-                accountId: account.Id,
-                amount: amount,
-                reason: request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)), 
-                comment: request.Comment,
-                additionalInfo: request.AdditionalInfo
+                request.EventSourceId.RequiredNotNullOrWhiteSpace(nameof(request.EventSourceId)),
+                account.Id,
+                amount,
+                request.Reason.RequiredNotNullOrWhiteSpace(nameof(request.Reason)), 
+                request.Comment,
+                request.AdditionalInfo
             );
         }
 
@@ -70,11 +68,11 @@ namespace MarginTrading.AccountsManagement.Controllers
                 .RequiredNotNullOrWhiteSpace(nameof(request.AccountId)));
 
             return await _accountManagementService.StartRevokeTemporaryCapital(
-                eventSourceId: request.EventSourceId.RequiredNotNullOrWhiteSpace(nameof(request.EventSourceId)),
-                accountId: request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
-                revokeEventSourceId: request.RevokeEventSourceId, 
-                comment: request.Comment, 
-                additionalInfo: request.AdditionalInfo);
+                request.EventSourceId.RequiredNotNullOrWhiteSpace(nameof(request.EventSourceId)),
+                request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
+                request.RevokeEventSourceId, 
+                request.Comment, 
+                request.AdditionalInfo);
         }
     }
 }

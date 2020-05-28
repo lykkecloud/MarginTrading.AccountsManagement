@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Autofac.Extensions.DependencyInjection;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Services.Implementation;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -38,7 +37,7 @@ namespace MarginTrading.AccountsManagement
                 try
                 {
                     var configuration = new ConfigurationBuilder()
-                        .AddJsonFile("appsettings.json", optional: true)
+                        .AddJsonFile("appsettings.json", true)
                         .AddUserSecrets<Startup>()
                         .AddEnvironmentVariables()
                         .Build();

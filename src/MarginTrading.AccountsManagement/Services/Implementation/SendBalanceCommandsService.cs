@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
@@ -32,16 +31,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
                 new UpdateBalanceInternalCommand(
-                    operationId: operationId,
-                    accountId: accountId,
-                    amountDelta: amountDelta,
-                    comment: reason,
-                    auditLog: auditLog,
-                    source: source,
-                    changeReasonType: type,
-                    eventSourceId: eventSourceId,
-                    assetPairId: assetPairId,
-                    tradingDay: tradingDay),
+                    operationId,
+                    accountId,
+                    amountDelta,
+                    reason,
+                    auditLog,
+                    source,
+                    type,
+                    eventSourceId,
+                    assetPairId,
+                    tradingDay),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
@@ -53,12 +52,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
                 new WithdrawCommand(
-                    operationId: operationId,
-                    clientId: null,
-                    accountId: accountId,
-                    amount: amountDelta,
-                    comment: reason,
-                    auditLog: auditLog),
+                    operationId,
+                    null,
+                    accountId,
+                    amountDelta,
+                    reason,
+                    auditLog),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
@@ -70,12 +69,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             operationId = operationId ?? Guid.NewGuid().ToString();
             _cqrsEngine.SendCommand(
                 new DepositCommand(
-                    operationId: operationId,
-                    clientId: null,
-                    accountId: accountId,
-                    amount: amountDelta,
-                    comment: reason,
-                    auditLog: auditLog),
+                    operationId,
+                    null,
+                    accountId,
+                    amountDelta,
+                    reason,
+                    auditLog),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
             return Task.FromResult(operationId);
@@ -86,12 +85,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             _cqrsEngine.SendCommand(
                 new StartGiveTemporaryCapitalInternalCommand(
-                    operationId: eventSourceId,
-                    accountId: accountId,
-                    amount: amount,
-                    reason: reason,
-                    comment: comment,
-                    additionalInfo: additionalInfo
+                    eventSourceId,
+                    accountId,
+                    amount,
+                    reason,
+                    comment,
+                    additionalInfo
                 ),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);
@@ -103,11 +102,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             _cqrsEngine.SendCommand(
                 new StartRevokeTemporaryCapitalInternalCommand(
-                    operationId:  eventSourceId,
-                    accountId: accountId,
-                    revokeEventSourceId: revokeEventSourceId,
-                    comment: comment,
-                    additionalInfo: additionalInfo
+                    eventSourceId,
+                    accountId,
+                    revokeEventSourceId,
+                    comment,
+                    additionalInfo
                 ),
                 _cqrsContextNamesSettings.AccountsManagement,
                 _cqrsContextNamesSettings.AccountsManagement);

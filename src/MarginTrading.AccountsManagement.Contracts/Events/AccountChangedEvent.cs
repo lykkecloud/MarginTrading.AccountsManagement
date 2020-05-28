@@ -6,8 +6,6 @@ using System.ComponentModel;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MessagePack;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.AccountsManagement.Contracts.Events
 {

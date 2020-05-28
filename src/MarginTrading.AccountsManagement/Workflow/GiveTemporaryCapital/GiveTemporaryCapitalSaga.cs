@@ -61,16 +61,16 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
             {
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
-                        operationId: e.OperationId,
-                        accountId: executionInfo.Data.AccountId,
-                        amountDelta: executionInfo.Data.Amount,
-                        comment: executionInfo.Data.Comment,
-                        auditLog: executionInfo.Data.AdditionalInfo,
-                        source: OperationName,
-                        changeReasonType: AccountBalanceChangeReasonType.TemporaryCashAdjustment,
-                        eventSourceId: e.OperationId,
-                        assetPairId: string.Empty,
-                        tradingDay: _systemClock.UtcNow.UtcDateTime),
+                        e.OperationId,
+                        executionInfo.Data.AccountId,
+                        executionInfo.Data.Amount,
+                        executionInfo.Data.Comment,
+                        executionInfo.Data.AdditionalInfo,
+                        OperationName,
+                        AccountBalanceChangeReasonType.TemporaryCashAdjustment,
+                        e.OperationId,
+                        string.Empty,
+                        _systemClock.UtcNow.UtcDateTime),
                     _contextNames.AccountsManagement);
 
                 _chaosKitty.Meow(
@@ -100,10 +100,10 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
             {
                 sender.SendCommand(
                     new FinishGiveTemporaryCapitalInternalCommand(
-                        operationId: e.BalanceChange.Id,
-                        eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                        isSuccess: true,
-                        failReason: null),
+                        e.BalanceChange.Id,
+                        _systemClock.UtcNow.UtcDateTime,
+                        true,
+                        null),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow($"{nameof(AccountChangedEvent)}: " +
@@ -132,10 +132,10 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
                     new FinishGiveTemporaryCapitalInternalCommand(
-                        operationId: e.OperationId,
-                        eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                        isSuccess: false,
-                        failReason: e.Reason),
+                        e.OperationId,
+                        _systemClock.UtcNow.UtcDateTime,
+                        false,
+                        e.Reason),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow($"{nameof(AccountBalanceChangeFailedEvent)}: " +

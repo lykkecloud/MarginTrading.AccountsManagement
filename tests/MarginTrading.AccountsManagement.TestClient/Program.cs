@@ -6,19 +6,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncFriendlyStackTrace;
-using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.HttpClientGenerator;
-using Lykke.HttpClientGenerator.Retries;
-using Lykke.RabbitMqBroker.Publisher;
-using Lykke.RabbitMqBroker.Subscriber;
-using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using Newtonsoft.Json;
 using Refit;
@@ -95,28 +89,28 @@ namespace MarginTrading.AccountsManagement.TestClient
             Thread.Sleep(5000);
 
             cqrsEngine.PublishEvent(new AccountChangedEvent(
-                changeTimestamp: DateTime.UtcNow, 
-                source: "tetest1",
-                account: new AccountContract("","","","",default,default,"",default,default,default,default), 
-                eventType: AccountChangedEventTypeContract.BalanceUpdated,
-                balanceChange: new AccountBalanceChangeContract(
-                    id: "tetetetest1",
-                    changeTimestamp: DateTime.UtcNow, 
-                    accountId: Enumerable.Repeat("t", 200).Aggregate((f, s) => $"{f}{s}"),//field has length of 64 
-                    clientId: "tetest1",
-                    changeAmount: 1,
-                    balance: 1,
-                    withdrawTransferLimit: 10000,
-                    comment: "tetest1",
-                    reasonType: AccountBalanceChangeReasonTypeContract.Manual,
-                    eventSourceId: "tetest1",
-                    legalEntity: "tetest1",
-                    auditLog: "tetest1",
-                    instrument: "tetest1",
-                    tradingDate: DateTime.MinValue
+                DateTime.UtcNow, 
+                "tetest1",
+                new AccountContract("","","","",default,default,"",default,default,default,default), 
+                AccountChangedEventTypeContract.BalanceUpdated,
+                new AccountBalanceChangeContract(
+                    "tetetetest1",
+                    DateTime.UtcNow, 
+                    Enumerable.Repeat("t", 200).Aggregate((f, s) => $"{f}{s}"),//field has length of 64 
+                    "tetest1",
+                    1,
+                    1,
+                    10000,
+                    "tetest1",
+                    AccountBalanceChangeReasonTypeContract.Manual,
+                    "tetest1",
+                    "tetest1",
+                    "tetest1",
+                    "tetest1",
+                    DateTime.MinValue
                 ),
-                operationId: null,
-                activitiesMetadata: null), new CqrsContextNamesSettings().AccountsManagement);
+                null,
+                null), new CqrsContextNamesSettings().AccountsManagement);
         }
 
         private static async Task CheckAccountsApiWorking(IHttpClientGenerator clientGenerator)

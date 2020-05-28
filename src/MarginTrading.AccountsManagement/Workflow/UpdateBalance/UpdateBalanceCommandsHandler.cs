@@ -18,7 +18,6 @@ using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
-using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
@@ -60,13 +59,13 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
             IEventPublisher publisher)
         {
             var executionInfo = await _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<OperationData>(
-                    operationName: OperationName,
-                    id: command.OperationId,
-                    data: new  OperationData { State = OperationState.Created },
-                    lastModified: _systemClock.UtcNow.UtcDateTime));
+                OperationName,
+                command.OperationId,
+                () => new OperationExecutionInfo<OperationData>(
+                    OperationName,
+                    command.OperationId,
+                    new  OperationData { State = OperationState.Created },
+                    _systemClock.UtcNow.UtcDateTime));
 
             if (SwitchState(executionInfo.Data, OperationState.Created, OperationState.Started))
             {
@@ -74,10 +73,10 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 try
                 {
                     account = await _accountsRepository.UpdateBalanceAsync(
-                        operationId: command.OperationId,
-                        accountId: command.AccountId,
-                        amountDelta: command.AmountDelta,
-                        changeLimit: false);
+                        command.OperationId,
+                        command.AccountId,
+                        command.AmountDelta,
+                        false);
                 }
                 catch (ValidationException ex)
                 {
@@ -95,20 +94,20 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
                 _chaosKitty.Meow(command.OperationId);
 
                 var change = new AccountBalanceChangeContract(
-                    id: command.OperationId,
-                    changeTimestamp: account.ModificationTimestamp,
-                    accountId: account.Id,
-                    clientId: account.ClientId,
-                    changeAmount: command.AmountDelta,
-                    balance: account.Balance,
-                    withdrawTransferLimit: account.WithdrawTransferLimit,
-                    comment: command.Comment,
-                    reasonType: Convert(command.ChangeReasonType),
-                    eventSourceId: command.EventSourceId,
-                    legalEntity: account.LegalEntity,
-                    auditLog: command.AuditLog,
-                    instrument: command.AssetPairId,
-                    tradingDate: command.TradingDay);
+                    command.OperationId,
+                    account.ModificationTimestamp,
+                    account.Id,
+                    account.ClientId,
+                    command.AmountDelta,
+                    account.Balance,
+                    account.WithdrawTransferLimit,
+                    command.Comment,
+                    Convert(command.ChangeReasonType),
+                    command.EventSourceId,
+                    account.LegalEntity,
+                    command.AuditLog,
+                    command.AssetPairId,
+                    command.TradingDay);
 
                 var convertedAccount = Convert(account);
 
@@ -133,16 +132,16 @@ namespace MarginTrading.AccountsManagement.Workflow.UpdateBalance
         public async Task Handle(ChangeBalanceCommand command, IEventPublisher publisher)
         {
             await Handle(new UpdateBalanceInternalCommand(
-                operationId: command.OperationId,
-                accountId: command.AccountId,
-                amountDelta: command.Amount,
-                comment: command.Reason,
-                auditLog: command.AuditLog,
-                source: $"{command.ReasonType.ToString()} command",
-                changeReasonType: command.ReasonType.ToType<AccountBalanceChangeReasonType>(),
-                eventSourceId: command.EventSourceId,
-                assetPairId: command.AssetPairId,
-                tradingDay: command.TradingDay
+                command.OperationId,
+                command.AccountId,
+                command.Amount,
+                command.Reason,
+                command.AuditLog,
+                $"{command.ReasonType.ToString()} command",
+                command.ReasonType.ToType<AccountBalanceChangeReasonType>(),
+                command.EventSourceId,
+                command.AssetPairId,
+                command.TradingDay
             ), publisher);
         }
 

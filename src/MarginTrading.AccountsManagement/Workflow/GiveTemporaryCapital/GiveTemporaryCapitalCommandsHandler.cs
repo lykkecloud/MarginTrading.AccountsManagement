@@ -15,8 +15,6 @@ using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Events;
-using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
-using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Events;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
@@ -55,12 +53,12 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
         public async Task Handle(StartGiveTemporaryCapitalInternalCommand c, IEventPublisher publisher)
         {
             var executionInfo = await _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: c.OperationId,
-                factory: () => new OperationExecutionInfo<GiveTemporaryCapitalData>(
-                    operationName: OperationName,
-                    id: c.OperationId,
-                    data: new GiveTemporaryCapitalData 
+                OperationName,
+                c.OperationId,
+                () => new OperationExecutionInfo<GiveTemporaryCapitalData>(
+                    OperationName,
+                    c.OperationId,
+                    new GiveTemporaryCapitalData 
                     {
                         State = TemporaryCapitalState.Initiated,
                         OperationId = c.OperationId,
@@ -70,7 +68,7 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                         Comment = c.Comment,
                         AdditionalInfo = c.AdditionalInfo,
                     },
-                    lastModified: _systemClock.UtcNow.UtcDateTime));
+                    _systemClock.UtcNow.UtcDateTime));
 
             if (executionInfo.Data.State != TemporaryCapitalState.Initiated)
             {
@@ -104,7 +102,7 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                         Id = c.OperationId,
                         Amount = c.Amount,
                     },
-                    isAdd: true);
+                    true);
             }
             catch (Exception exception)
             {
@@ -144,14 +142,14 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
             if (executionInfo.Data.State == TemporaryCapitalState.ChargedOnAccount)
             {
                 publisher.PublishEvent(new GiveTemporaryCapitalSucceededEvent(
-                    operationId: c.OperationId, 
-                    eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                    eventSourceId: executionInfo.Data.OperationId,
-                    accountId: executionInfo.Data.AccountId,
-                    amount: executionInfo.Data.Amount,
-                    reason: executionInfo.Data.Reason,
-                    comment: executionInfo.Data.Comment,
-                    additionalInfo: executionInfo.Data.AdditionalInfo));
+                    c.OperationId, 
+                    _systemClock.UtcNow.UtcDateTime,
+                    executionInfo.Data.OperationId,
+                    executionInfo.Data.AccountId,
+                    executionInfo.Data.Amount,
+                    executionInfo.Data.Reason,
+                    executionInfo.Data.Comment,
+                    executionInfo.Data.AdditionalInfo));
             }
             else if (executionInfo.Data.State == TemporaryCapitalState.Failing)
             {
@@ -163,7 +161,7 @@ namespace MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital
                         Id = executionInfo.Data.OperationId,
                         Amount = executionInfo.Data.Amount,
                     },
-                    isAdd: false);
+                    false);
             
                 _chaosKitty.Meow($"{nameof(FinishGiveTemporaryCapitalInternalCommand)}: " +
                                  "publisher.PublishEvent: " + c.OperationId);

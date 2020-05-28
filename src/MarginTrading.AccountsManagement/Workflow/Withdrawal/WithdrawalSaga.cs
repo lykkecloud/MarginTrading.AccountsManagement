@@ -52,11 +52,11 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             {
                 sender.SendCommand(
                     new FreezeAmountForWithdrawalCommand(
-                        operationId: executionInfo.Id,
-                        eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                        accountId: executionInfo.Data.AccountId,
-                        amount: executionInfo.Data.Amount,
-                        reason: executionInfo.Data.Comment),
+                        executionInfo.Id,
+                        _systemClock.UtcNow.UtcDateTime,
+                        executionInfo.Data.AccountId,
+                        executionInfo.Data.Amount,
+                        executionInfo.Data.Comment),
                     _contextNames.TradingEngine);
                 
                 _chaosKitty.Meow(e.OperationId);
@@ -80,16 +80,16 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             {
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
-                        operationId: e.OperationId,
-                        accountId: executionInfo.Data.AccountId,
-                        amountDelta: -executionInfo.Data.Amount,
-                        comment: "Funds withdrawal " + executionInfo.Data.Comment,
-                        auditLog: executionInfo.Data.AuditLog,
-                        source: OperationName,
-                        changeReasonType: AccountBalanceChangeReasonType.Withdraw,
-                        eventSourceId: e.OperationId,
-                        assetPairId: string.Empty,
-                        tradingDay: DateTime.UtcNow),
+                        e.OperationId,
+                        executionInfo.Data.AccountId,
+                        -executionInfo.Data.Amount,
+                        "Funds withdrawal " + executionInfo.Data.Comment,
+                        executionInfo.Data.AuditLog,
+                        OperationName,
+                        AccountBalanceChangeReasonType.Withdraw,
+                        e.OperationId,
+                        string.Empty,
+                        DateTime.UtcNow),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow(e.OperationId);
@@ -140,7 +140,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             {
                 sender.SendCommand(
                     new CompleteWithdrawalInternalCommand(
-                        operationId: e.BalanceChange.Id), 
+                        e.BalanceChange.Id), 
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow(e.BalanceChange.Id);
@@ -168,7 +168,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
                     new UnfreezeMarginOnFailWithdrawalCommand(
-                        operationId: e.OperationId), 
+                        e.OperationId), 
                     _contextNames.TradingEngine);
                 
                 _chaosKitty.Meow(e.OperationId);

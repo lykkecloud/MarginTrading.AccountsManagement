@@ -11,7 +11,6 @@ using Lykke.Messaging;
 using Lykke.Messaging.RabbitMq;
 using Lykke.Messaging.Serialization;
 using MarginTrading.AccountsManagement.Contracts.Events;
-using MarginTrading.AccountsManagement.Modules;
 using MarginTrading.AccountsManagement.Settings;
 using Moq;
 using AutofacDependencyResolver = Lykke.Cqrs.AutofacDependencyResolver;

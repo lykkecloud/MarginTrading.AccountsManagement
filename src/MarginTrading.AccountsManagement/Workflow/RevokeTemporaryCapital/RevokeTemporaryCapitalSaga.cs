@@ -11,8 +11,6 @@ using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
-using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Events;
 using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Events;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
@@ -65,16 +63,16 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                 
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
-                        operationId: e.OperationId,
-                        accountId: executionInfo.Data.AccountId,
-                        amountDelta: - executionInfo.Data.RevokedTemporaryCapital.Sum(x => x.Amount),
-                        comment: $"{executionInfo.Data.Comment}  ***  Revoked eventSourceIds: [{string.Join(",", executionInfo.Data.RevokedTemporaryCapital.Select(x => x.Id))}]",
-                        auditLog: executionInfo.Data.AdditionalInfo,
-                        source: OperationName,
-                        changeReasonType: AccountBalanceChangeReasonType.TemporaryCashAdjustment,
-                        eventSourceId: executionInfo.Data.EventSourceId,
-                        assetPairId: string.Empty,
-                        tradingDay: _systemClock.UtcNow.UtcDateTime),
+                        e.OperationId,
+                        executionInfo.Data.AccountId,
+                        - executionInfo.Data.RevokedTemporaryCapital.Sum(x => x.Amount),
+                        $"{executionInfo.Data.Comment}  ***  Revoked eventSourceIds: [{string.Join(",", executionInfo.Data.RevokedTemporaryCapital.Select(x => x.Id))}]",
+                        executionInfo.Data.AdditionalInfo,
+                        OperationName,
+                        AccountBalanceChangeReasonType.TemporaryCashAdjustment,
+                        executionInfo.Data.EventSourceId,
+                        string.Empty,
+                        _systemClock.UtcNow.UtcDateTime),
                     _contextNames.AccountsManagement);   
 
                 _chaosKitty.Meow(
@@ -104,10 +102,10 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             {
                 sender.SendCommand(
                     new FinishRevokeTemporaryCapitalInternalCommand(
-                        operationId: e.BalanceChange.Id,
-                        eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                        isSuccess: true,
-                        failReason: null),
+                        e.BalanceChange.Id,
+                        _systemClock.UtcNow.UtcDateTime,
+                        true,
+                        null),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow($"{nameof(AccountChangedEvent)}: " +
@@ -136,10 +134,10 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                 executionInfo.Data.FailReason = e.Reason;
                 sender.SendCommand(
                     new FinishRevokeTemporaryCapitalInternalCommand(
-                        operationId: e.OperationId,
-                        eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                        isSuccess: false,
-                        failReason: e.Reason),
+                        e.OperationId,
+                        _systemClock.UtcNow.UtcDateTime,
+                        false,
+                        e.Reason),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow($"{nameof(AccountBalanceChangeFailedEvent)}: " +

@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.AccountsManagement.Extensions;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.SettingsService.Contracts;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation

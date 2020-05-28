@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Common;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
@@ -14,7 +13,6 @@ using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.SettingsService.Contracts;
@@ -84,7 +82,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
             
-            return Convert(_accountManagementService.ListByPagesAsync(search, showDeleted, skip: skip, take: take, isAscendingOrder: isAscendingOrder));
+            return Convert(_accountManagementService.ListByPagesAsync(search, showDeleted, skip, take, isAscendingOrder));
         }
 
         /// <summary>
@@ -237,16 +235,16 @@ namespace MarginTrading.AccountsManagement.Controllers
                 account.BaseAssetId, nameof(BeginChargeManually));
 
             return await _sendBalanceCommandsService.ChargeManuallyAsync(
-                accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: amount,
-                operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason,
-                source: "Api",
-                auditLog: request.AdditionalInfo,
-                type: request.ReasonType.ToType<AccountBalanceChangeReasonType>(),
-                eventSourceId: request.EventSourceId, 
-                assetPairId: request.AssetPairId, 
-                tradingDate: request.TradingDay ?? _systemClock.UtcNow.DateTime);
+                accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
+                amount,
+                request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
+                request.Reason,
+                "Api",
+                request.AdditionalInfo,
+                request.ReasonType.ToType<AccountBalanceChangeReasonType>(),
+                request.EventSourceId, 
+                request.AssetPairId, 
+                request.TradingDay ?? _systemClock.UtcNow.DateTime);
         }
 
         /// <summary>
@@ -264,11 +262,11 @@ namespace MarginTrading.AccountsManagement.Controllers
                 account.BaseAssetId, nameof(BeginDeposit));
             
             return await _sendBalanceCommandsService.DepositAsync(
-                accountId: accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
-                amountDelta: amount,
-                operationId: request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
-                reason: request.Reason,
-                auditLog: request.AdditionalInfo);
+                accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
+                amount,
+                request.OperationId.RequiredNotNullOrWhiteSpace(nameof(request.OperationId)),
+                request.Reason,
+                request.AdditionalInfo);
         }
 
         /// <summary>
@@ -353,11 +351,11 @@ namespace MarginTrading.AccountsManagement.Controllers
             try
             {
                 var operationId = await _sendBalanceCommandsService.WithdrawAsync(
-                    accountId: accountId,
-                    amountDelta: amount,
-                    operationId: request.OperationId,
-                    reason: request.Reason,
-                    auditLog: request.AdditionalInfo);
+                    accountId,
+                    amount,
+                    request.OperationId,
+                    request.Reason,
+                    request.AdditionalInfo);
                 
                 return new WithdrawalResponse
                 {
@@ -444,10 +442,10 @@ namespace MarginTrading.AccountsManagement.Controllers
         {
             var data = await accounts;
             return new PaginatedResponseContract<AccountContract>(
-                contents: data.Contents.Select(Convert).ToList(),
-                start: data.Start,
-                size: data.Size,
-                totalSize: data.TotalSize
+                data.Contents.Select(Convert).ToList(),
+                data.Start,
+                data.Size,
+                data.TotalSize
             );
         }
 

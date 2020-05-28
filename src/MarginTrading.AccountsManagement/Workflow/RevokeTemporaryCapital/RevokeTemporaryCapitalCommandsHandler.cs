@@ -60,12 +60,12 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
         public async Task Handle(StartRevokeTemporaryCapitalInternalCommand c, IEventPublisher publisher)
         {
             var executionInfo = await _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: c.OperationId,
-                factory: () => new OperationExecutionInfo<RevokeTemporaryCapitalData>(
-                    operationName: OperationName,
-                    id: c.OperationId,
-                    data: new RevokeTemporaryCapitalData 
+                OperationName,
+                c.OperationId,
+                () => new OperationExecutionInfo<RevokeTemporaryCapitalData>(
+                    OperationName,
+                    c.OperationId,
+                    new RevokeTemporaryCapitalData 
                     {
                         State = TemporaryCapitalState.Initiated,
                         OperationId = c.OperationId,
@@ -74,7 +74,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                         Comment = c.Comment,
                         AdditionalInfo = c.AdditionalInfo,
                     },
-                    lastModified: _systemClock.UtcNow.UtcDateTime));
+                    _systemClock.UtcNow.UtcDateTime));
 
             if (executionInfo.Data.State != TemporaryCapitalState.Initiated)
             {
@@ -134,7 +134,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                     string.IsNullOrEmpty(c.RevokeEventSourceId)
                         ? null
                         : new InternalModels.TemporaryCapital { Id = c.RevokeEventSourceId },
-                    isAdd: false);
+                    false);
             }
             catch (Exception exception)
             {
@@ -176,13 +176,13 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             if (executionInfo.Data.State == TemporaryCapitalState.ChargedOnAccount)
             {
                 publisher.PublishEvent(new RevokeTemporaryCapitalSucceededEvent(
-                    operationId: c.OperationId, 
-                    eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                    eventSourceId: executionInfo.Data.EventSourceId,
-                    accountId: executionInfo.Data.AccountId,
-                    revokeEventSourceId: executionInfo.Data.RevokeEventSourceId,
-                    comment: executionInfo.Data.Comment,
-                    additionalInfo: executionInfo.Data.AdditionalInfo));
+                    c.OperationId, 
+                    _systemClock.UtcNow.UtcDateTime,
+                    executionInfo.Data.EventSourceId,
+                    executionInfo.Data.AccountId,
+                    executionInfo.Data.RevokeEventSourceId,
+                    executionInfo.Data.Comment,
+                    executionInfo.Data.AdditionalInfo));
             }
             else if (executionInfo.Data.State == TemporaryCapitalState.Failing)
             {

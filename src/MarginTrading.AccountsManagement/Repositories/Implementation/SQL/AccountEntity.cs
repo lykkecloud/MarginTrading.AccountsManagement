@@ -3,10 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using Common;
-using Lykke.AzureStorage.Tables;
-using Lykke.AzureStorage.Tables.Entity.Annotation;
-using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using Newtonsoft.Json;

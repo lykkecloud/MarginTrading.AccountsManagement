@@ -6,7 +6,6 @@ using System.Net;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.PlatformAbstractions;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {

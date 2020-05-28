@@ -3,7 +3,6 @@
 
 using System;
 using MarginTrading.AccountsManagement.Extensions;
-using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MessagePack;
 

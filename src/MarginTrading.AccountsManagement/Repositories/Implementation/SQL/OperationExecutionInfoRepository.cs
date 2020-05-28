@@ -166,8 +166,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             where TData : class
         {
             return new OperationExecutionInfo<TData>(
-                operationName: entity.OperationName,
-                id: entity.Id,
+                entity.OperationName,
+                entity.Id,
                 lastModified: entity.LastModified,
                 data: entity.Data is string dataStr
                     ? JsonConvert.DeserializeObject<TData>(dataStr)

@@ -51,12 +51,12 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private async Task Handle(WithdrawCommand command, IEventPublisher publisher)
         {
             await _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<WithdrawalDepositData>(
-                    operationName: OperationName,
-                    id: command.OperationId,
-                    data: new WithdrawalDepositData
+                OperationName,
+                command.OperationId,
+                () => new OperationExecutionInfo<WithdrawalDepositData>(
+                    OperationName,
+                    command.OperationId,
+                    new WithdrawalDepositData
                     {
                         AccountId = command.AccountId,
                         Amount = command.Amount,
@@ -64,7 +64,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         State = WithdrawalState.Created,
                         Comment = command.Comment
                     },
-                    lastModified: _systemClock.UtcNow.UtcDateTime));
+                    _systemClock.UtcNow.UtcDateTime));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
 

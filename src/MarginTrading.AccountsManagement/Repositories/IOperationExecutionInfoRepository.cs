@@ -4,7 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.Repositories

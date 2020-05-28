@@ -2,9 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Settings;
@@ -27,16 +25,16 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
         public void Handle(NotifyNegativeProtectionInternalCommand command, IEventPublisher publisher)
         {
             publisher.PublishEvent(new NegativeProtectionEvent(
-                id: Guid.NewGuid().ToString("N"),
-                correlationId: command.CorrelationId,
-                causationId: command.CausationId,
-                eventTimestamp: command.EventTimestamp,
-                clientId: command.ClientId,
-                accountId: command.AccountId,
-                amount: command.Amount,
-                isAutoCompensated: _accountManagementSettings.NegativeProtectionAutoCompensation,
-                openPositionsRemainingOnAccount: command.OpenPositionsRemainingOnAccount,
-                currentTotalCapital: command.CurrentTotalCapital
+                Guid.NewGuid().ToString("N"),
+                command.CorrelationId,
+                command.CausationId,
+                command.EventTimestamp,
+                command.ClientId,
+                command.AccountId,
+                command.Amount,
+                _accountManagementSettings.NegativeProtectionAutoCompensation,
+                command.OpenPositionsRemainingOnAccount,
+                command.CurrentTotalCapital
             ));
         }
     }

@@ -3,7 +3,6 @@
 
 using System;
 using JetBrains.Annotations;
-using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
@@ -14,14 +13,10 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
 {
     internal class ClosePositionSaga
     {
-        private readonly IChaosKitty _chaosKitty;
         private readonly CqrsContextNamesSettings _contextNames;
 
-        public ClosePositionSaga(
-            IChaosKitty chaosKitty,
-            CqrsContextNamesSettings contextNames)
+        public ClosePositionSaga(CqrsContextNamesSettings contextNames)
         {
-            _chaosKitty = chaosKitty;
             _contextNames = contextNames;
         }
 
@@ -35,16 +30,16 @@ namespace MarginTrading.AccountsManagement.Workflow.ClosePosition
             
             sender.SendCommand(
                 new UpdateBalanceInternalCommand(
-                    operationId: operationId,
-                    accountId: evt.AccountId,
-                    amountDelta: evt.BalanceDelta,
-                    comment: $"Balance changed on position close (id = {evt.PositionId})",
-                    auditLog: string.Empty,
-                    source: nameof(ClosePositionSaga),
-                    changeReasonType: AccountBalanceChangeReasonType.RealizedPnL,
-                    eventSourceId: evt.PositionId,
-                    assetPairId: evt.AssetPairId,
-                    tradingDay: DateTime.UtcNow),
+                    operationId,
+                    evt.AccountId,
+                    evt.BalanceDelta,
+                    $"Balance changed on position close (id = {evt.PositionId})",
+                    string.Empty,
+                    nameof(ClosePositionSaga),
+                    AccountBalanceChangeReasonType.RealizedPnL,
+                    evt.PositionId,
+                    evt.AssetPairId,
+                    DateTime.UtcNow),
                 _contextNames.AccountsManagement);
         }
     }

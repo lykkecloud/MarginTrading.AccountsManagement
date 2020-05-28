@@ -60,10 +60,10 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             var contents = data.ToList();
 
             return new PaginatedResponse<IAccountBalanceChange>(
-                contents: contents,
-                start: skip ?? 0,
-                size: take.Value,
-                totalSize: contents.Count
+                contents,
+                skip ?? 0,
+                take.Value,
+                contents.Count
             );
         }
 

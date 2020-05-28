@@ -36,16 +36,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             if (_negativeProtectionAutoCompensation)
             {
                 await _sendBalanceCommandsService.ChargeManuallyAsync(
-                    accountId: account.Id,
-                    amountDelta: amount,
-                    operationId: $"{operationId}-negative-protection",
-                    reason: "Negative protection",
-                    source: nameof(NegativeProtectionService),
-                    auditLog: null,
-                    type: AccountBalanceChangeReasonType.CompensationPayments,
-                    eventSourceId: operationId,
-                    assetPairId: null,
-                    tradingDate: _systemClock.UtcNow.UtcDateTime
+                    account.Id,
+                    amount,
+                    $"{operationId}-negative-protection",
+                    "Negative protection",
+                    nameof(NegativeProtectionService),
+                    null,
+                    AccountBalanceChangeReasonType.CompensationPayments,
+                    operationId,
+                    null,
+                    _systemClock.UtcNow.UtcDateTime
                 );
             }
 

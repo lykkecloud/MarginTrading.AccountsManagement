@@ -2,8 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MarginTrading.AccountsManagement.Contracts;
-using MarginTrading.AccountsManagement.Contracts.Events;
 
 namespace MarginTrading.AccountsManagement.Contracts.Commands
 {

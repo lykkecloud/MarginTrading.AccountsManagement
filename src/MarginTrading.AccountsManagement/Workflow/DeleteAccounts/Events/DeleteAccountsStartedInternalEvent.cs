@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MessagePack;
 
