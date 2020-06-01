@@ -48,7 +48,7 @@
     <PackageReference Include="Lykke.Common" Version="7.5.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="3.1.1" />
     <PackageReference Include="Lykke.Cqrs" Version="9.0.1" />
-    <PackageReference Include="Lykke.HttpClientGenerator" Version="2.8.0" />
+    <PackageReference Include="Lykke.HttpClientGenerator" Version="3.0.0" />
     <PackageReference Include="Lykke.JobTriggers" Version="2.2.0" />
     <PackageReference Include="Lykke.Logs" Version="7.4.0" />
     <PackageReference Include="Lykke.Logs.MsSql" Version="2.1.0" />
@@ -69,7 +69,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.4" />
-    <PackageReference Include="morelinq" Version="2.10.0" />
+    <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.4.1" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.4.1" />
   </ItemGroup>

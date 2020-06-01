@@ -11,7 +11,7 @@ using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
 using AzureRepos = MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.AzureRepositories;
 using SqlRepos = MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.SqlRepositories;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 {
@@ -19,7 +19,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
     {
         protected override string ApplicationName => "AccountHistoryBroker";
 
-        public Startup(IHostingEnvironment env) : base(env)
+        public Startup(IHostEnvironment env) : base(env)
         {
         }
 
