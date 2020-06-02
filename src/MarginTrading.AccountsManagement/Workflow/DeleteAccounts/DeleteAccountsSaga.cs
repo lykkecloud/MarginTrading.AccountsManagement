@@ -1,8 +1,6 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -17,7 +15,6 @@ using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Commands;
 using MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Events;
 using Microsoft.Extensions.Internal;
-using MoreLinq;
 
 namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
 {

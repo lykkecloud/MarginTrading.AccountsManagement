@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using JetBrains.Annotations;
 using MessagePack;
 
 namespace MarginTrading.AccountsManagement.Workflow.Deposit.Commands

@@ -1,19 +1,16 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
-using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
-using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Workflow.Deposit
@@ -45,12 +42,12 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
         private async Task Handle(DepositCommand c, IEventPublisher publisher)
         {
             await _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: c.OperationId,
-                factory: () => new OperationExecutionInfo<WithdrawalDepositData>(
-                    operationName: OperationName,
-                    id: c.OperationId,
-                    data: new WithdrawalDepositData 
+                OperationName,
+                c.OperationId,
+                () => new OperationExecutionInfo<WithdrawalDepositData>(
+                    OperationName,
+                    c.OperationId,
+                    new WithdrawalDepositData 
                     {
                         AccountId = c.AccountId,
                         Amount = c.Amount,
@@ -58,7 +55,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
                         State = WithdrawalState.Created,
                         Comment = c.Comment
                     },
-                    lastModified: _systemClock.UtcNow.UtcDateTime));
+                    _systemClock.UtcNow.UtcDateTime));
 
             _chaosKitty.Meow(c.OperationId);
 

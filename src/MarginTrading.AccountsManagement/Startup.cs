@@ -2,9 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -29,18 +27,17 @@ using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Modules;
-using MarginTrading.AccountsManagement.Repositories;
-using MarginTrading.AccountsManagement.Repositories.Implementation.SQL;
 using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using IApplicationLifetime = Microsoft.AspNetCore.Hosting.IApplicationLifetime;
 
 namespace MarginTrading.AccountsManagement
 {
@@ -49,12 +46,12 @@ namespace MarginTrading.AccountsManagement
         private IReloadingManager<AppSettings> _mtSettingsManager;
         public static string ServiceName { get; } = PlatformServices.Default.Application.ApplicationName;
 
-        private IHostingEnvironment Environment { get; }
+        private IHostEnvironment Environment { get; }
         private ILifetimeScope ApplicationContainer { get; set; }
         private IConfigurationRoot Configuration { get; }
         [CanBeNull] private ILog Log { get; set; }
         
-        public Startup(IHostingEnvironment env)
+        public Startup(IHostEnvironment env)
         {
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -118,7 +115,7 @@ namespace MarginTrading.AccountsManagement
         }
 
         [UsedImplicitly]
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
+        public void Configure(IApplicationBuilder app, IHostEnvironment env, IApplicationLifetime appLifetime)
         {
             try
             {

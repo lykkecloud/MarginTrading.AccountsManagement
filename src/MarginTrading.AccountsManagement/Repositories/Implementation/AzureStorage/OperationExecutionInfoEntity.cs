@@ -3,7 +3,6 @@
 
 using System;
 using Lykke.AzureStorage.Tables;
-using Lykke.AzureStorage.Tables.Entity.Annotation;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using Newtonsoft.Json;
 

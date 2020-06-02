@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
-using Lykke.Logs.MsSql.Extensions;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Extensions;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;

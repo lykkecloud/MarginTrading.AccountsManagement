@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
-using Lykke.Common.Log;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -76,11 +75,11 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             if (command.AccountIds == null || !command.AccountIds.Any())
             {
                 publisher.PublishEvent(new AccountsDeletionFinishedEvent(
-                    operationId: command.OperationId,
-                    eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                    deletedAccountIds: new List<string>(),
-                    failedAccounts: new Dictionary<string, string>(),
-                    comment: command.Comment
+                    command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime,
+                    new List<string>(),
+                    new Dictionary<string, string>(),
+                    command.Comment
                 ));
                 return;
             }
@@ -88,19 +87,19 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             command.AccountIds = command.AccountIds.Distinct().ToList();
             
             var executionInfo = await _executionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
-                operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<DeleteAccountsData>(
-                    operationName: OperationName,
-                    id: command.OperationId,
-                    data: new DeleteAccountsData
+                OperationName,
+                command.OperationId,
+                () => new OperationExecutionInfo<DeleteAccountsData>(
+                    OperationName,
+                    command.OperationId,
+                    new DeleteAccountsData
                     {
                         State = DeleteAccountsState.Initiated,
                         OperationId = command.OperationId,
                         AccountIds = command.AccountIds,
                         Comment = command.Comment,
                     },
-                    lastModified: _systemClock.UtcNow.UtcDateTime));
+                    _systemClock.UtcNow.UtcDateTime));
 
             if (executionInfo.Data.State != DeleteAccountsState.Initiated)
             {
@@ -140,11 +139,11 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
             if (!command.AccountIds.Except(failedAccounts.Keys).Any())
             {
                 publisher.PublishEvent(new AccountsDeletionFinishedEvent(
-                    operationId: command.OperationId,
-                    eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                    deletedAccountIds: new List<string>(),
-                    failedAccounts: failedAccounts,
-                    comment: executionInfo.Data.Comment
+                    command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime,
+                    new List<string>(),
+                    failedAccounts,
+                    executionInfo.Data.Comment
                 ));
                 return;
             }
@@ -154,9 +153,9 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                 $"{command.OperationId}");
 
             publisher.PublishEvent(new DeleteAccountsStartedInternalEvent(
-                operationId: command.OperationId,
-                eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                failedAccountIds: failedAccounts
+                command.OperationId,
+                _systemClock.UtcNow.UtcDateTime,
+                failedAccounts
             ));
         }
 
@@ -238,9 +237,9 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                              $"{command.OperationId}");
 
             publisher.PublishEvent(new AccountsMarkedAsDeletedEvent(
-                operationId: command.OperationId,
-                eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                validationFailedAccountIds: validationFailedAccountIds
+                command.OperationId,
+                _systemClock.UtcNow.UtcDateTime,
+                validationFailedAccountIds
             ));
         }
 
@@ -267,11 +266,11 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
                              $"{command.OperationId}");
 
             publisher.PublishEvent(new AccountsDeletionFinishedEvent(
-                operationId: command.OperationId,
-                eventTimestamp: _systemClock.UtcNow.UtcDateTime,
-                deletedAccountIds: executionInfo.Data.GetAccountsToDelete(),
-                failedAccounts: executionInfo.Data.FailedAccountIds,
-                comment: executionInfo.Data.Comment
+                command.OperationId,
+                _systemClock.UtcNow.UtcDateTime,
+                executionInfo.Data.GetAccountsToDelete(),
+                executionInfo.Data.FailedAccountIds,
+                executionInfo.Data.Comment
             ));
         }
 

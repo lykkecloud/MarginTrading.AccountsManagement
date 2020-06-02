@@ -100,7 +100,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         public async Task<IReadOnlyList<IAccount>> CreateDefaultAccountsAsync(string clientId,
             string tradingConditionId)
         {
-            var existingAccounts = (await _accountsRepository.GetAllAsync(clientId: clientId)).ToList();
+            var existingAccounts = (await _accountsRepository.GetAllAsync(clientId)).ToList();
 
             if (existingAccounts.Any())
             {
@@ -178,12 +178,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         public Task<PaginatedResponse<IAccount>> ListByPagesAsync(string search, bool showDeleted = false,
             int? skip = null, int? take = null, bool isAscendingOrder = true)
         {
-            return _accountsRepository.GetByPagesAsync(search, showDeleted, skip: skip, take: take, isAscendingOrder: isAscendingOrder);
+            return _accountsRepository.GetByPagesAsync(search, showDeleted, skip, take, isAscendingOrder);
         }
 
         public Task<IReadOnlyList<IAccount>> GetByClientAsync(string clientId, bool showDeleted = false)
         {
-            return _accountsRepository.GetAllAsync(clientId: clientId, showDeleted: showDeleted);
+            return _accountsRepository.GetAllAsync(clientId, showDeleted: showDeleted);
         }
 
         public Task<IAccount> GetByIdAsync(string accountId)
@@ -215,9 +215,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var accountCapital = await GetAccountCapitalAsync(account);
 
             var result = new AccountStat(
-                accountId: accountId,
-                created: _systemClock.UtcNow.UtcDateTime,
-                realisedPnl: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.RealizedPnL),
+                accountId,
+                _systemClock.UtcNow.UtcDateTime,
+                accountHistory.GetTotalByType(AccountBalanceChangeReasonType.RealizedPnL),
                 unRealisedPnl: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.UnrealizedDailyPnL),
                 depositAmount: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.Deposit),
                 withdrawalAmount: accountHistory.GetTotalByType(AccountBalanceChangeReasonType.Withdraw),
@@ -400,16 +400,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             decimal amountDelta, AccountBalanceChangeReasonType changeReasonType, string source, bool changeTransferLimit = false)
         {
             await _sendBalanceCommandsService.ChargeManuallyAsync(
-                accountId: accountId,
-                amountDelta: amountDelta,
-                operationId: operationId,
-                reason: changeReasonType.ToString(),
-                source: source,
-                auditLog: null,
-                type: changeReasonType,
-                eventSourceId: operationId,
-                assetPairId: null,
-                tradingDate: _systemClock.UtcNow.UtcDateTime);
+                accountId,
+                amountDelta,
+                operationId,
+                changeReasonType.ToString(),
+                source,
+                null,
+                changeReasonType,
+                operationId,
+                null,
+                _systemClock.UtcNow.UtcDateTime);
         }
         
         private async Task ValidateTradingConditionAsync(string accountId,

@@ -104,10 +104,10 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 var totalCount = await gridReader.ReadSingleAsync<int>();
 
                 return new PaginatedResponse<IAccountBalanceChange>(
-                    contents: contents, 
-                    start: skip ?? 0, 
-                    size: contents.Count, 
-                    totalSize: totalCount
+                    contents, 
+                    skip ?? 0, 
+                    contents.Count, 
+                    totalCount
                 );
             }
         }

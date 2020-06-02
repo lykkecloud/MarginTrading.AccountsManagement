@@ -12,7 +12,6 @@ using Lykke.SlackNotifications;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Extensions;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
-using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 
@@ -70,7 +69,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         private static AccountHistory Map(AccountBalanceChangeContract accountBalanceChangeContract)
         {
             return new AccountHistory(
-                id: accountBalanceChangeContract.Id,
+                accountBalanceChangeContract.Id,
                 changeAmount: accountBalanceChangeContract.ChangeAmount,
                 accountId: accountBalanceChangeContract.AccountId,
                 changeTimestamp: accountBalanceChangeContract.ChangeTimestamp,

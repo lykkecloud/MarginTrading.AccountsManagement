@@ -13,7 +13,6 @@ using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Commands;
 using MarginTrading.AccountsManagement.Workflow.Deposit.Events;
 using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
-using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 
 namespace MarginTrading.AccountsManagement.Workflow.Deposit
 {
@@ -73,16 +72,16 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             {
                 sender.SendCommand(
                     new UpdateBalanceInternalCommand(
-                        operationId: e.OperationId,
-                        accountId: executionInfo.Data.AccountId,
-                        amountDelta: executionInfo.Data.Amount,
-                        comment: "Funds deposit " + executionInfo.Data.Comment,
-                        auditLog: executionInfo.Data.AuditLog,
-                        source: OperationName,
-                        changeReasonType: AccountBalanceChangeReasonType.Deposit,
-                        eventSourceId: e.OperationId,
-                        assetPairId: string.Empty,
-                        tradingDay: DateTime.UtcNow),
+                        e.OperationId,
+                        executionInfo.Data.AccountId,
+                        executionInfo.Data.Amount,
+                        "Funds deposit " + executionInfo.Data.Comment,
+                        executionInfo.Data.AuditLog,
+                        OperationName,
+                        AccountBalanceChangeReasonType.Deposit,
+                        e.OperationId,
+                        string.Empty,
+                        DateTime.UtcNow),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow(e.OperationId);
@@ -132,7 +131,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Deposit
             {
                 sender.SendCommand(
                     new CompleteDepositInternalCommand(
-                        operationId: e.BalanceChange.Id),
+                        e.BalanceChange.Id),
                     _contextNames.AccountsManagement);
                 
                 _chaosKitty.Meow(e.BalanceChange.Id);

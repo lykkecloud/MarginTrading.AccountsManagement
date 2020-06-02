@@ -2,11 +2,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using AutoMapper;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
-using Newtonsoft.Json;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Services
 {

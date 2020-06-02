@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using AzureStorage;
 using Common;
 using Common.Log;
-using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
@@ -42,9 +41,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             Func<IOperationExecutionInfo<TData>> factory) where TData : class
         {
             var entity = await _tableStorage.GetOrInsertAsync(
-                partitionKey: OperationExecutionInfoEntity.GeneratePartitionKey(operationName),
-                rowKey: OperationExecutionInfoEntity.GeneratePartitionKey(operationId),
-                createNew: () => Convert(factory()));
+                OperationExecutionInfoEntity.GeneratePartitionKey(operationName),
+                OperationExecutionInfoEntity.GeneratePartitionKey(operationId),
+                () => Convert(factory()));
                 
             return Convert<TData>(entity);
         }
@@ -71,20 +70,20 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         {
             var entity = Convert(executionInfo);
             await _tableStorage.DeleteIfExistAsync(
-                partitionKey: OperationExecutionInfoEntity.GeneratePartitionKey(entity.OperationName),
-                rowKey: OperationExecutionInfoEntity.GeneratePartitionKey(executionInfo.Id));
+                OperationExecutionInfoEntity.GeneratePartitionKey(entity.OperationName),
+                OperationExecutionInfoEntity.GeneratePartitionKey(executionInfo.Id));
         }
 
         private static IOperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class
         {
             return new OperationExecutionInfo<TData>(
-                operationName: entity.OperationName,
-                id: entity.Id,
-                data: entity.Data is string dataStr
+                entity.OperationName,
+                entity.Id,
+                entity.Data is string dataStr
                     ? JsonConvert.DeserializeObject<TData>(dataStr)
                     : ((JToken) entity.Data).ToObject<TData>(),
-                lastModified: entity.LastModified);
+                entity.LastModified);
         }
 
         private static OperationExecutionInfoEntity Convert<TData>(IOperationExecutionInfo<TData> model)

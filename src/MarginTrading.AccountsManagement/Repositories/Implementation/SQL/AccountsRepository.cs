@@ -8,18 +8,13 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Transactions;
-using AutoMapper;
-using AzureStorage;
 using Common;
 using Common.Log;
 using Dapper;
 using Lykke.Logs.MsSql.Extensions;
-using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
-using MarginTrading.AccountsManagement.Repositories.AzureServices;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.Extensions.Internal;
 
@@ -156,10 +151,10 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 var totalCount = await gridReader.ReadSingleAsync<int>();
 
                 return new PaginatedResponse<IAccount>(
-                    contents: accounts, 
-                    start: skip ?? 0, 
-                    size: accounts.Count, 
-                    totalSize: !take.HasValue ? accounts.Count : totalCount
+                    accounts, 
+                    skip ?? 0, 
+                    accounts.Count, 
+                    !take.HasValue ? accounts.Count : totalCount
                 );
             }
         }
