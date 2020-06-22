@@ -9,6 +9,7 @@ using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.SettingsService.Contracts;
+using MarginTrading.TradingHistory.Client;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MarginTrading.AccountsManagement.Modules
@@ -25,7 +26,6 @@ namespace MarginTrading.AccountsManagement.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            // todo register external services here
             var settingsClientGeneratorBuilder = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl)
                 .WithServiceName<LykkeErrorResponse>(
@@ -53,6 +53,14 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IOrdersApi>());
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IPositionsApi>());
             builder.RegisterInstance(mtCoreClientGenerator.Generate<IAccountsApi>());
+            
+            var mtTradingHistoryClientGenerator = HttpClientGenerator
+                .BuildForUrl(_settings.CurrentValue.TradingHistoryClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>("MT Core History Service")
+                .WithOptionalApiKey(_settings.CurrentValue.TradingHistoryClient.ApiKey)
+                .Create();
+
+            builder.RegisterInstance(mtTradingHistoryClientGenerator.Generate<IDealsApi>());
 
             builder.Populate(_services);
         }

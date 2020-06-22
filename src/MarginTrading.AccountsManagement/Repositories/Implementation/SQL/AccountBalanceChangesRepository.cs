@@ -151,7 +151,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<decimal> GetRealizedPnlAndCompensationsForToday(string accountId)
+        public async Task<decimal> GetCompensationsForToday(string accountId)
         {
             var whereClause = "WHERE AccountId=@accountId"
                               + " AND ChangeTimestamp > @from"
@@ -159,19 +159,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
             var reasonTypes = new[]
             {
-                AccountBalanceChangeReasonType.RealizedPnL.ToString(),
                 AccountBalanceChangeReasonType.CompensationPayments.ToString()
             };
-            
+
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 return await conn.QuerySingleAsync<decimal?>(
                     $"SELECT SUM(ChangeAmount) FROM {TableName} WITH (NOLOCK) {whereClause}", new
                     {
                         accountId,
-                        //TODO rethink the way trading day's start & end are selected 
                         from = _systemClock.UtcNow.UtcDateTime.Date,
-                        reasonTypes = reasonTypes,
+                        reasonTypes,
                     }) ?? 0;
             }
         }
