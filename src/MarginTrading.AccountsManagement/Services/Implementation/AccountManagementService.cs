@@ -273,10 +273,10 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var compensationsCapital = await _accountBalanceChangesRepository.GetCompensationsForToday(account.Id);
 
-            var totalPnL = await _dealsApi.GetTotalPnL(account.Id, null, _systemClock.UtcNow.UtcDateTime.Date);
+            var totalPnlResponse = await _dealsApi.GetTotalPnL(account.Id, null, _systemClock.UtcNow.UtcDateTime.Date);
 
             return new AccountCapital(account.Balance, 
-                totalPnL, 
+                totalPnlResponse?.Value ?? 0, 
                 temporaryCapital, 
                 compensationsCapital,
                 account.BaseAssetId);
