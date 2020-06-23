@@ -96,6 +96,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 .Sum(x => x.ChangeAmount);
         }
 
+        public async Task<decimal> GetCompensationsForToday(string accountId)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task AddAsync(IAccountBalanceChange change)
         {
             var entity = _convertService.Convert<AccountBalanceChangeEntity>(change);
