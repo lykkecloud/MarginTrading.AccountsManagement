@@ -11,7 +11,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         Swap = 5,
         Manual = 6,
         UnrealizedDailyPnL = 7,
-        RealizedPnL = 8,
+        RealizedPnL = 8, 
         Commission = 9,
         Dividend = 10,
         OnBehalf = 11,
