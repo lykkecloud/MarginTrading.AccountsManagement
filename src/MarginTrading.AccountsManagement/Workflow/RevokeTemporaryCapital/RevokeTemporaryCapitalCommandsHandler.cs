@@ -11,6 +11,7 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
@@ -26,10 +27,10 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
         private readonly IAccountsRepository _accountsRepository;
         private readonly ISystemClock _systemClock;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
-        private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly IChaosKitty _chaosKitty;
         private readonly ILog _log;
         private readonly AccountManagementSettings _settings;
+        private readonly IAccountManagementService _accountManagementService;
         
         private const string OperationName = RevokeTemporaryCapitalSaga.OperationName;
 
@@ -38,19 +39,19 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             IAccountsRepository accountsRepository,
             ISystemClock systemClock,
             IOperationExecutionInfoRepository executionInfoRepository,
-            IAccountBalanceChangesRepository accountBalanceChangesRepository,
             IChaosKitty chaosKitty,
             ILog log,
-            AccountManagementSettings settings)
+            AccountManagementSettings settings, 
+            IAccountManagementService accountManagementService)
         {
             _accountsApi = accountsApi;
             _accountsRepository = accountsRepository;
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
-            _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _chaosKitty = chaosKitty;
             _log = log;
             _settings = settings;
+            _accountManagementService = accountManagementService;
         }
         
         /// <summary>
@@ -104,15 +105,17 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             var temporaryCapitalToRevoke = account.TemporaryCapital
                 .Where(x => string.IsNullOrEmpty(c.RevokeEventSourceId) || x.Id == c.RevokeEventSourceId)
                 .ToList();
-            
-            var accountableTransactionsSumForToday = await _accountBalanceChangesRepository.GetRealizedPnlAndCompensationsForToday(c.AccountId);
-            var amountToRevoke = temporaryCapitalToRevoke.Select(x => x.Amount).Sum();
-            if (account.Balance - accountableTransactionsSumForToday < amountToRevoke)
+
+            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account);
+            var amountToRevoke = temporaryCapitalToRevoke.Sum(x => x.Amount);
+            if (accountCapital.CanRevokeAmount < amountToRevoke)
             {
+                var totalPnlAndCompensations = accountCapital.TotalPnl + accountCapital.Compensations;
+                
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
                     _systemClock.UtcNow.UtcDateTime,
                     $"Account {c.AccountId} balance {account.Balance}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}."
-                    + (accountableTransactionsSumForToday > 0 ? $" Taking into account the sum of the current realized daily PnL and compensation payments {accountableTransactionsSumForToday}{account.BaseAssetId}." : ""),
+                    + (totalPnlAndCompensations > 0 ? $" Taking into account the sum of the total daily PnL and compensation payments {totalPnlAndCompensations}{account.BaseAssetId}." : ""),
                     c.RevokeEventSourceId));
                 return;
             }
@@ -133,7 +136,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                     AccountManagementService.UpdateTemporaryCapital,
                     string.IsNullOrEmpty(c.RevokeEventSourceId)
                         ? null
-                        : new InternalModels.TemporaryCapital { Id = c.RevokeEventSourceId },
+                        : new TemporaryCapital { Id = c.RevokeEventSourceId },
                     false);
             }
             catch (Exception exception)

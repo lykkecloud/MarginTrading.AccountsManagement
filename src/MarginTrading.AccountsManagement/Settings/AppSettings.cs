@@ -18,5 +18,7 @@ namespace MarginTrading.AccountsManagement.Settings
         public ClientSettings MarginTradingSettingsServiceClient { get; set; }
         
         public OptionalClientSettings MtBackendServiceClient { get; set; }
+        
+        public OptionalClientSettings TradingHistoryClient { get; set; }
     }
 }

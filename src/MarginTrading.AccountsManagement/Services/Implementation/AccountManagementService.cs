@@ -14,6 +14,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.TradingHistory.Client;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Internal;
 
@@ -32,6 +33,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IMemoryCache _statsCache;
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly CacheSettings _cacheSettings;
+        private readonly IDealsApi _dealsApi;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
@@ -42,7 +44,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             ISystemClock systemClock, 
             IMemoryCache statsCache, 
             IAccountBalanceChangesRepository accountBalanceChangesRepository, 
-            CacheSettings cacheSettings)
+            CacheSettings cacheSettings, 
+            IDealsApi dealsApi)
         {
             _accountsRepository = accountsRepository;
             _tradingConditionsService = tradingConditionsService;
@@ -54,6 +57,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _statsCache = statsCache;
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _cacheSettings = cacheSettings;
+            _dealsApi = dealsApi;
         }
 
 
@@ -267,10 +271,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             
             var temporaryCapital = account.GetTemporaryCapital();
 
-            var compensationsCapital =
-                await _accountBalanceChangesRepository.GetRealizedPnlAndCompensationsForToday(account.Id);
-            
-            return new AccountCapital(account.Balance, temporaryCapital, compensationsCapital, account.BaseAssetId);
+            var compensationsCapital = await _accountBalanceChangesRepository.GetCompensationsForToday(account.Id);
+
+            var totalPnlResponse = await _dealsApi.GetTotalPnL(account.Id, null, _systemClock.UtcNow.UtcDateTime.Date);
+
+            return new AccountCapital(account.Balance, 
+                totalPnlResponse?.Value ?? 0, 
+                temporaryCapital, 
+                compensationsCapital,
+                account.BaseAssetId);
         }
 
         #endregion

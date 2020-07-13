@@ -76,8 +76,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     _systemClock.UtcNow.UtcDateTime, account == null
                         ? $"Account {command.AccountId} not found."
                         : $"Account {account.Id} balance {accountCapital.Balance}{accountCapital.AssetId} is not enough to withdraw {command.Amount}{accountCapital.AssetId}."
-                          + (accountCapital.Compensations + accountCapital.Temporary != 0
-                              ? $" Taking into account the sum of the current realized daily PnL and compensation payments {accountCapital.Compensations}{accountCapital.AssetId}, and temporary capital {accountCapital.Temporary}{accountCapital.AssetId}."
+                          + (accountCapital.Compensations + accountCapital.Temporary + accountCapital.TotalPnl != 0
+                              ? $" Taking into account the sum of the total daily PnL and compensation payments {accountCapital.TotalPnl + accountCapital.Compensations}{accountCapital.AssetId}, and temporary capital {accountCapital.Temporary}{accountCapital.AssetId}."
                               : "")));
                 return;
             }
