@@ -23,7 +23,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public decimal Compensations { get; }
         
         /// <summary>
-        /// The total deals PnL 
+        /// The total PnL 
         /// </summary>
         public decimal TotalPnl { get; }
         

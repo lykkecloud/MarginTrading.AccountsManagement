@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 
-namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Extensions
+namespace MarginTrading.AccountsManagement.Dal.Common
 {
     public static class FileExtensions
     {

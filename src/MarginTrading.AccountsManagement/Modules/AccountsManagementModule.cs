@@ -47,6 +47,7 @@ namespace MarginTrading.AccountsManagement.Modules
                 .As<IEventSender>()
                 .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
+            
             builder.RegisterChaosKitty(_settings.CurrentValue.MarginTradingAccountManagement.ChaosKitty);
 
             RegisterServices(builder);
@@ -65,6 +66,10 @@ namespace MarginTrading.AccountsManagement.Modules
                     .As<IAccountsRepository>().SingleInstance();
                 builder.RegisterType<SqlRepos.OperationExecutionInfoRepository>()
                     .As<IOperationExecutionInfoRepository>().SingleInstance();
+                builder.RegisterType<SqlRepos.SqlEodTaxFileMissingRepository>()
+                    .As<IEodTaxFileMissingRepository>()
+                    .WithParameter(TypedParameter.From(_settings.CurrentValue.MarginTradingAccountManagement.Db.ConnectionString))
+                    .SingleInstance();
             }
             else if (_settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.Azure.ToString())
             {
@@ -89,7 +94,7 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterType<NegativeProtectionService>().As<INegativeProtectionService>().SingleInstance();
             builder.RegisterType<AccuracyService>().As<IAccuracyService>().SingleInstance();
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
-            builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance(); 
+            builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance();
         }
     }
 }

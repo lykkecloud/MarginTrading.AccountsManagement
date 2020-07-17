@@ -2,11 +2,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Microsoft.Data.SqlClient;
 using Common.Log;
 using Dapper;
+using Microsoft.Data.SqlClient;
 
-namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Extensions
+namespace MarginTrading.AccountsManagement.Dal.Common
 {
     public static class SqlExtensions
     {
