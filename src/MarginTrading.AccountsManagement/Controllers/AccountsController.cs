@@ -433,7 +433,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 throw new ArgumentNullException(nameof(accountId), "Account must be set.");
             }
 
-            var stat = await _accountManagementService.GetStat(accountId);
+            var stat = await _accountManagementService.GetCachedAccountStatistics(accountId);
             
             return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }

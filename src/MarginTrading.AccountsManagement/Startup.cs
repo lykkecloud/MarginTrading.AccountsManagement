@@ -112,6 +112,7 @@ namespace MarginTrading.AccountsManagement
             builder.RegisterModule(new AccountsManagementModule(_mtSettingsManager, Log));
             builder.RegisterModule(new AccountsManagementExternalServicesModule(_mtSettingsManager));
             builder.RegisterModule(new CqrsModule(_mtSettingsManager.CurrentValue.MarginTradingAccountManagement.Cqrs, Log));
+            builder.RegisterModule(new RabbitMqModule(_mtSettingsManager, Log));
         }
 
         [UsedImplicitly]
