@@ -15,7 +15,7 @@ using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Services;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Internal;
 using Refit;
