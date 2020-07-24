@@ -8,7 +8,7 @@ using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.Backend.Contracts;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 using MarginTrading.TradingHistory.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,14 +27,14 @@ namespace MarginTrading.AccountsManagement.Modules
         protected override void Load(ContainerBuilder builder)
         {
             var settingsClientGeneratorBuilder = HttpClientGenerator
-                .BuildForUrl(_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl)
+                .BuildForUrl(_settings.CurrentValue.MarginTradingAssetServiceClient.ServiceUrl)
                 .WithServiceName<LykkeErrorResponse>(
-                    $"MT Settings [{_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl}]");
+                    $"MT Settings [{_settings.CurrentValue.MarginTradingAssetServiceClient.ServiceUrl}]");
             
-            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MarginTradingSettingsServiceClient.ApiKey))
+            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MarginTradingAssetServiceClient.ApiKey))
             {
                 settingsClientGeneratorBuilder = settingsClientGeneratorBuilder
-                    .WithApiKey(_settings.CurrentValue.MarginTradingSettingsServiceClient.ApiKey);
+                    .WithApiKey(_settings.CurrentValue.MarginTradingAssetServiceClient.ApiKey);
             }
 
             var settingsClientGenerator = settingsClientGeneratorBuilder.Create();
