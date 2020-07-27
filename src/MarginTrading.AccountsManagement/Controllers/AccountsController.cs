@@ -19,6 +19,8 @@ using MarginTrading.SettingsService.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Internal;
 using Refit;
+using MarginTrading.AccountsManagement.Exceptions;
+using MarginTrading.AccountsManagement.Contracts.ErrorCodes;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
@@ -53,7 +55,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         #region CRUD
-        
+
         /// <summary>
         /// Gets all accounts
         /// </summary>
@@ -81,7 +83,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             {
                 throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
-            
+
             return Convert(_accountManagementService.ListByPagesAsync(search, showDeleted, skip, take, isAscendingOrder));
         }
 
@@ -123,7 +125,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpPost]
         [Route("{clientId}")]
         [Obsolete("Use a single-parameter Create.")]
-        public Task<AccountContract> Create([NotNull] string clientId, 
+        public Task<AccountContract> Create([NotNull] string clientId,
             [FromBody][NotNull] CreateAccountRequestObsolete request)
         {
             return Create(new CreateAccountRequest
@@ -134,7 +136,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                 BaseAssetId = request.BaseAssetId,
             });
         }
-        
+
         /// <summary>
         /// Creates an account
         /// </summary>
@@ -177,12 +179,19 @@ namespace MarginTrading.AccountsManagement.Controllers
                 return await GetById(accountId);
             }
 
-            var result = await _accountManagementService.UpdateAccountAsync(accountId,
-                request.TradingConditionId,
-                request.IsDisabled,
-                request.IsWithdrawalDisabled);
+            try
+            {
+                var result = await _accountManagementService.UpdateAccountAsync(accountId,
+                    request.TradingConditionId,
+                    request.IsDisabled,
+                    request.IsWithdrawalDisabled);
 
-            return Convert(result);
+                return Convert(result);
+            }
+            catch (DisableAccountWithPositionsOrOrdersException)
+            {
+                throw new Exception(AccountsApiErrorCodes.DisableAccountWithPositionsOrOrders);
+            }
         }
 
         /// <summary>
@@ -205,7 +214,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         #endregion CRUD
 
         #region Deposit/Withdraw/ChargeManually
-        
+
         /// <summary>
         /// Starts the operation of manually charging the client's account.
         /// Amount is absolute, i.e. negative value goes for charging.
@@ -242,8 +251,8 @@ namespace MarginTrading.AccountsManagement.Controllers
                 "Api",
                 request.AdditionalInfo,
                 request.ReasonType.ToType<AccountBalanceChangeReasonType>(),
-                request.EventSourceId, 
-                request.AssetPairId, 
+                request.EventSourceId,
+                request.AssetPairId,
                 request.TradingDay ?? _systemClock.UtcNow.DateTime);
         }
 
@@ -260,7 +269,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta.RequiredGreaterThan(default, nameof(request.AmountDelta)),
                 account.BaseAssetId, nameof(BeginDeposit));
-            
+
             return await _sendBalanceCommandsService.DepositAsync(
                 accountId.RequiredNotNullOrWhiteSpace(nameof(accountId)),
                 amount,
@@ -286,7 +295,7 @@ namespace MarginTrading.AccountsManagement.Controllers
 
             return result.OperationId;
         }
-        
+
         /// <summary>
         /// Tries to start the operation of withdrawing funds to the client's account. Amount should be positive.
         /// </summary>
@@ -304,7 +313,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                     ErrorDetails = "OperationID is missing"
                 };
             }
-            
+
             IAccount account;
 
             try
@@ -323,7 +332,7 @@ namespace MarginTrading.AccountsManagement.Controllers
 
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta,
-                account.BaseAssetId, 
+                account.BaseAssetId,
                 nameof(BeginWithdraw));
 
             if (amount <= 0)
@@ -356,7 +365,7 @@ namespace MarginTrading.AccountsManagement.Controllers
                     request.OperationId,
                     request.Reason,
                     request.AdditionalInfo);
-                
+
                 return new WithdrawalResponse
                 {
                     Amount = amount,
@@ -374,11 +383,11 @@ namespace MarginTrading.AccountsManagement.Controllers
                 };
             }
         }
-        
+
         #endregion Deposit/Withdraw/ChargeManually
 
         #region System actions
-        
+
         /// <summary>
         /// Reset account balance to default value (from settings)
         /// </summary>
@@ -398,7 +407,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public Task<List<AccountContract>> CreateDefaultAccounts([NotNull] CreateDefaultAccountsRequest request)
         {
             return Convert(_accountManagementService.CreateDefaultAccountsAsync(
-                request.ClientId.RequiredNotNullOrWhiteSpace(nameof(request.ClientId)), 
+                request.ClientId.RequiredNotNullOrWhiteSpace(nameof(request.ClientId)),
                 request.TradingConditionId.RequiredNotNullOrWhiteSpace(nameof(request.TradingConditionId))));
         }
 
@@ -416,7 +425,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             return Convert(account);
         }
 
-        
+
 
         #endregion System actions
 
@@ -434,7 +443,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             }
 
             var stat = await _accountManagementService.GetStat(accountId);
-            
+
             return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }
 
