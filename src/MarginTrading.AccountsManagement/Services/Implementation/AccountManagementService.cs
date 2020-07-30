@@ -9,11 +9,13 @@ using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AccountsManagement.Exceptions;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.Backend.Contracts;
 using MarginTrading.TradingHistory.Client;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Internal;
@@ -34,18 +36,20 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly CacheSettings _cacheSettings;
         private readonly IDealsApi _dealsApi;
+        private readonly IAccountsApi _accountsApi;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
             ISendBalanceCommandsService sendBalanceCommandsService,
             AccountManagementSettings settings,
-            IEventSender eventSender, 
+            IEventSender eventSender,
             ILog log,
-            ISystemClock systemClock, 
-            IMemoryCache statsCache, 
-            IAccountBalanceChangesRepository accountBalanceChangesRepository, 
-            CacheSettings cacheSettings, 
-            IDealsApi dealsApi)
+            ISystemClock systemClock,
+            IMemoryCache statsCache,
+            IAccountBalanceChangesRepository accountBalanceChangesRepository,
+            CacheSettings cacheSettings,
+            IDealsApi dealsApi,
+            IAccountsApi accountsApi)
         {
             _accountsRepository = accountsRepository;
             _tradingConditionsService = tradingConditionsService;
@@ -58,6 +62,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _cacheSettings = cacheSettings;
             _dealsApi = dealsApi;
+            _accountsApi = accountsApi;
         }
 
 
@@ -97,7 +102,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             _log.WriteInfo(nameof(AccountManagementService), nameof(CreateAsync),
                 $"{baseAssetId} account {accountId} created for client {clientId} on trading condition {tradingConditionId}");
-            
+
             return account;
         }
 
@@ -201,14 +206,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentNullException(nameof(accountId));
 
             var onDate = _systemClock.UtcNow.UtcDateTime.Date;
-            
+
             if (_statsCache.TryGetValue(GetStatsCacheKey(accountId, onDate), out AccountStat cachedData))
             {
                 return cachedData;
             }
-            
+
             var account = await _accountsRepository.GetAsync(accountId);
-            
+
             if (account == null)
                 return null;
 
@@ -252,32 +257,32 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         public async Task<IAccount> EnsureAccountValidAsync(string accountId, bool skipDeleteValidation = false)
         {
             var account = await GetByIdAsync(accountId);
-            
+
             account.RequiredNotNull(nameof(account), $"Account [{accountId}] does not exist");
-            
+
             if (!skipDeleteValidation && account.IsDeleted)
             {
                 throw new ValidationException(
                     $"Account [{account.Id}] is deleted. No operations are permitted.");
             }
-            
+
             return account;
         }
-        
+
         public async Task<AccountCapital> GetAccountCapitalAsync(IAccount account)
         {
             if (account == null)
                 throw new ArgumentNullException(nameof(account));
-            
+
             var temporaryCapital = account.GetTemporaryCapital();
 
             var compensationsCapital = await _accountBalanceChangesRepository.GetCompensationsForToday(account.Id);
 
             var totalPnlResponse = await _dealsApi.GetTotalPnL(account.Id, null, _systemClock.UtcNow.UtcDateTime.Date);
 
-            return new AccountCapital(account.Balance, 
-                totalPnlResponse?.Value ?? 0, 
-                temporaryCapital, 
+            return new AccountCapital(account.Balance,
+                totalPnlResponse?.Value ?? 0,
+                temporaryCapital,
                 compensationsCapital,
                 account.BaseAssetId);
         }
@@ -292,6 +297,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             await ValidateTradingConditionAsync(accountId, tradingConditionId);
 
+            if (isDisabled ?? false)
+            {
+                await ValidateStatsBeforeDisableAsync(accountId);
+            }
+
             var account = await EnsureAccountValidAsync(accountId, true);
 
             var result =
@@ -300,14 +310,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     tradingConditionId,
                     isDisabled,
                     isWithdrawalDisabled);
-            
+
             _eventSender.SendAccountChangedEvent(
                 nameof(UpdateAccountAsync),
                 result,
                 AccountChangedEventTypeContract.Updated,
                 Guid.NewGuid().ToString("N"),
                 previousSnapshot: account);
-                
+
             return result;
         }
 
@@ -320,10 +330,10 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var account = await EnsureAccountValidAsync(accountId, true);
 
-            await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId, 
-                _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset, 
+            await UpdateBalanceAsync(Guid.NewGuid().ToString(), accountId,
+                _settings.Behavior.DefaultBalance - account.Balance, AccountBalanceChangeReasonType.Reset,
                 "Reset account Api");
-            
+
             await _accountsRepository.EraseAsync(accountId);
         }
 
@@ -331,11 +341,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             string reason, string comment, string additionalInfo)
         {
             return await _sendBalanceCommandsService.GiveTemporaryCapital(
-                eventSourceId, 
+                eventSourceId,
                 accountId,
-                amount, 
-                reason, 
-                comment, 
+                amount,
+                reason,
+                comment,
                 additionalInfo);
         }
 
@@ -343,10 +353,10 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             string revokeEventSourceId, string comment, string additionalInfo)
         {
             return await _sendBalanceCommandsService.RevokeTemporaryCapital(
-                eventSourceId, 
+                eventSourceId,
                 accountId,
-                revokeEventSourceId, 
-                comment, 
+                revokeEventSourceId,
+                comment,
                 additionalInfo);
         }
 
@@ -356,11 +366,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentNullException(nameof(accountId));
 
             var cacheKey = GetStatsCacheKey(accountId, _systemClock.UtcNow.UtcDateTime.Date);
-            
+
             _statsCache.Remove(cacheKey);
 
             _log.WriteInfo(
-                nameof(AccountManagementService), 
+                nameof(AccountManagementService),
                 nameof(ClearStatsCache),
                 $"The account statistics cache has been wiped for key = {cacheKey}");
         }
@@ -377,15 +387,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 : accountId;
 
             IAccount account = new Account(
-                id, 
-                clientId, 
-                tradingConditionId, 
-                baseAssetId, 
-                0, 
-                0, 
-                legalEntityId, 
-                false, 
-                !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true), 
+                id,
+                clientId,
+                tradingConditionId,
+                baseAssetId,
+                0,
+                0,
+                legalEntityId,
+                false,
+                !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true),
                 false,
                 DateTime.UtcNow);
 
@@ -398,7 +408,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             //todo consider moving to CQRS projection
             if (_settings.Behavior?.DefaultBalance != null && _settings.Behavior.DefaultBalance != default)
             {
-                await UpdateBalanceAsync(Guid.NewGuid().ToString(), account.Id, _settings.Behavior.DefaultBalance, 
+                await UpdateBalanceAsync(Guid.NewGuid().ToString(), account.Id, _settings.Behavior.DefaultBalance,
                     AccountBalanceChangeReasonType.Create, "Create account Api");
             }
 
@@ -420,13 +430,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 null,
                 _systemClock.UtcNow.UtcDateTime);
         }
-        
+
         private async Task ValidateTradingConditionAsync(string accountId,
             string tradingConditionId)
         {
             if (string.IsNullOrEmpty(tradingConditionId))
                 return;
-            
+
             if (!await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
             {
                 throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
@@ -451,11 +461,20 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
         }
 
+        private async Task ValidateStatsBeforeDisableAsync(string accountId)
+        {
+            var stats = await _accountsApi.GetAccountStats(accountId);
+            if (stats.ActiveOrdersCount > 0 || stats.OpenPositionsCount > 0)
+            {
+                throw new DisableAccountWithPositionsOrOrdersException();
+            }
+        }
+
         public static List<TemporaryCapital> UpdateTemporaryCapital(string accountId, List<TemporaryCapital> current,
             TemporaryCapital temporaryCapital, bool isAdd)
         {
             var result = current.ToList();
-            
+
             if (isAdd)
             {
                 if (result.Any(x => x.Id == temporaryCapital.Id))
@@ -464,7 +483,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                         $"Temporary capital record with id {temporaryCapital.Id} is already set on account {accountId}",
                         nameof(temporaryCapital.Id));
                 }
-                    
+
                 if (temporaryCapital != null)
                 {
                     result.Add(temporaryCapital);
@@ -488,7 +507,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private string GetStatsCacheKey(string accountId, DateTime date)
         {
             var dateText = date.ToString("yyyy-MM-dd");
-            
+
             return $"{accountId}:{dateText}";
         }
 
