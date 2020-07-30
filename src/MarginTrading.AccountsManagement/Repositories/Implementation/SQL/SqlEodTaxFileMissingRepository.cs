@@ -23,16 +23,16 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             _log = log;
             connectionString.InitializeSqlObject("dbo.TaxFileMissing.sql", log);
-            ExecCreateOrAlter("dbo.sp_addTaxFileMissing.sql");
-            ExecCreateOrAlter("dbo.sp_removeTaxFileMissing.sql");
-            ExecCreateOrAlter("dbo.sp_getTaxFileMissing.sql");
+            ExecCreateOrAlter("dbo.addTaxFileMissing.sql");
+            ExecCreateOrAlter("dbo.removeTaxFileMissing.sql");
+            ExecCreateOrAlter("dbo.getTaxFileMissing.sql");
         }
         
         public async Task AddAsync(DateTime tradingDay)
         {
             try
             {
-                await ExecuteNonQueryAsync("[dbo].[sp_addTaxFileMissing]",
+                await ExecuteNonQueryAsync("[dbo].[addTaxFileMissing]",
                     new[]
                     {
                         new SqlParameter("@TradingDate", SqlDbType.DateTime) {Value = tradingDay.Date}
@@ -52,7 +52,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             try
             {
-                await ExecuteNonQueryAsync("[dbo].[sp_removeTaxFileMissing]",
+                await ExecuteNonQueryAsync("[dbo].[removeTaxFileMissing]",
                     new[] {new SqlParameter("@TradingDate", SqlDbType.DateTime) {Value = tradingDay.Date}});
             }
             catch (InsertionFailedException e)
@@ -69,7 +69,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             try
             {
-                return await GetAllAsync("[dbo].[sp_getTaxFileMissing]", null, Map);
+                return await GetAllAsync("[dbo].[getTaxFileMissing]", null, Map);
             }
             catch (FormatException e)
             {

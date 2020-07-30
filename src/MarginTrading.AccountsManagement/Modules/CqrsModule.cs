@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using Autofac;
+using BookKeeper.Client.Workflow.Events;
 using Common.Log;
 using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
@@ -20,7 +21,6 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
-using MarginTrading.AccountsManagement.Workflow;
 using MarginTrading.AccountsManagement.Workflow.ClosePosition;
 using MarginTrading.AccountsManagement.Workflow.DeleteAccounts;
 using MarginTrading.AccountsManagement.Workflow.DeleteAccounts.Commands;
@@ -33,6 +33,7 @@ using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.GiveTemporaryCapital.Events;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands;
+using MarginTrading.AccountsManagement.Workflow.Projections;
 using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital;
 using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Commands;
 using MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital.Events;
@@ -41,6 +42,7 @@ using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
+using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 
 namespace MarginTrading.AccountsManagement.Modules
@@ -139,7 +141,7 @@ namespace MarginTrading.AccountsManagement.Modules
             RegisterGiveTemporaryCapitalCommandsHandler(contextRegistration);
             RegisterRevokeTemporaryCapitalCommandsHandler(contextRegistration);
             RegisterDeleteAccountsCommandsHandler(contextRegistration);
-            RegisterAccountChangedProjection(contextRegistration);
+            RegisterProjections(contextRegistration);
             
             return contextRegistration;
         }
@@ -457,14 +459,25 @@ namespace MarginTrading.AccountsManagement.Modules
                 .With(DefaultPipeline);
         }
         
-        private void RegisterAccountChangedProjection(
-            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        private void RegisterProjections(ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
         {
             contextRegistration.ListeningEvents(
                     typeof(AccountChangedEvent))
                 .From(_settings.ContextNames.AccountsManagement).On("events")
                 .WithProjection(
                     typeof(AccountChangedProjection), _settings.ContextNames.AccountsManagement);
+            
+            contextRegistration.ListeningEvents(
+                    typeof(MarketStateChangedEvent))
+                .From(_settings.ContextNames.TradingEngine).On("events")
+                .WithProjection(
+                    typeof(MarketStateChangedProjection), _settings.ContextNames.TradingEngine);
+
+            contextRegistration.ListeningEvents(
+                    typeof(TaxFileUploadedEvent))
+                .From(_settings.ContextNames.BookKeeper).On("events")
+                .WithProjection(
+                    typeof(TaxFileUploadedProjection), _settings.ContextNames.BookKeeper);
         }
 
         private ISagaRegistration RegisterSaga<TSaga>()
