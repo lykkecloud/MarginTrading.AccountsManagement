@@ -8,7 +8,7 @@ using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Services;
 
-namespace MarginTrading.AccountsManagement.Workflow
+namespace MarginTrading.AccountsManagement.Workflow.Projections
 {
     public class AccountChangedProjection
     {

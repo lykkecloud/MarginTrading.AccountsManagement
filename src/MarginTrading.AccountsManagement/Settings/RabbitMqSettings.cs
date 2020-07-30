@@ -8,7 +8,5 @@ namespace MarginTrading.AccountsManagement.Settings
     [UsedImplicitly]
     public class RabbitMqSettings
     {
-        public SubscriberSettings MarketStateChangedEventSubscriber { get; set; }
-        public SubscriberSettings TaxFileUploadedEventSubscriber { get; set; }
     }
 }
