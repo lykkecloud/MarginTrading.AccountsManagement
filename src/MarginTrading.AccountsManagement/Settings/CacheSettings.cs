@@ -9,8 +9,5 @@ namespace MarginTrading.AccountsManagement.Settings
     public class CacheSettings
     {
         public TimeSpan ExpirationPeriod { get; set; }
-        
-        [Optional]
-        public TimeSpan? AccountCapitalPnlExpirationPeriod { get; set; }
     }
 }
