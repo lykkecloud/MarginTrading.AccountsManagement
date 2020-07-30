@@ -518,7 +518,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             var taxFileMissingDays = await _taxFileMissingRepository.GetAllDaysAsync();
             
-            var taxMissingDaysPnl = await _dealsApi.GetTotalPnL(accountId, null, taxFileMissingDays.ToArray());
+            var taxMissingDaysPnl = await _dealsApi.GetTotalPnL(accountId, taxFileMissingDays.ToArray());
 
             var accountStats = await _accountsApi.GetAccountStats(accountId);
             
