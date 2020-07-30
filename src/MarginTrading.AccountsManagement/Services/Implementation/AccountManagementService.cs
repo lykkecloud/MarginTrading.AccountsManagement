@@ -38,8 +38,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IAccountsApi _accountsApi;
         private readonly IEodTaxFileMissingRepository _taxFileMissingRepository;
 
-        private const int DefaultAccountCapitalExpirationInMinutes = 1;
-
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
             ISendBalanceCommandsService sendBalanceCommandsService,
@@ -282,7 +280,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var compensationsCapital = await _accountBalanceChangesRepository.GetCompensationsForToday(account.Id);
 
-            var totalPnl = await GetCachedAccountCapitalTotalPnlAsync(account.Id);
+            var totalPnl = await GetAccountCapitalTotalPnlAsync(account.Id);
             
             return new AccountCapital(
                 account.Balance, 
@@ -501,34 +499,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return $"{accountId}:{dateText}";
         }
 
-        private string GetAccountCapitalTotalPnlCacheKey(string accountId)
+        private async Task<decimal> GetAccountCapitalTotalPnlAsync(string accountId)
         {
-            return $"accountCapital:totalPnl:{accountId}";
-        }
-        
-        private async Task<decimal> GetCachedAccountCapitalTotalPnlAsync(string accountId)
-        {
-            var cacheKey = GetAccountCapitalTotalPnlCacheKey(accountId);
-            
-            if (_memoryCache.TryGetValue(cacheKey, out decimal totalPnl))
-            {
-                return totalPnl;
-            }
-            
             var taxFileMissingDays = await _taxFileMissingRepository.GetAllDaysAsync();
             
             var taxMissingDaysPnl = await _dealsApi.GetTotalPnL(accountId, null, taxFileMissingDays.ToArray());
 
             var accountStats = await _accountsApi.GetAccountStats(accountId);
             
-            totalPnl = (taxMissingDaysPnl?.Value ?? 0) + accountStats.PnL;
+            var totalPnl = (taxMissingDaysPnl?.Value ?? 0) + accountStats.PnL;
 
-            _memoryCache.Set(
-                cacheKey,
-                totalPnl,
-                _cacheSettings.AccountCapitalPnlExpirationPeriod ??
-                TimeSpan.FromMinutes(DefaultAccountCapitalExpirationInMinutes));
-            
             return totalPnl;
         }
 
