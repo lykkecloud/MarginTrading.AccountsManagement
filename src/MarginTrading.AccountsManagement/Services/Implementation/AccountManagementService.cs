@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -517,14 +518,28 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private async Task<decimal> GetAccountCapitalTotalPnlAsync(string accountId)
         {
             var taxFileMissingDays = await _taxFileMissingRepository.GetAllDaysAsync();
+
+            var missingDaysArray = taxFileMissingDays as DateTime[] ?? taxFileMissingDays.ToArray();
             
-            var taxMissingDaysPnl = await _dealsApi.GetTotalPnL(accountId, taxFileMissingDays.ToArray());
+            LogWarningForTaxFileMissingDaysIfRequired(accountId, missingDaysArray);
+            
+            var taxMissingDaysPnl = await _dealsApi.GetTotalPnL(accountId, missingDaysArray);
 
             var accountStats = await _accountsApi.GetAccountStats(accountId);
             
             var totalPnl = (taxMissingDaysPnl?.Value ?? 0) + accountStats.PnL;
 
             return totalPnl;
+        }
+
+        private void LogWarningForTaxFileMissingDaysIfRequired(string accountId, DateTime[] missingDays)
+        {
+            if (missingDays.Length > 1)
+            {
+                _log.WriteWarning(nameof(AccountManagementService),
+                    new {accountId, missingDays}.ToJson(),
+                    "There are days which we don't have tax file for. Therefore these days PnL will be excluded from total PnL for the account.");
+            }
         }
 
         #endregion

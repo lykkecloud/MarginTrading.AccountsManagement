@@ -443,7 +443,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             }
 
             var stat = await _accountManagementService.GetCachedAccountStatistics(accountId);
-
+            
             return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }
 
