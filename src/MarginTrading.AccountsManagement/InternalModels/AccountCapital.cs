@@ -23,9 +23,14 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public decimal Compensations { get; }
         
         /// <summary>
-        /// The total PnL 
+        /// The total realised PnL 
         /// </summary>
-        public decimal TotalPnl { get; }
+        public decimal TotalRealisedPnl { get; }
+        
+        /// <summary>
+        /// The total unrealised PnL 
+        /// </summary>
+        public decimal TotalUnRealisedPnl { get; }
         
         /// <summary>
         /// The available amount
@@ -42,7 +47,8 @@ namespace MarginTrading.AccountsManagement.InternalModels
         /// </summary>
         public string AssetId { get; }
 
-        public AccountCapital(decimal balance, decimal totalPnl, decimal temporary, decimal compensations, string assetId)
+        public AccountCapital(decimal balance, decimal totalRealisedPnl, decimal totalUnRealisedPnl, decimal temporary, decimal compensations, string 
+        assetId)
         {
             if (string.IsNullOrWhiteSpace(assetId))
                 throw new ArgumentNullException(nameof(assetId));
@@ -51,18 +57,21 @@ namespace MarginTrading.AccountsManagement.InternalModels
             Temporary = temporary;
             Compensations = compensations;
             AssetId = assetId;
-            TotalPnl = totalPnl;
+            TotalRealisedPnl = totalRealisedPnl;
+            TotalUnRealisedPnl = totalUnRealisedPnl;
             
             Disposable = Math.Max(0,
                 Balance - (
                     Math.Max(0, Temporary) + 
                     Math.Max(0, Compensations) +
-                    Math.Max(0, totalPnl)));
+                    Math.Max(0, totalRealisedPnl) + 
+                    Math.Max(0, totalUnRealisedPnl)));
                     
             CanRevokeAmount = Math.Max(0,
                 Balance - (
                     Math.Max(0, Compensations) +
-                    Math.Max(0, totalPnl)));
+                    Math.Max(0, totalRealisedPnl) + 
+                    Math.Max(0, totalUnRealisedPnl)));
         }
     }
 }

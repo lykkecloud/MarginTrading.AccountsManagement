@@ -282,11 +282,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var compensationsCapital = await _accountBalanceChangesRepository.GetCompensationsForToday(account.Id);
 
-            var totalPnl = await GetAccountCapitalTotalPnlAsync(account.Id);
+            var totalRealisedPnl = await GetAccountCapitalTotalPnlAsync(account.Id);
+            
+            var accountStats = await _accountsApi.GetAccountStats(account.Id);
             
             return new AccountCapital(
                 account.Balance, 
-                totalPnl, 
+                totalRealisedPnl, 
+                accountStats.PnL,
                 temporaryCapital, 
                 compensationsCapital,
                 account.BaseAssetId);
@@ -523,11 +526,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             
             LogWarningForTaxFileMissingDaysIfRequired(accountId, missingDaysArray);
             
-            var taxMissingDaysPnl = await _dealsApi.GetTotalPnL(accountId, missingDaysArray);
-
-            var accountStats = await _accountsApi.GetAccountStats(accountId);
+            var taxMissingDaysPnl = await _dealsApi.GetTotalProfit(accountId, missingDaysArray);
             
-            var totalPnl = (taxMissingDaysPnl?.Value ?? 0) + accountStats.PnL;
+            var totalPnl = taxMissingDaysPnl?.Value ?? 0;
 
             return totalPnl;
         }
