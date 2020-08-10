@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.AccountsManagement.Settings
 {

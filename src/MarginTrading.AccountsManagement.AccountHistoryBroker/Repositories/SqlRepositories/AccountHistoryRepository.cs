@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
-using MarginTrading.AccountsManagement.AccountHistoryBroker.Extensions;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
+using MarginTrading.AccountsManagement.Dal.Common;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.SqlRepositories
 {
@@ -32,7 +32,6 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             _log = log;
             _settings = settings;
             _convertService = convertService;
-            
             _settings.Db.ConnString.InitializeSqlObject("dbo.AccountHistory.sql", log);
             _settings.Db.ConnString.InitializeSqlObject("dbo.SP_UpdateDealCommissionParamsOnAccountHistory.sql", log);
         }

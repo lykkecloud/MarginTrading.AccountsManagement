@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -32,11 +33,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IEventSender _eventSender;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
-        private readonly IMemoryCache _statsCache;
+        private readonly IMemoryCache _memoryCache;
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
         private readonly CacheSettings _cacheSettings;
         private readonly IDealsApi _dealsApi;
         private readonly IAccountsApi _accountsApi;
+        private readonly IEodTaxFileMissingRepository _taxFileMissingRepository;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
@@ -44,11 +46,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             AccountManagementSettings settings,
             IEventSender eventSender,
             ILog log,
-            ISystemClock systemClock,
-            IMemoryCache statsCache,
-            IAccountBalanceChangesRepository accountBalanceChangesRepository,
-            CacheSettings cacheSettings,
-            IDealsApi dealsApi,
+            ISystemClock systemClock, 
+            IMemoryCache memoryCache, 
+            IAccountBalanceChangesRepository accountBalanceChangesRepository, 
+            CacheSettings cacheSettings, 
+            IDealsApi dealsApi, 
+            IEodTaxFileMissingRepository taxFileMissingRepository, 
             IAccountsApi accountsApi)
         {
             _accountsRepository = accountsRepository;
@@ -58,10 +61,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _eventSender = eventSender;
             _log = log;
             _systemClock = systemClock;
-            _statsCache = statsCache;
+            _memoryCache = memoryCache;
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
             _cacheSettings = cacheSettings;
             _dealsApi = dealsApi;
+            _taxFileMissingRepository = taxFileMissingRepository;
             _accountsApi = accountsApi;
         }
 
@@ -200,14 +204,14 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return _accountsRepository.GetAsync(accountId);
         }
 
-        public async ValueTask<AccountStat> GetStat(string accountId)
+        public async ValueTask<AccountStat> GetCachedAccountStatistics(string accountId)
         {
             if (string.IsNullOrEmpty(accountId))
                 throw new ArgumentNullException(nameof(accountId));
 
             var onDate = _systemClock.UtcNow.UtcDateTime.Date;
-
-            if (_statsCache.TryGetValue(GetStatsCacheKey(accountId, onDate), out AccountStat cachedData))
+            
+            if (_memoryCache.TryGetValue(GetStatsCacheKey(accountId, onDate), out AccountStat cachedData))
             {
                 return cachedData;
             }
@@ -243,7 +247,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 disposableCapital: accountCapital.Disposable
             );
 
-            _statsCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
+            _memoryCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
 
             return result;
         }
@@ -278,17 +282,20 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var compensationsCapital = await _accountBalanceChangesRepository.GetCompensationsForToday(account.Id);
 
-            var totalPnlResponse = await _dealsApi.GetTotalPnL(account.Id, null, _systemClock.UtcNow.UtcDateTime.Date);
-
-            return new AccountCapital(account.Balance,
-                totalPnlResponse?.Value ?? 0,
-                temporaryCapital,
+            var totalRealisedPnl = await GetAccountCapitalTotalPnlAsync(account.Id);
+            
+            var accountStats = await _accountsApi.GetAccountStats(account.Id);
+            
+            return new AccountCapital(
+                account.Balance, 
+                totalRealisedPnl, 
+                accountStats.PnL,
+                temporaryCapital, 
                 compensationsCapital,
                 account.BaseAssetId);
         }
 
         #endregion
-
 
         #region Modify
 
@@ -366,8 +373,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentNullException(nameof(accountId));
 
             var cacheKey = GetStatsCacheKey(accountId, _systemClock.UtcNow.UtcDateTime.Date);
-
-            _statsCache.Remove(cacheKey);
+            
+            _memoryCache.Remove(cacheKey);
 
             _log.WriteInfo(
                 nameof(AccountManagementService),
@@ -509,6 +516,31 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var dateText = date.ToString("yyyy-MM-dd");
 
             return $"{accountId}:{dateText}";
+        }
+
+        private async Task<decimal> GetAccountCapitalTotalPnlAsync(string accountId)
+        {
+            var taxFileMissingDays = await _taxFileMissingRepository.GetAllDaysAsync();
+
+            var missingDaysArray = taxFileMissingDays as DateTime[] ?? taxFileMissingDays.ToArray();
+            
+            LogWarningForTaxFileMissingDaysIfRequired(accountId, missingDaysArray);
+            
+            var taxMissingDaysPnl = await _dealsApi.GetTotalProfit(accountId, missingDaysArray);
+            
+            var totalPnl = taxMissingDaysPnl?.Value ?? 0;
+
+            return totalPnl;
+        }
+
+        private void LogWarningForTaxFileMissingDaysIfRequired(string accountId, DateTime[] missingDays)
+        {
+            if (missingDays.Length > 1)
+            {
+                _log.WriteWarning(nameof(AccountManagementService),
+                    new {accountId, missingDays}.ToJson(),
+                    "There are days which we don't have tax file for. Therefore these days PnL will be excluded from total PnL for the account.");
+            }
         }
 
         #endregion
