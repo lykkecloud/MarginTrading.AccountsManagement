@@ -27,14 +27,14 @@ namespace MarginTrading.AccountsManagement.Modules
         protected override void Load(ContainerBuilder builder)
         {
             var settingsClientGeneratorBuilder = HttpClientGenerator
-                .BuildForUrl(_settings.CurrentValue.MarginTradingAssetServiceClient.ServiceUrl)
+                .BuildForUrl(_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl)
                 .WithServiceName<LykkeErrorResponse>(
-                    $"MT Settings [{_settings.CurrentValue.MarginTradingAssetServiceClient.ServiceUrl}]");
+                    $"MT Settings [{_settings.CurrentValue.MarginTradingSettingsServiceClient.ServiceUrl}]");
             
-            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MarginTradingAssetServiceClient.ApiKey))
+            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MarginTradingSettingsServiceClient.ApiKey))
             {
                 settingsClientGeneratorBuilder = settingsClientGeneratorBuilder
-                    .WithApiKey(_settings.CurrentValue.MarginTradingAssetServiceClient.ApiKey);
+                    .WithApiKey(_settings.CurrentValue.MarginTradingSettingsServiceClient.ApiKey);
             }
 
             var settingsClientGenerator = settingsClientGeneratorBuilder.Create();
