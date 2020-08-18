@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
@@ -110,12 +111,9 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
             var amountToRevoke = temporaryCapitalToRevoke.Sum(x => x.Amount);
             if (accountCapital.CanRevokeAmount < amountToRevoke)
             {
-                var totalPnlAndCompensations = accountCapital.TotalPnl + accountCapital.Compensations;
-                
                 publisher.PublishEvent(new RevokeTemporaryCapitalFailedEvent(c.OperationId,
                     _systemClock.UtcNow.UtcDateTime,
-                    $"Account {c.AccountId} balance {account.Balance}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}."
-                    + (totalPnlAndCompensations > 0 ? $" Taking into account the sum of the total daily PnL and compensation payments {totalPnlAndCompensations}{account.BaseAssetId}." : ""),
+                    $"Account {c.AccountId} balance {account.Balance}{account.BaseAssetId} is not enough to revoke {amountToRevoke}{account.BaseAssetId}. Taking into account the current state of the trading account: {accountCapital.ToJson()}.",
                     c.RevokeEventSourceId));
                 return;
             }
