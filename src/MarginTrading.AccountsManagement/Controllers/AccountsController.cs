@@ -330,6 +330,15 @@ namespace MarginTrading.AccountsManagement.Controllers
                 };
             }
 
+            if (account.IsWithdrawalDisabled)
+            {
+                return new WithdrawalResponse
+                {
+                    Amount = request.AmountDelta,
+                    Error = WithdrawalErrorContract.WithdrawalDisabled
+                };
+            }
+
             var amount = await _accuracyService.ToAccountAccuracy(
                 request.AmountDelta,
                 account.BaseAssetId,
