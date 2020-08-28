@@ -8,7 +8,7 @@ using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.Backend.Contracts;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 using MarginTrading.TradingHistory.Client;
 using Microsoft.Extensions.DependencyInjection;
 

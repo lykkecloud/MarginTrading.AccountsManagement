@@ -4,7 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using Common.Log;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
