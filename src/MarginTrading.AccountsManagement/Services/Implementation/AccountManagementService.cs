@@ -244,7 +244,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
                 accountBalance: account.Balance,
                 prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance,
-                disposableCapital: accountCapital.Disposable
+                disposableCapital: accountCapital.Disposable,
+                accountName:account.AccountName
             );
 
             _memoryCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
