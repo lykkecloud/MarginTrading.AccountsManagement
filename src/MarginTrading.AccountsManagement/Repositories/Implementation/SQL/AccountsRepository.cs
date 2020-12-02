@@ -39,6 +39,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[ModificationTimestamp] [DateTime] NOT NULL, " +
                                                  "[TemporaryCapital] [nvarchar] (MAX) NOT NULL, " +
                                                  "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL, " +
+                                                 "[AccountName] [nvarchar] (255), " +
                                                  "INDEX IX_{0} (ClientId, IsDeleted)" +
                                                  ");";
 
@@ -335,6 +336,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 ModificationTimestamp = account.ModificationTimestamp,
                 TemporaryCapital = account.TemporaryCapital.ToJson(),
                 LastExecutedOperations = account.LastExecutedOperations.ToJson(),
+                AccountName = account.AccountName,
             };
         }
         

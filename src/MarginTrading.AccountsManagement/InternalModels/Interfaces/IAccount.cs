@@ -35,5 +35,8 @@ namespace MarginTrading.AccountsManagement.InternalModels.Interfaces
         
         
         List<string> LastExecutedOperations { get; }
+
+        string AccountName { get; }
+
     }
 }
