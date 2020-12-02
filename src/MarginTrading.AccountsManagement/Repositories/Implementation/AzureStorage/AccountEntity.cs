@@ -98,6 +98,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         [JsonValueSerializer]
         public List<string> LastExecutedOperations { get; set; } = new List<string>();
 
+        public string AccountName { get; set; }
+
         public static string GeneratePartitionKey(string clientId)
         {
             return clientId;

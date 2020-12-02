@@ -44,9 +44,12 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         [Key(10)]
         public bool IsDeleted { get; }
 
+        [Key(11)]
+        public string AccountName { get; }
+
         public AccountContract([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
             [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
-            bool isDisabled, DateTime modificationTimestamp, bool isWithdrawalDisabled, bool isDeleted)
+            bool isDisabled, DateTime modificationTimestamp, bool isWithdrawalDisabled, bool isDeleted, string accountName)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
@@ -59,6 +62,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             ModificationTimestamp = modificationTimestamp;
             IsWithdrawalDisabled = isWithdrawalDisabled;
             IsDeleted = isDeleted;
+            AccountName = accountName;
         }
     }
 }
