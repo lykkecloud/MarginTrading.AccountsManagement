@@ -48,5 +48,7 @@ namespace MarginTrading.AccountsManagement.Settings
         public bool UseSerilog { get; set; }
         
         public CacheSettings Cache { get; set; }
+
+        public string BrokerId { get; set; }
     }
 }

@@ -1,13 +1,17 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Threading.Tasks;
 using Common;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using Lykke.Snow.Mdm.Contracts.Api;
+using Lykke.Snow.Mdm.Contracts.Models.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
+using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
@@ -26,6 +30,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private readonly IChaosKitty _chaosKitty;
         private readonly IScheduleSettingsApi _scheduleSettingsApi;
         private readonly IAccountManagementService _accountManagementService;
+        private readonly IBrokerSettingsApi _brokerSettingsApi;
+        private readonly BrokerConfigurationAccessor _brokerConfigurationAccessor;
 
         private const string OperationName = "Withdraw";
 
@@ -35,7 +41,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             IOperationExecutionInfoRepository executionInfoRepository,
             IChaosKitty chaosKitty,
             IScheduleSettingsApi scheduleSettingsApi, 
-            IAccountManagementService accountManagementService)
+            IAccountManagementService accountManagementService,
+            IBrokerSettingsApi brokerSettingsApi, BrokerConfigurationAccessor brokerConfigurationAccessor)
         {
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
@@ -43,6 +50,8 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             _chaosKitty = chaosKitty;
             _scheduleSettingsApi = scheduleSettingsApi;
             _accountManagementService = accountManagementService;
+            _brokerSettingsApi = brokerSettingsApi;
+            _brokerConfigurationAccessor = brokerConfigurationAccessor;
         }
 
         /// <summary>
@@ -80,14 +89,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 return;
             }
 
-            var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
 
-            if (!platformInfo.IsTradingEnabled)
-            {
-                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
-                    _systemClock.UtcNow.UtcDateTime,
-                    $"Platform is our of trading hours. Last trading day: {platformInfo.LastTradingDay}, next will start: {platformInfo.NextTradingDayStart}"));
-            }
 
             if (account.IsWithdrawalDisabled)
             {
@@ -96,7 +98,53 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 
                 return;
             }
-            
+
+            var brokerSettingsResponse = await _brokerSettingsApi.GetByIdAsync(_brokerConfigurationAccessor.BrokerId);
+            if (brokerSettingsResponse.ErrorCode != BrokerSettingsErrorCodesContract.None)
+            {
+                //@avolkov let's treat this kind of errors as transient
+                throw new InvalidOperationException($"Cannot read broker settings for {_brokerConfigurationAccessor.BrokerId}, " +
+                                                    $"because of {brokerSettingsResponse.ErrorCode}");
+            }
+
+            switch (brokerSettingsResponse.BrokerSettings.WithdrawalMode)
+            {
+                case WithdrawalMode.DuringTradingHours:
+                {
+                    var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
+
+                    if (!platformInfo.IsTradingEnabled)
+                    {
+                        publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                            _systemClock.UtcNow.UtcDateTime,
+                            $"Platform is out of trading hours. Last trading day: {platformInfo.LastTradingDay}, " +
+                            $"next will start: {platformInfo.NextTradingDayStart}"));
+
+                        return;
+                    }
+                    break;
+                }
+                case WithdrawalMode.BusinessDays:
+                {
+                    var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
+
+                    if (!platformInfo.IsBusinessDay)
+                    {
+                        publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                            _systemClock.UtcNow.UtcDateTime,
+                            "Platform is out of business days"));
+
+                        return;
+                    }
+                    break;
+                }
+                case WithdrawalMode.Always:
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown switch: {brokerSettingsResponse.BrokerSettings.WithdrawalMode}", 
+                        nameof(brokerSettingsResponse.BrokerSettings.WithdrawalMode));
+            }
+
             _chaosKitty.Meow(command.OperationId);
           
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
