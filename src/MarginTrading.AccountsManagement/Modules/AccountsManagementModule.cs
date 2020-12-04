@@ -36,6 +36,7 @@ namespace MarginTrading.AccountsManagement.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterInstance(new BrokerConfigurationAccessor(_settings.CurrentValue.MarginTradingAccountManagement.BrokerId));
             builder.RegisterInstance(_settings.Nested(s => s.MarginTradingAccountManagement)).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MarginTradingAccountManagement.Cqrs.ContextNames).SingleInstance();

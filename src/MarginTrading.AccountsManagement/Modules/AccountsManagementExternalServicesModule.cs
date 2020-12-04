@@ -5,6 +5,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Lykke.HttpClientGenerator;
 using Lykke.SettingsReader;
+using Lykke.Snow.Mdm.Contracts.Api;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.Backend.Contracts;
@@ -61,6 +62,14 @@ namespace MarginTrading.AccountsManagement.Modules
                 .Create();
 
             builder.RegisterInstance(mtTradingHistoryClientGenerator.Generate<IDealsApi>());
+
+            var mdmClientGenerator = HttpClientGenerator
+                .BuildForUrl(_settings.CurrentValue.MdmServiceClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>("Mdm Service")
+                .WithOptionalApiKey(_settings.CurrentValue.MdmServiceClient.ApiKey)
+                .Create();
+
+            builder.RegisterInstance(mdmClientGenerator.Generate<IBrokerSettingsApi>());
 
             builder.Populate(_services);
         }
