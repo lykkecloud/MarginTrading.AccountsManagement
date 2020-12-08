@@ -28,10 +28,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
-        private readonly IScheduleSettingsApi _scheduleSettingsApi;
         private readonly IAccountManagementService _accountManagementService;
-        private readonly IBrokerSettingsApi _brokerSettingsApi;
-        private readonly BrokerConfigurationAccessor _brokerConfigurationAccessor;
 
         private const string OperationName = "Withdraw";
 
@@ -40,18 +37,13 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             IAccountsRepository accountsRepository,
             IOperationExecutionInfoRepository executionInfoRepository,
             IChaosKitty chaosKitty,
-            IScheduleSettingsApi scheduleSettingsApi, 
-            IAccountManagementService accountManagementService,
-            IBrokerSettingsApi brokerSettingsApi, BrokerConfigurationAccessor brokerConfigurationAccessor)
+            IAccountManagementService accountManagementService)
         {
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
-            _scheduleSettingsApi = scheduleSettingsApi;
             _accountManagementService = accountManagementService;
-            _brokerSettingsApi = brokerSettingsApi;
-            _brokerConfigurationAccessor = brokerConfigurationAccessor;
         }
 
         /// <summary>
@@ -88,61 +80,13 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         : $"Account {account.Id} balance {accountCapital.Balance}{accountCapital.AssetId} is not enough to withdraw {command.Amount}{accountCapital.AssetId}. Taking into account the current state of the trading account: {accountCapital.ToJson()}."));
                 return;
             }
-
-
-
+            
             if (account.IsWithdrawalDisabled)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
                     _systemClock.UtcNow.UtcDateTime, "Withdrawal is disabled"));
                 
                 return;
-            }
-
-            var brokerSettingsResponse = await _brokerSettingsApi.GetByIdAsync(_brokerConfigurationAccessor.BrokerId);
-            if (brokerSettingsResponse.ErrorCode != BrokerSettingsErrorCodesContract.None)
-            {
-                //@avolkov let's treat this kind of errors as transient
-                throw new InvalidOperationException($"Cannot read broker settings for {_brokerConfigurationAccessor.BrokerId}, " +
-                                                    $"because of {brokerSettingsResponse.ErrorCode}");
-            }
-
-            switch (brokerSettingsResponse.BrokerSettings.WithdrawalMode)
-            {
-                case WithdrawalMode.DuringTradingHours:
-                {
-                    var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
-
-                    if (!platformInfo.IsTradingEnabled)
-                    {
-                        publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
-                            _systemClock.UtcNow.UtcDateTime,
-                            $"Platform is out of trading hours. Last trading day: {platformInfo.LastTradingDay}, " +
-                            $"next will start: {platformInfo.NextTradingDayStart}"));
-
-                        return;
-                    }
-                    break;
-                }
-                case WithdrawalMode.BusinessDays:
-                {
-                    var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
-
-                    if (!platformInfo.IsBusinessDay)
-                    {
-                        publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
-                            _systemClock.UtcNow.UtcDateTime,
-                            "Platform is out of business days"));
-
-                        return;
-                    }
-                    break;
-                }
-                case WithdrawalMode.Always:
-                    break;
-                default:
-                    throw new ArgumentException($"Unknown switch: {brokerSettingsResponse.BrokerSettings.WithdrawalMode}", 
-                        nameof(brokerSettingsResponse.BrokerSettings.WithdrawalMode));
             }
 
             _chaosKitty.Meow(command.OperationId);

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Snow.Mdm.Contracts.Api;
+using Lykke.Snow.Mdm.Contracts.Models.Contracts;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Commands;
@@ -21,6 +23,7 @@ using Microsoft.Extensions.Internal;
 using Refit;
 using MarginTrading.AccountsManagement.Exceptions;
 using MarginTrading.AccountsManagement.Contracts.ErrorCodes;
+using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
@@ -35,6 +38,8 @@ namespace MarginTrading.AccountsManagement.Controllers
         private readonly ISendBalanceCommandsService _sendBalanceCommandsService;
         private readonly ICqrsSender _cqrsSender;
         private readonly IScheduleSettingsApi _scheduleSettingsApi;
+        private readonly IBrokerSettingsApi _brokerSettingsApi;
+        private readonly BrokerConfigurationAccessor _brokerConfigurationAccessor;
 
         public AccountsController(
             IAccountManagementService accountManagementService,
@@ -43,7 +48,9 @@ namespace MarginTrading.AccountsManagement.Controllers
             ISystemClock systemClock,
             ISendBalanceCommandsService sendBalanceCommandsService,
             ICqrsSender cqrsSender,
-            IScheduleSettingsApi scheduleSettingsApi)
+            IScheduleSettingsApi scheduleSettingsApi, 
+            IBrokerSettingsApi brokerSettingsApi, 
+            BrokerConfigurationAccessor brokerConfigurationAccessor)
         {
             _accountManagementService = accountManagementService;
             _accuracyService = accuracyService;
@@ -52,6 +59,8 @@ namespace MarginTrading.AccountsManagement.Controllers
             _sendBalanceCommandsService = sendBalanceCommandsService;
             _cqrsSender = cqrsSender;
             _scheduleSettingsApi = scheduleSettingsApi;
+            _brokerSettingsApi = brokerSettingsApi;
+            _brokerConfigurationAccessor = brokerConfigurationAccessor;
         }
 
         #region CRUD
@@ -71,7 +80,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpGet]
         [Route("by-pages")]
-        public Task<PaginatedResponseContract<AccountContract>> ListByPages([FromQuery] string search = null,
+        public Task<Contracts.PaginatedResponseContract<AccountContract>> ListByPages([FromQuery] string search = null,
             [FromQuery] int? skip = null, [FromQuery] int? take = null, bool showDeleted = false, bool isAscendingOrder = true)
         {
             if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
@@ -352,18 +361,51 @@ namespace MarginTrading.AccountsManagement.Controllers
                     Error = WithdrawalErrorContract.InvalidAmount
                 };
             }
-
-            var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
-
-            if (!platformInfo.IsTradingEnabled)
+            
+            var brokerSettingsResponse = await _brokerSettingsApi.GetByIdAsync(_brokerConfigurationAccessor.BrokerId);
+            if (brokerSettingsResponse.ErrorCode != BrokerSettingsErrorCodesContract.None)
             {
-                return new WithdrawalResponse
-                {
-                    Amount = amount,
-                    Error = WithdrawalErrorContract.OutOfTradingHours,
-                    ErrorDetails =
-                        $"Last trading day: {platformInfo.LastTradingDay}, next will start: {platformInfo.NextTradingDayStart}"
-                };
+                throw new InvalidOperationException($"Cannot read broker settings for {_brokerConfigurationAccessor.BrokerId}, " +
+                                                    $"because of {brokerSettingsResponse.ErrorCode}");
+            }
+
+            switch (brokerSettingsResponse.BrokerSettings.WithdrawalMode)
+            {
+                case WithdrawalMode.DuringTradingHours:
+                    {
+                        var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
+
+                        if (!platformInfo.IsTradingEnabled)
+                        {
+                            return new WithdrawalResponse
+                            {
+                                Amount = amount,
+                                Error = WithdrawalErrorContract.OutOfTradingHours,
+                                ErrorDetails = $"Last trading day: {platformInfo.LastTradingDay}," +
+                                               $" next will start: {platformInfo.NextTradingDayStart}"
+                            };
+                        }
+                        break;
+                    }
+                case WithdrawalMode.BusinessDays:
+                    {
+                        var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
+
+                        if (!platformInfo.IsBusinessDay)
+                        {
+                            return new WithdrawalResponse
+                            {
+                                Amount = amount,
+                                Error = WithdrawalErrorContract.OutOfBusinessDays
+                            };
+                        }
+                        break;
+                    }
+                case WithdrawalMode.Always:
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown switch: {brokerSettingsResponse.BrokerSettings.WithdrawalMode}",
+                        nameof(brokerSettingsResponse.BrokerSettings.WithdrawalMode));
             }
 
             try
@@ -456,10 +498,10 @@ namespace MarginTrading.AccountsManagement.Controllers
             return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }
 
-        private async Task<PaginatedResponseContract<AccountContract>> Convert(Task<PaginatedResponse<IAccount>> accounts)
+        private async Task<Contracts.PaginatedResponseContract<AccountContract>> Convert(Task<PaginatedResponse<IAccount>> accounts)
         {
             var data = await accounts;
-            return new PaginatedResponseContract<AccountContract>(
+            return new Contracts.PaginatedResponseContract<AccountContract>(
                 data.Contents.Select(Convert).ToList(),
                 data.Start,
                 data.Size,

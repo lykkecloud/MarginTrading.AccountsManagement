@@ -10,6 +10,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Api
         InvalidAccount, 
         InvalidAmount, 
         OutOfTradingHours,
+        OutOfBusinessDays,
         UnknownError,
         WithdrawalDisabled
     }
