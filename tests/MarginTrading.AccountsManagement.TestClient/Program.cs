@@ -91,7 +91,7 @@ namespace MarginTrading.AccountsManagement.TestClient
             cqrsEngine.PublishEvent(new AccountChangedEvent(
                 DateTime.UtcNow, 
                 "tetest1",
-                new AccountContract("","","","",default,default,"",default,default,default,default, default), 
+                new AccountContract(), 
                 AccountChangedEventTypeContract.BalanceUpdated,
                 new AccountBalanceChangeContract(
                     "tetetetest1",
