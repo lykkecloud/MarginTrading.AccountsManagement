@@ -12,53 +12,36 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
     public class AccountContract
     {
         [Key(0)]
-        public string Id { get; }
+        public string Id { get; set; }
 
         [Key(1)]
-        public string ClientId { get; }
+        public string ClientId { get; set; }
 
         [Key(2)]
-        public string TradingConditionId { get; }
+        public string TradingConditionId { get; set; }
 
         [Key(3)]
-        public string BaseAssetId { get; }
+        public string BaseAssetId { get; set; }
 
         [Key(4)]
-        public decimal Balance { get; }
+        public decimal Balance { get; set; }
 
         [Key(5)]
-        public decimal WithdrawTransferLimit { get; }
+        public decimal WithdrawTransferLimit { get; set; }
 
         [Key(6)]
-        public string LegalEntity { get; }
+        public string LegalEntity { get; set; }
 
         [Key(7)]
-        public bool IsDisabled { get; }
+        public bool IsDisabled { get; set; }
 
         [Key(8)]
-        public DateTime ModificationTimestamp { get; }
+        public DateTime ModificationTimestamp { get; set; }
         
         [Key(9)]
-        public bool IsWithdrawalDisabled { get; }
+        public bool IsWithdrawalDisabled { get; set; }
         
         [Key(10)]
-        public bool IsDeleted { get; }
-
-        public AccountContract([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
-            [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
-            bool isDisabled, DateTime modificationTimestamp, bool isWithdrawalDisabled, bool isDeleted)
-        {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            TradingConditionId = tradingConditionId ?? throw new ArgumentNullException(nameof(tradingConditionId));
-            BaseAssetId = baseAssetId ?? throw new ArgumentNullException(nameof(baseAssetId));
-            Balance = balance;
-            WithdrawTransferLimit = withdrawTransferLimit;
-            LegalEntity = legalEntity ?? throw new ArgumentNullException(nameof(legalEntity));
-            IsDisabled = isDisabled;
-            ModificationTimestamp = modificationTimestamp;
-            IsWithdrawalDisabled = isWithdrawalDisabled;
-            IsDeleted = isDeleted;
-        }
+        public bool IsDeleted { get; set; }
     }
 }
