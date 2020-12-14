@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Log;
@@ -164,7 +165,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             }
             catch (NotSupportedException e)
             {
-                _logger.Error(e, "Couldn't create an account.");
+                _logger.WriteError("Account creation", request.ToJson(), e);
                 return new ApiResponse<AccountContract>(new HttpResponseMessage(HttpStatusCode.Conflict), null);
             }
         }
