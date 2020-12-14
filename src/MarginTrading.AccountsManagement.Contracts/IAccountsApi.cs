@@ -56,13 +56,13 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         [Post("/api/accounts/{clientId}")]
         [Obsolete("Use a single-parameter Create.")]
-        Task<AccountContract> Create(string clientId, [Body] CreateAccountRequestObsolete request);
+        Task<ApiResponse<AccountContract>> Create(string clientId, [Body] CreateAccountRequestObsolete request);
         
         /// <summary>
         /// Creates an account
         /// </summary>
         [Post("/api/accounts/")]
-        Task<AccountContract> Create([Body] CreateAccountRequest request);
+        Task<ApiResponse<AccountContract>> Create([Body] CreateAccountRequest request);
 
         /// <summary>
         /// Changes an account.
