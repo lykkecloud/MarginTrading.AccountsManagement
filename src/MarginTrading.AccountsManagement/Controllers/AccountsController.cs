@@ -4,10 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
+using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Snow.Mdm.Contracts.Api;
 using Lykke.Snow.Mdm.Contracts.Models.Contracts;
+using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Commands;
@@ -40,6 +44,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         private readonly IScheduleSettingsApi _scheduleSettingsApi;
         private readonly IBrokerSettingsApi _brokerSettingsApi;
         private readonly BrokerConfigurationAccessor _brokerConfigurationAccessor;
+        private readonly ILog _logger;
 
         public AccountsController(
             IAccountManagementService accountManagementService,
@@ -50,7 +55,8 @@ namespace MarginTrading.AccountsManagement.Controllers
             ICqrsSender cqrsSender,
             IScheduleSettingsApi scheduleSettingsApi, 
             IBrokerSettingsApi brokerSettingsApi, 
-            BrokerConfigurationAccessor brokerConfigurationAccessor)
+            BrokerConfigurationAccessor brokerConfigurationAccessor,
+            ILog logger)
         {
             _accountManagementService = accountManagementService;
             _accuracyService = accuracyService;
@@ -61,6 +67,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             _scheduleSettingsApi = scheduleSettingsApi;
             _brokerSettingsApi = brokerSettingsApi;
             _brokerConfigurationAccessor = brokerConfigurationAccessor;
+            _logger = logger;
         }
 
         #region CRUD
@@ -134,7 +141,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpPost]
         [Route("{clientId}")]
         [Obsolete("Use a single-parameter Create.")]
-        public Task<AccountContract> Create([NotNull] string clientId,
+        public Task<ApiResponse<AccountContract>> Create([NotNull] string clientId,
             [FromBody][NotNull] CreateAccountRequestObsolete request)
         {
             return Create(new CreateAccountRequest
@@ -151,15 +158,25 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpPost]
         [Route("")]
-        public Task<AccountContract> Create([FromBody][NotNull] CreateAccountRequest request)
+        public async Task<ApiResponse<AccountContract>> Create([FromBody][NotNull] CreateAccountRequest request)
         {
-            return Convert(
-                _accountManagementService.CreateAsync(
-                    request.ClientId.RequiredNotNullOrWhiteSpace(nameof(request.ClientId)),
-                    request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
-                    request.TradingConditionId,
-                    request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId)),
-                    request.AccountName));
+            try
+            {
+                var account = await Convert(
+                    _accountManagementService.CreateAsync(
+                        request.ClientId.RequiredNotNullOrWhiteSpace(nameof(request.ClientId)),
+                        request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
+                        request.TradingConditionId,
+                        request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId)),
+                        request.AccountName));
+                
+                return new ApiResponse<AccountContract>(new HttpResponseMessage(HttpStatusCode.Created), account);
+            }
+            catch (NotSupportedException e)
+            {
+                _logger.Error(e, "Couldn't create an account.");
+                return new ApiResponse<AccountContract>(new HttpResponseMessage(HttpStatusCode.Conflict), null);
+            }
         }
 
         /// <summary>
