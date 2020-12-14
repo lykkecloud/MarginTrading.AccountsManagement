@@ -5,12 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Commands;
@@ -31,7 +29,7 @@ namespace MarginTrading.AccountsManagement.Controllers
 {
     [Microsoft.AspNetCore.Authorization.Authorize]
     [Route("api/accounts")]
-    public class AccountsController : Controller, IAccountsApi
+    public class AccountsController : Controller
     {
         private readonly IAccountManagementService _accountManagementService;
         private readonly IAccuracyService _accuracyService;
@@ -133,7 +131,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         [HttpPost]
         [Route("{clientId}")]
         [Obsolete("Use a single-parameter Create.")]
-        public Task<ApiResponse<AccountContract>> Create([NotNull] string clientId,
+        public Task<IActionResult> Create([NotNull] string clientId,
             [FromBody][NotNull] CreateAccountRequestObsolete request)
         {
             return Create(new CreateAccountRequest
@@ -150,7 +148,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// </summary>
         [HttpPost]
         [Route("")]
-        public async Task<ApiResponse<AccountContract>> Create([FromBody][NotNull] CreateAccountRequest request)
+        public async Task<IActionResult> Create([FromBody][NotNull] CreateAccountRequest request)
         {
             try
             {
@@ -160,13 +158,13 @@ namespace MarginTrading.AccountsManagement.Controllers
                         request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
                         request.TradingConditionId,
                         request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId))));
-                
-                return new ApiResponse<AccountContract>(new HttpResponseMessage(HttpStatusCode.Created), account);
+
+                return StatusCode((int) HttpStatusCode.Created, account);
             }
             catch (NotSupportedException e)
             {
                 _logger.WriteError("Account creation", request.ToJson(), e);
-                return new ApiResponse<AccountContract>(new HttpResponseMessage(HttpStatusCode.Conflict), null);
+                return Conflict();
             }
         }
 
