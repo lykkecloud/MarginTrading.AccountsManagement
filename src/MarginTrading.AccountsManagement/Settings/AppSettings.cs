@@ -11,11 +11,14 @@ namespace MarginTrading.AccountsManagement.Settings
     {
         public AccountManagementSettings MarginTradingAccountManagement { get; set; }
 
+
         [Optional]
         public Lykke.Snow.Common.Startup.ApiKey.ClientSettings MarginTradingAccountManagementServiceClient { get; set; }
          = new Lykke.Snow.Common.Startup.ApiKey.ClientSettings();
         
         public ClientSettings MarginTradingSettingsServiceClient { get; set; }
+
+        public ClientSettings MdmServiceClient { get; set; }
         
         public OptionalClientSettings MtBackendServiceClient { get; set; }
         

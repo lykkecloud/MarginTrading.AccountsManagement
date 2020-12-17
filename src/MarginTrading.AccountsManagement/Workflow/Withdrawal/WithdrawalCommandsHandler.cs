@@ -1,13 +1,17 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Threading.Tasks;
 using Common;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using Lykke.Snow.Mdm.Contracts.Api;
+using Lykke.Snow.Mdm.Contracts.Models.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
+using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
@@ -24,7 +28,6 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
         private readonly IAccountsRepository _accountsRepository;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
-        private readonly IScheduleSettingsApi _scheduleSettingsApi;
         private readonly IAccountManagementService _accountManagementService;
 
         private const string OperationName = "Withdraw";
@@ -34,14 +37,12 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
             IAccountsRepository accountsRepository,
             IOperationExecutionInfoRepository executionInfoRepository,
             IChaosKitty chaosKitty,
-            IScheduleSettingsApi scheduleSettingsApi, 
             IAccountManagementService accountManagementService)
         {
             _systemClock = systemClock;
             _executionInfoRepository = executionInfoRepository;
             _accountsRepository = accountsRepository;
             _chaosKitty = chaosKitty;
-            _scheduleSettingsApi = scheduleSettingsApi;
             _accountManagementService = accountManagementService;
         }
 
@@ -79,16 +80,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                         : $"Account {account.Id} balance {accountCapital.Balance}{accountCapital.AssetId} is not enough to withdraw {command.Amount}{accountCapital.AssetId}. Taking into account the current state of the trading account: {accountCapital.ToJson()}."));
                 return;
             }
-
-            var platformInfo = await _scheduleSettingsApi.GetPlatformInfo();
-
-            if (!platformInfo.IsTradingEnabled)
-            {
-                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
-                    _systemClock.UtcNow.UtcDateTime,
-                    $"Platform is our of trading hours. Last trading day: {platformInfo.LastTradingDay}, next will start: {platformInfo.NextTradingDayStart}"));
-            }
-
+            
             if (account.IsWithdrawalDisabled)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
@@ -96,7 +88,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 
                 return;
             }
-            
+
             _chaosKitty.Meow(command.OperationId);
           
             publisher.PublishEvent(new WithdrawalStartedInternalEvent(command.OperationId, 
