@@ -73,7 +73,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         #region Create 
 
         public async Task<IAccount> CreateAsync(string clientId, string accountId, string tradingConditionId,
-            string baseAssetId)
+            string baseAssetId, string accountName)
         {
             #region Validations
 
@@ -102,7 +102,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var legalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
 
-            var account = await CreateAccount(clientId, baseAssetId, tradingConditionId, legalEntity, accountId);
+            var account = await CreateAccount(clientId, baseAssetId, tradingConditionId, legalEntity, accountId, accountName);
 
             _log.WriteInfo(nameof(AccountManagementService), nameof(CreateAsync),
                 $"{baseAssetId} account {accountId} created for client {clientId} on trading condition {tradingConditionId}");
@@ -244,7 +244,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
                 accountBalance: account.Balance,
                 prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance,
-                disposableCapital: accountCapital.Disposable
+                disposableCapital: accountCapital.Disposable,
+                accountName:account.AccountName
             );
 
             _memoryCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
@@ -387,7 +388,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         #region Helpers
 
         private async Task<IAccount> CreateAccount(string clientId, string baseAssetId, string tradingConditionId,
-            string legalEntityId, string accountId = null)
+            string legalEntityId, string accountId = null, string accountName = null)
         {
             var id = string.IsNullOrEmpty(accountId)
                 ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
@@ -404,7 +405,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 false,
                 !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true),
                 false,
-                DateTime.UtcNow);
+                DateTime.UtcNow,
+                accountName);
 
             await _accountsRepository.AddAsync(account);
             account = await _accountsRepository.GetAsync(accountId);

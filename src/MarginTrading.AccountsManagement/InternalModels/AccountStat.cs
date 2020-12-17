@@ -30,9 +30,11 @@ namespace MarginTrading.AccountsManagement.InternalModels
         
         public decimal UnRealisedPnl { get; }
 
+        public string AccountName { get; }
+
         public AccountStat([NotNull] string accountId, DateTime created, decimal realisedPnl, decimal depositAmount,
             decimal withdrawalAmount, decimal commissionAmount, decimal otherAmount, decimal accountBalance,
-            decimal prevEodAccountBalance, decimal disposableCapital, decimal unRealisedPnl)
+            decimal prevEodAccountBalance, decimal disposableCapital, decimal unRealisedPnl, string accountName)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Created = created;
@@ -45,6 +47,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
             PrevEodAccountBalance = prevEodAccountBalance;
             DisposableCapital = disposableCapital;
             UnRealisedPnl = unRealisedPnl;
+            AccountName = accountName;
         }
     }
 }

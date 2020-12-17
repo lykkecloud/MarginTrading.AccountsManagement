@@ -149,7 +149,8 @@ namespace MarginTrading.AccountsManagement.Controllers
                     request.ClientId.RequiredNotNullOrWhiteSpace(nameof(request.ClientId)),
                     request.AccountId.RequiredNotNullOrWhiteSpace(nameof(request.AccountId)),
                     request.TradingConditionId,
-                    request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId))));
+                    request.BaseAssetId.RequiredNotNullOrWhiteSpace(nameof(request.BaseAssetId)),
+                    request.AccountName));
         }
 
         /// <summary>
