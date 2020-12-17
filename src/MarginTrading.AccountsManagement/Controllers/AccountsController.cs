@@ -381,7 +381,8 @@ namespace MarginTrading.AccountsManagement.Controllers
                             {
                                 Amount = amount,
                                 Error = WithdrawalErrorContract.OutOfTradingHours,
-                                ErrorDetails = $"Last trading day: {platformInfo.LastTradingDay}," +
+                                ErrorDetails = $"Platform is our of trading hours " +
+                                               $"Last trading day: {platformInfo.LastTradingDay}," +
                                                $" next will start: {platformInfo.NextTradingDayStart}"
                             };
                         }
