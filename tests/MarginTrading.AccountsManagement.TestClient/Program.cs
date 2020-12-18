@@ -91,7 +91,7 @@ namespace MarginTrading.AccountsManagement.TestClient
             cqrsEngine.PublishEvent(new AccountChangedEvent(
                 DateTime.UtcNow, 
                 "tetest1",
-                new AccountContract("","","","",default,default,"",default,default,default,default, default), 
+                new AccountContract(), 
                 AccountChangedEventTypeContract.BalanceUpdated,
                 new AccountBalanceChangeContract(
                     "tetetetest1",
@@ -117,10 +117,10 @@ namespace MarginTrading.AccountsManagement.TestClient
         {
             var client = clientGenerator.Generate<IAccountsApi>();
             await client.List().Dump();
-            var account = await client.Create(new CreateAccountRequest
+            var accountResponse = await client.Create(new CreateAccountRequest
                 {ClientId = "client1", TradingConditionId = "tc1", BaseAssetId = "ba1"}).Dump();
-            await client.GetByClientAndId("client1", account.Id).Dump();
-            await client.Change("client1", account.Id,
+            await client.GetByClientAndId("client1", accountResponse.Content.Id).Dump();
+            await client.Change("client1", accountResponse.Content.Id,
                 new ChangeAccountRequest {IsDisabled = true, TradingConditionId = "tc2"}).Dump();
         }
         
