@@ -46,23 +46,5 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
 
         [Key(11)]
         public string AccountName { get; set; }
-
-        public AccountContract([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
-            [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
-            bool isDisabled, DateTime modificationTimestamp, bool isWithdrawalDisabled, bool isDeleted, string accountName)
-        {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            TradingConditionId = tradingConditionId ?? throw new ArgumentNullException(nameof(tradingConditionId));
-            BaseAssetId = baseAssetId ?? throw new ArgumentNullException(nameof(baseAssetId));
-            Balance = balance;
-            WithdrawTransferLimit = withdrawTransferLimit;
-            LegalEntity = legalEntity ?? throw new ArgumentNullException(nameof(legalEntity));
-            IsDisabled = isDisabled;
-            ModificationTimestamp = modificationTimestamp;
-            IsWithdrawalDisabled = isWithdrawalDisabled;
-            IsDeleted = isDeleted;
-            AccountName = accountName;
-        }
     }
 }
