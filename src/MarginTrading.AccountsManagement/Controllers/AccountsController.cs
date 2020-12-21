@@ -516,6 +516,24 @@ namespace MarginTrading.AccountsManagement.Controllers
             
             return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
         }
+        
+        /// <summary>
+        /// Recalculates account statistics
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [HttpPost("stat/{accountId}/recalculate")]
+        public IActionResult RecalculateStat(string accountId)
+        {
+            if (string.IsNullOrWhiteSpace(accountId))
+            {
+                throw new ArgumentNullException(nameof(accountId), "Account must be set.");
+            }
+
+            _accountManagementService.ClearStatsCache(accountId);
+
+            return Ok();
+        }
 
         private async Task<Contracts.PaginatedResponseContract<AccountContract>> Convert(Task<PaginatedResponse<IAccount>> accounts)
         {
