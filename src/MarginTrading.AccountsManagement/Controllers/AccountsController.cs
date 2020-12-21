@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using Lykke.Snow.Mdm.Contracts.Api;
 using Lykke.Snow.Mdm.Contracts.Models.Contracts;
 using Lykke.Common.Log;
@@ -515,6 +516,24 @@ namespace MarginTrading.AccountsManagement.Controllers
             var stat = await _accountManagementService.GetCachedAccountStatistics(accountId);
             
             return stat != null ? _convertService.Convert<AccountStat, AccountStatContract>(stat) : null;
+        }
+        
+        /// <summary>
+        /// Recalculates account statistics
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        [HttpPost("stat/{accountId}/recalculate")]
+        public IActionResult RecalculateStat(string accountId)
+        {
+            if (string.IsNullOrWhiteSpace(accountId))
+            {
+                throw new ArgumentNullException(nameof(accountId), "Account must be set.");
+            }
+
+            _accountManagementService.ClearStatsCache(accountId);
+
+            return Ok();
         }
 
         private async Task<Contracts.PaginatedResponseContract<AccountContract>> Convert(Task<PaginatedResponse<IAccount>> accounts)

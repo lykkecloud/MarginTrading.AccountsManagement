@@ -85,11 +85,17 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         /// </summary>
         [Key(11)]
         public string AccountName { get; }
+        
+        /// <summary>
+        /// Detailed account capital info
+        /// </summary>
+        [Key(12)]
+        public AccountCapitalContract AccountCapitalDetails { get; }
 
         public AccountStatContract([NotNull] string accountId, DateTime created, decimal realisedPnl,
             decimal depositAmount, decimal withdrawalAmount, decimal commissionAmount, decimal otherAmount,
             decimal accountBalance, decimal prevEodAccountBalance, decimal disposableCapital,
-            decimal unRealisedPnl, string accountName)
+            decimal unRealisedPnl, string accountName, AccountCapitalContract accountCapitalDetails)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Created = created;
@@ -103,6 +109,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             DisposableCapital = disposableCapital;
             UnRealisedPnl = unRealisedPnl;
             AccountName = accountName;
+            AccountCapitalDetails = accountCapitalDetails;
         }
     }
 }
