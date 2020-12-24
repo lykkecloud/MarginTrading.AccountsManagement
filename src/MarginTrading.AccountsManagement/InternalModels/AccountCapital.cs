@@ -63,13 +63,11 @@ namespace MarginTrading.AccountsManagement.InternalModels
             Disposable = Math.Max(0,
                 Balance - (
                     Math.Max(0, Temporary) + 
-                    Math.Max(0, Compensations) +
                     Math.Max(0, totalRealisedPnl) + 
                     Math.Max(0, totalUnRealisedPnl)));
                     
             CanRevokeAmount = Math.Max(0,
                 Balance - (
-                    Math.Max(0, Compensations) +
                     Math.Max(0, totalRealisedPnl) + 
                     Math.Max(0, totalUnRealisedPnl)));
         }

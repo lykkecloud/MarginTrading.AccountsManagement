@@ -38,6 +38,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly CacheSettings _cacheSettings;
         private readonly IDealsApi _dealsApi;
         private readonly IAccountsApi _accountsApi;
+        private readonly IPositionsApi _positionsApi;
         private readonly IEodTaxFileMissingRepository _taxFileMissingRepository;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
@@ -52,7 +53,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             CacheSettings cacheSettings, 
             IDealsApi dealsApi, 
             IEodTaxFileMissingRepository taxFileMissingRepository, 
-            IAccountsApi accountsApi)
+            IAccountsApi accountsApi,
+            IPositionsApi positionsApi)
         {
             _accountsRepository = accountsRepository;
             _tradingConditionsService = tradingConditionsService;
@@ -67,6 +69,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _dealsApi = dealsApi;
             _taxFileMissingRepository = taxFileMissingRepository;
             _accountsApi = accountsApi;
+            _positionsApi = positionsApi;
         }
 
 
@@ -281,19 +284,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 throw new ArgumentNullException(nameof(account));
 
             var temporaryCapital = account.GetTemporaryCapital();
-
-            var compensationsCapital = await _accountBalanceChangesRepository.GetCompensationsForToday(account.Id);
-
-            var totalRealisedPnl = await GetAccountCapitalTotalPnlAsync(account.Id);
             
-            var accountStats = await _accountsApi.GetAccountStats(account.Id);
+            var realizedProfit = await GetRealizedProfit(account.Id);
+            var unRealizedProfit = await GetUnrealizedProfit(account.Id);
             
             return new AccountCapital(
                 account.Balance, 
-                totalRealisedPnl, 
-                accountStats.PnL,
+                totalRealisedPnl: realizedProfit.total,
+                unRealizedProfit,
                 temporaryCapital, 
-                compensationsCapital,
+                compensations: realizedProfit.compensations,
                 account.BaseAssetId);
         }
 
@@ -521,7 +521,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return $"{accountId}:{dateText}";
         }
 
-        private async Task<decimal> GetAccountCapitalTotalPnlAsync(string accountId)
+        private async Task<(decimal deals, decimal compensations, decimal dividends, decimal total)> GetRealizedProfit(string accountId)
         {
             var taxFileMissingDays = await _taxFileMissingRepository.GetAllDaysAsync();
 
@@ -529,11 +529,20 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             
             LogWarningForTaxFileMissingDaysIfRequired(accountId, missingDaysArray);
             
-            var taxMissingDaysPnl = await _dealsApi.GetTotalProfit(accountId, missingDaysArray);
-            
-            var totalPnl = taxMissingDaysPnl?.Value ?? 0;
+            var deals = (await _dealsApi.GetTotalProfit(accountId, missingDaysArray))?.Value ??0;
+            var compensations = await _accountBalanceChangesRepository.GetCompensationsProfit(accountId, missingDaysArray);
+            var dividends = await _accountBalanceChangesRepository.GetDividendsProfit(accountId, missingDaysArray);
 
-            return totalPnl;
+            var total = deals + compensations + dividends;
+
+            return (deals, compensations, dividends, total);
+        }
+
+        private async Task<decimal> GetUnrealizedProfit(string accountId)
+        {
+            var openPositions = await _positionsApi.ListAsync(accountId);
+
+            return openPositions.Where(p => p.PnL > 0).Sum(p => p.PnL);
         }
 
         private void LogWarningForTaxFileMissingDaysIfRequired(string accountId, DateTime[] missingDays)
