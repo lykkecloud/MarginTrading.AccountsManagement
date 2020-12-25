@@ -69,18 +69,23 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                     _systemClock.UtcNow.UtcDateTime));
 
             var account = await _accountsRepository.GetAsync(command.AccountId);
-
-            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account);
-            
-            if (account == null || accountCapital.Disposable < command.Amount)
+            if(account == null)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
-                    _systemClock.UtcNow.UtcDateTime, account == null
-                        ? $"Account {command.AccountId} not found."
-                        : $"Account {account.Id} balance {accountCapital.Balance}{accountCapital.AssetId} is not enough to withdraw {command.Amount}{accountCapital.AssetId}. Taking into account the current state of the trading account: {accountCapital.ToJson()}."));
+                    _systemClock.UtcNow.UtcDateTime, $"Account {command.AccountId} not found."));
                 return;
             }
-            
+
+            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account.Id);
+            if (accountCapital.Disposable < command.Amount)
+            {
+                publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
+                    _systemClock.UtcNow.UtcDateTime, 
+                    $"Account {account.Id} balance {accountCapital.Balance}{accountCapital.AssetId} is not enough to withdraw {command.Amount}{accountCapital.AssetId}. " +
+                    $"Taking into account the current state of the trading account: {accountCapital.ToJson()}."));
+                return;
+            }
+
             if (account.IsWithdrawalDisabled)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,

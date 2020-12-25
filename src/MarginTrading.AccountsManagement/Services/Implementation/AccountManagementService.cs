@@ -215,13 +215,24 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var onDate = _systemClock.UtcNow.UtcDateTime.Date; 
 
             var account = await GetCached(accountId, CacheCategory.GetAccount, () => _accountsRepository.GetAsync(accountId));
+            if (account == null)
+            {
+                return null;
+            }
+
             var mtCoreAccountStats = await _accountsApi.GetAccountStats(accountId);
 
             var accountHistory = await GetCached(accountId, CacheCategory.GetAccountBalanceChanges, () => _accountBalanceChangesRepository.GetAsync(accountId, onDate));
 
             var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
-            var accountCapital = await GetAccountCapitalAsync(account);
+            var accountCapital = await GetAccountCapitalAsync(account, mtCoreAccountStats); 
+            
+            var marginPercent = 0m;
+            if (mtCoreAccountStats.TotalCapital != 0)
+            {
+                marginPercent = mtCoreAccountStats.UsedMargin / mtCoreAccountStats.TotalCapital * 100;
+            }
 
             var result = new AccountStat(
                 accountId,
@@ -242,7 +253,17 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? (account?.Balance ?? 0),
                 disposableCapital: accountCapital.Disposable,
                 accountName: account?.AccountName,
-                accountCapitalDetails: accountCapital
+                accountCapitalDetails: accountCapital,
+                totalCapital: mtCoreAccountStats.TotalCapital,
+                usedMargin: mtCoreAccountStats.UsedMargin,
+                usedMarginPercent: marginPercent,
+                freeCapital: mtCoreAccountStats.FreeMargin,
+                unrealizedPnl: mtCoreAccountStats.PnL,
+                balance: mtCoreAccountStats.Balance,
+                unrealizedPnlDay: mtCoreAccountStats.UnrealizedDailyPnl,
+                currentlyUsedMargin: mtCoreAccountStats.CurrentlyUsedMargin,
+                initiallyUsedMargin: mtCoreAccountStats.InitiallyUsedMargin,
+                openPositionsCount: mtCoreAccountStats.OpenPositionsCount
             );
 
             return result;
@@ -269,7 +290,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return account;
         }
 
-        public async Task<AccountCapital> GetAccountCapitalAsync(IAccount account)
+        public async Task<AccountCapital> GetAccountCapitalAsync(string accountId)
+        {
+            var account = await _accountsRepository.GetAsync(accountId);
+            var mtCoreAccountStats = await _accountsApi.GetAccountStats(accountId);
+
+            return await GetAccountCapitalAsync(account, mtCoreAccountStats);
+        }
+
+        private async Task<AccountCapital> GetAccountCapitalAsync(IAccount account, Backend.Contracts.Account.AccountStatContract mtCoreAccountStat)
         {
             if (account == null)
                 throw new ArgumentNullException(nameof(account));
@@ -285,7 +314,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 unRealizedProfit,
                 temporaryCapital, 
                 compensations: realizedProfit.compensations,
-                account.BaseAssetId);
+                account.BaseAssetId,
+                usedMargin: mtCoreAccountStat.UsedMargin);
         }
 
         #endregion
@@ -541,7 +571,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Cache
 
-        private async Task<T> GetCached<T>(string accountId, CacheCategory category, Func<Task<T>> factory)
+        private async Task<T> GetCached<T>(string accountId, CacheCategory category, Func<Task<T>> valueResolver)
         {
             var cacheKey = BuildCacheKey(accountId, category);
             if (_memoryCache.TryGetValue(cacheKey, out T cachedData))
@@ -549,7 +579,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 return cachedData;
             }
 
-            var value = await factory();
+            var value = await valueResolver();
             _memoryCache.Set(cacheKey, value, _cacheSettings.ExpirationPeriod);
 
             return value;
