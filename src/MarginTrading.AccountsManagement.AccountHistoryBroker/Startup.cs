@@ -3,15 +3,18 @@
 
 using Autofac;
 using Common.Log;
+using Lykke.HttpClientGenerator;
 using Lykke.MarginTrading.BrokerBase;
 using Lykke.MarginTrading.BrokerBase.Models;
 using Lykke.MarginTrading.BrokerBase.Settings;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
+using MarginTrading.AccountsManagement.Contracts;
 using AzureRepos = MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.AzureRepositories;
 using SqlRepos = MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.SqlRepositories;
 using Microsoft.Extensions.Hosting;
+using Refit;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 {
@@ -26,6 +29,10 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         protected override void RegisterCustomServices(ContainerBuilder builder, 
             IReloadingManager<Settings> settings, ILog log)
         {
+            builder.RegisterClient<IAccountsApi>(settings.CurrentValue.AccountManagement.ServiceUrl,
+                config =>
+                    config.WithServiceName<ProblemDetails>($"Account Management"));
+
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
             builder.RegisterInstance(new ConvertService())
                 .As<IConvertService>().SingleInstance();
