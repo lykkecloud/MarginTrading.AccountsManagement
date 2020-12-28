@@ -539,7 +539,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             
             LogWarningForTaxFileMissingDaysIfRequired(accountId, missingDaysArray);
             
-            var deals = (await _dealsApi.GetTotalProfit(accountId, missingDaysArray))?.Value ??0;
+            var getDeals = await GetCached(accountId, CacheCategory.GetDeals, () => _dealsApi.GetTotalProfit(accountId, missingDaysArray));
+            var deals = getDeals?.Value ?? 0;
             var compensations =  await GetCached(accountId, CacheCategory.GetCompensations, () => _accountBalanceChangesRepository.GetCompensationsProfit(accountId, missingDaysArray));
             var dividends =  await GetCached(accountId, CacheCategory.GetDividends, () => _accountBalanceChangesRepository.GetDividendsProfit(accountId, missingDaysArray));
 
@@ -603,7 +604,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             GetAccountBalanceChanges,
             GetCompensations,
             GetDividends,
-            GetTaxFileMissingDays
+            GetTaxFileMissingDays,
+            GetDeals
         }
 
         #endregion
