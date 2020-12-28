@@ -251,10 +251,10 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     AccountBalanceChangeReasonType.Withdraw,
                     AccountBalanceChangeReasonType.Commission,
                 }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
-                accountBalance: account?.Balance ?? 0,
-                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? (account?.Balance ?? 0),
+                accountBalance: account.Balance,
+                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance,
                 disposableCapital: accountCapital.Disposable,
-                accountName: account?.AccountName,
+                accountName: account.AccountName,
                 accountCapitalDetails: accountCapital,
                 totalCapital: mtCoreAccountStats.TotalCapital,
                 usedMargin: mtCoreAccountStats.UsedMargin,
@@ -265,7 +265,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 unrealizedPnlDay: mtCoreAccountStats.UnrealizedDailyPnl,
                 currentlyUsedMargin: mtCoreAccountStats.CurrentlyUsedMargin,
                 initiallyUsedMargin: mtCoreAccountStats.InitiallyUsedMargin,
-                openPositionsCount: mtCoreAccountStats.OpenPositionsCount
+                openPositionsCount: mtCoreAccountStats.OpenPositionsCount,
+                lastBalanceChangeTime: mtCoreAccountStats.LastBalanceChangeTime
             );
 
             return result;
