@@ -111,7 +111,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
 
         /// <summary>TotalCapital - UsedMargin</summary>
         [Key(16)]
-        public decimal FreeCapital { get; }
+        public decimal FreeMargin { get; }
 
         /// <summary>Unrealized PnL from MT Core</summary>
         [Key(17)]
@@ -123,7 +123,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
 
         /// <summary>Unrealized daily PnL</summary>
         [Key(19)]
-        public decimal UnrealizedPnlDay { get; }
+        public decimal UnrealizedPnlDaily { get; }
 
         /// <summary>Margin used by open positions</summary>
         [Key(20)]
@@ -144,8 +144,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             decimal depositAmount, decimal withdrawalAmount, decimal commissionAmount, decimal otherAmount,
             decimal accountBalance, decimal prevEodAccountBalance, decimal disposableCapital,
             decimal unRealisedPnl, string accountName, AccountCapitalContract accountCapitalDetails,
-            decimal totalCapital, decimal usedMargin, decimal usedMarginPercent, decimal freeCapital,
-            decimal pnl, decimal balance, decimal unrealizedPnlDay, decimal currentlyUsedMargin,
+            decimal totalCapital, decimal usedMargin, decimal usedMarginPercent, decimal freeMargin,
+            decimal pnl, decimal balance, decimal unrealizedPnlDaily, decimal currentlyUsedMargin,
             decimal initiallyUsedMargin, int openPositionsCount, DateTime lastBalanceChangeTime)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
@@ -164,10 +164,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             TotalCapital = totalCapital;
             UsedMargin = usedMargin;
             UsedMarginPercent = usedMarginPercent;
-            FreeCapital = freeCapital;
+            FreeMargin = freeMargin;
             Pnl = pnl;
             Balance = balance;
-            UnrealizedPnlDay = unrealizedPnlDay;
+            UnrealizedPnlDaily = unrealizedPnlDaily;
             CurrentlyUsedMargin = currentlyUsedMargin;
             InitiallyUsedMargin = initiallyUsedMargin;
             OpenPositionsCount = openPositionsCount;

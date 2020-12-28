@@ -40,13 +40,13 @@ namespace MarginTrading.AccountsManagement.InternalModels
 
         public decimal UsedMarginPercent { get; }
 
-        public decimal FreeCapital { get; }
+        public decimal FreeMargin { get; }
 
         public decimal Pnl { get; }
 
         public decimal Balance { get; }
 
-        public decimal UnrealizedPnlDay { get; }
+        public decimal UnrealizedPnlDaily { get; }
 
         public decimal CurrentlyUsedMargin { get; }
 
@@ -60,7 +60,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
             decimal withdrawalAmount, decimal commissionAmount, decimal otherAmount, decimal accountBalance,
             decimal prevEodAccountBalance, decimal disposableCapital, decimal unRealisedPnl, string accountName, 
             AccountCapital accountCapitalDetails, decimal totalCapital, decimal usedMargin, decimal usedMarginPercent, 
-            decimal freeCapital, decimal pnl, decimal balance, decimal unrealizedPnlDay, decimal currentlyUsedMargin, 
+            decimal freeMargin, decimal pnl, decimal balance, decimal unrealizedPnlDaily, decimal currentlyUsedMargin, 
             decimal initiallyUsedMargin, int openPositionsCount, DateTime lastBalanceChangeTime)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
@@ -79,10 +79,10 @@ namespace MarginTrading.AccountsManagement.InternalModels
             TotalCapital = totalCapital;
             UsedMargin = usedMargin;
             UsedMarginPercent = usedMarginPercent;
-            FreeCapital = freeCapital;
+            FreeMargin = freeMargin;
             Pnl = pnl;
             Balance = balance;
-            UnrealizedPnlDay = unrealizedPnlDay;
+            UnrealizedPnlDaily = unrealizedPnlDaily;
             CurrentlyUsedMargin = currentlyUsedMargin;
             InitiallyUsedMargin = initiallyUsedMargin;
             OpenPositionsCount = openPositionsCount;
