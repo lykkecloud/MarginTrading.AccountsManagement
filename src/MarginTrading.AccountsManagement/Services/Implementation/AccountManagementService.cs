@@ -214,7 +214,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var onDate = _systemClock.UtcNow.UtcDateTime.Date; 
 
-            var account = await GetCached(accountId, CacheCategory.GetAccount, () => _accountsRepository.GetAsync(accountId));
+            var account = await GetCached(accountId, CacheCategory.GetAccount, async() =>
+            {
+                var accfromDb = await _accountsRepository.GetAsync(accountId);
+
+                return (value: accfromDb, shouldCache: accfromDb != null);
+            });
+
             if (account == null)
             {
                 return null;
@@ -572,7 +578,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Cache
 
-        private async Task<T> GetCached<T>(string accountId, CacheCategory category, Func<Task<T>> valueResolver)
+        private Task<T> GetCached<T>(string accountId, CacheCategory category, Func<Task<T>> getValue)
+        {
+            return GetCached(accountId, category, async () => (value: await getValue(), shouldCache: true));
+        }
+        private async Task<T> GetCached<T>(string accountId, CacheCategory category, Func<Task<(T value, bool shouldCache)>> getValue)
         {
             var cacheKey = BuildCacheKey(accountId, category);
             if (_memoryCache.TryGetValue(cacheKey, out T cachedData))
@@ -580,10 +590,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 return cachedData;
             }
 
-            var value = await valueResolver();
-            _memoryCache.Set(cacheKey, value, _cacheSettings.ExpirationPeriod);
+            var result = await getValue();
+            if (result.shouldCache)
+            {
+                _memoryCache.Set(cacheKey, result, _cacheSettings.ExpirationPeriod);
+            }
 
-            return value;
+            return result.value;
         }
 
         private void InvalidateCache(string accountId, CacheCategory category)
