@@ -18,7 +18,6 @@ using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.TradingHistory.Client;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -33,12 +32,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IEventSender _eventSender;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
-        private readonly IMemoryCache _memoryCache;
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
-        private readonly CacheSettings _cacheSettings;
         private readonly IDealsApi _dealsApi;
         private readonly IAccountsApi _accountsApi;
+        private readonly IPositionsApi _positionsApi;
         private readonly IEodTaxFileMissingRepository _taxFileMissingRepository;
+        private readonly AccountsCache _cache;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
@@ -46,13 +45,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             AccountManagementSettings settings,
             IEventSender eventSender,
             ILog log,
-            ISystemClock systemClock, 
-            IMemoryCache memoryCache, 
+            ISystemClock systemClock,
+            AccountsCache cache, 
             IAccountBalanceChangesRepository accountBalanceChangesRepository, 
-            CacheSettings cacheSettings, 
             IDealsApi dealsApi, 
             IEodTaxFileMissingRepository taxFileMissingRepository, 
-            IAccountsApi accountsApi)
+            IAccountsApi accountsApi,
+            IPositionsApi positionsApi)
         {
             _accountsRepository = accountsRepository;
             _tradingConditionsService = tradingConditionsService;
@@ -61,12 +60,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _eventSender = eventSender;
             _log = log;
             _systemClock = systemClock;
-            _memoryCache = memoryCache;
+            _cache = cache;
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
-            _cacheSettings = cacheSettings;
             _dealsApi = dealsApi;
             _taxFileMissingRepository = taxFileMissingRepository;
             _accountsApi = accountsApi;
+            _positionsApi = positionsApi;
         }
 
 
@@ -209,23 +208,33 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             if (string.IsNullOrEmpty(accountId))
                 throw new ArgumentNullException(nameof(accountId));
 
-            var onDate = _systemClock.UtcNow.UtcDateTime.Date;
-            
-            if (_memoryCache.TryGetValue(GetStatsCacheKey(accountId, onDate), out AccountStat cachedData))
-            {
-                return cachedData;
-            }
+            var onDate = _systemClock.UtcNow.UtcDateTime.Date; 
 
-            var account = await _accountsRepository.GetAsync(accountId);
+            var account = await _cache.Get(accountId, AccountsCache.Category.GetAccount, async() =>
+            {
+                var accfromDb = await _accountsRepository.GetAsync(accountId);
+
+                return (value: accfromDb, shouldCache: accfromDb != null);
+            });
 
             if (account == null)
+            {
                 return null;
+            }
 
-            var accountHistory = await _accountBalanceChangesRepository.GetAsync(accountId, onDate);
+            var mtCoreAccountStats = await _accountsApi.GetAccountStats(accountId);
+
+            var accountHistory = await _cache.Get(accountId, AccountsCache.Category.GetAccountBalanceChanges, () => _accountBalanceChangesRepository.GetAsync(accountId, onDate));
 
             var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
-            var accountCapital = await GetAccountCapitalAsync(account);
+            var accountCapital = await GetAccountCapitalAsync(account, mtCoreAccountStats, useCache: true); 
+            
+            var marginPercent = 0m;
+            if (mtCoreAccountStats.TotalCapital != 0)
+            {
+                marginPercent = mtCoreAccountStats.UsedMargin / mtCoreAccountStats.TotalCapital * 100;
+            }
 
             var result = new AccountStat(
                 accountId,
@@ -242,14 +251,22 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     AccountBalanceChangeReasonType.Withdraw,
                     AccountBalanceChangeReasonType.Commission,
                 }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount),
-                accountBalance: account.Balance,
-                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? account.Balance,
+                accountBalance: account?.Balance ?? 0,
+                prevEodAccountBalance: (firstEvent?.Balance - firstEvent?.ChangeAmount) ?? (account?.Balance ?? 0),
                 disposableCapital: accountCapital.Disposable,
-                accountName: account.AccountName,
-                accountCapitalDetails: accountCapital
+                accountName: account?.AccountName,
+                accountCapitalDetails: accountCapital,
+                totalCapital: mtCoreAccountStats.TotalCapital,
+                usedMargin: mtCoreAccountStats.UsedMargin,
+                usedMarginPercent: marginPercent,
+                freeCapital: mtCoreAccountStats.FreeMargin,
+                unrealizedPnl: mtCoreAccountStats.PnL,
+                balance: mtCoreAccountStats.Balance,
+                unrealizedPnlDay: mtCoreAccountStats.UnrealizedDailyPnl,
+                currentlyUsedMargin: mtCoreAccountStats.CurrentlyUsedMargin,
+                initiallyUsedMargin: mtCoreAccountStats.InitiallyUsedMargin,
+                openPositionsCount: mtCoreAccountStats.OpenPositionsCount
             );
-
-            _memoryCache.Set(GetStatsCacheKey(accountId, onDate), result, _cacheSettings.ExpirationPeriod);
 
             return result;
         }
@@ -275,26 +292,32 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return account;
         }
 
-        public async Task<AccountCapital> GetAccountCapitalAsync(IAccount account)
+        public async Task<AccountCapital> GetAccountCapitalAsync(string accountId, bool useCache)
+        {
+            var account = await _accountsRepository.GetAsync(accountId);
+            var mtCoreAccountStats = await _accountsApi.GetAccountStats(accountId);
+
+            return await GetAccountCapitalAsync(account, mtCoreAccountStats, useCache);
+        }
+
+        private async Task<AccountCapital> GetAccountCapitalAsync(IAccount account, Backend.Contracts.Account.AccountStatContract mtCoreAccountStat, bool useCache)
         {
             if (account == null)
                 throw new ArgumentNullException(nameof(account));
 
             var temporaryCapital = account.GetTemporaryCapital();
-
-            var compensationsCapital = await _accountBalanceChangesRepository.GetCompensationsForToday(account.Id);
-
-            var totalRealisedPnl = await GetAccountCapitalTotalPnlAsync(account.Id);
             
-            var accountStats = await _accountsApi.GetAccountStats(account.Id);
+            var realizedProfit = await GetRealizedProfit(account.Id, useCache);
+            var unRealizedProfit = await GetUnrealizedProfit(account.Id);
             
             return new AccountCapital(
                 account.Balance, 
-                totalRealisedPnl, 
-                accountStats.PnL,
+                totalRealisedPnl: realizedProfit.total,
+                unRealizedProfit,
                 temporaryCapital, 
-                compensationsCapital,
-                account.BaseAssetId);
+                compensations: realizedProfit.compensations,
+                account.BaseAssetId,
+                usedMargin: mtCoreAccountStat.UsedMargin);
         }
 
         #endregion
@@ -369,19 +392,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 additionalInfo);
         }
 
-        public void ClearStatsCache(string accountId)
+        public Task ClearStatsCache(string accountId)
         {
             if (string.IsNullOrEmpty(accountId))
                 throw new ArgumentNullException(nameof(accountId));
 
-            var cacheKey = GetStatsCacheKey(accountId, _systemClock.UtcNow.UtcDateTime.Date);
-            
-            _memoryCache.Remove(cacheKey);
-
-            _log.WriteInfo(
-                nameof(AccountManagementService),
-                nameof(ClearStatsCache),
-                $"The account statistics cache has been wiped for key = {cacheKey}");
+            return _cache.Invalidate(accountId);
         }
 
         #endregion
@@ -514,26 +530,36 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
-        private string GetStatsCacheKey(string accountId, DateTime date)
+        private async Task<(decimal deals, decimal compensations, decimal dividends, decimal total)> GetRealizedProfit(string accountId, bool useCache)
         {
-            var dateText = date.ToString("yyyy-MM-dd");
+            //@avolkov for some use cases (in message handlers) we should not use cache 
+            //to not duplicate logic added this ugly hack that will read from db in message handlers and will use cache in http calls
+            Task<T> GetCachedIfAllowed<T>(AccountsCache.Category cat, Func<Task<T>> getValue)
+            {
+                return useCache ? _cache.Get(accountId, cat, getValue) : getValue();
+            }
 
-            return $"{accountId}:{dateText}";
-        }
-
-        private async Task<decimal> GetAccountCapitalTotalPnlAsync(string accountId)
-        {
-            var taxFileMissingDays = await _taxFileMissingRepository.GetAllDaysAsync();
+            var taxFileMissingDays = await GetCachedIfAllowed(AccountsCache.Category.GetTaxFileMissingDays, () => _taxFileMissingRepository.GetAllDaysAsync());
 
             var missingDaysArray = taxFileMissingDays as DateTime[] ?? taxFileMissingDays.ToArray();
             
             LogWarningForTaxFileMissingDaysIfRequired(accountId, missingDaysArray);
             
-            var taxMissingDaysPnl = await _dealsApi.GetTotalProfit(accountId, missingDaysArray);
-            
-            var totalPnl = taxMissingDaysPnl?.Value ?? 0;
+            var getDeals = await GetCachedIfAllowed(AccountsCache.Category.GetDeals, () => _dealsApi.GetTotalProfit(accountId, missingDaysArray));
+            var deals = getDeals?.Value ?? 0;
+            var compensations =  await GetCachedIfAllowed(AccountsCache.Category.GetCompensations, () => _accountBalanceChangesRepository.GetCompensationsProfit(accountId, missingDaysArray));
+            var dividends =  await GetCachedIfAllowed(AccountsCache.Category.GetDividends, () => _accountBalanceChangesRepository.GetDividendsProfit(accountId, missingDaysArray));
 
-            return totalPnl;
+            var total = deals + compensations + dividends;
+
+            return (deals, compensations, dividends, total);
+        }
+
+        private async Task<decimal> GetUnrealizedProfit(string accountId)
+        {
+            var openPositions = await _positionsApi.ListAsync(accountId);
+
+            return openPositions.Where(p => p.PnL > 0).Sum(p => p.PnL);
         }
 
         private void LogWarningForTaxFileMissingDaysIfRequired(string accountId, DateTime[] missingDays)

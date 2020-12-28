@@ -524,14 +524,14 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// <param name="accountId"></param>
         /// <returns></returns>
         [HttpPost("stat/{accountId}/recalculate")]
-        public IActionResult RecalculateStat(string accountId)
+        public async Task<IActionResult> RecalculateStat(string accountId)
         {
             if (string.IsNullOrWhiteSpace(accountId))
             {
                 throw new ArgumentNullException(nameof(accountId), "Account must be set.");
             }
 
-            _accountManagementService.ClearStatsCache(accountId);
+            await _accountManagementService.ClearStatsCache(accountId);
 
             return Ok();
         }

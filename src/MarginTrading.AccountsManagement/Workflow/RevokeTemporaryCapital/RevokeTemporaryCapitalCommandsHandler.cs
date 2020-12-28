@@ -107,7 +107,7 @@ namespace MarginTrading.AccountsManagement.Workflow.RevokeTemporaryCapital
                 .Where(x => string.IsNullOrEmpty(c.RevokeEventSourceId) || x.Id == c.RevokeEventSourceId)
                 .ToList();
 
-            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account);
+            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account.Id, useCache: false);
             var amountToRevoke = temporaryCapitalToRevoke.Sum(x => x.Amount);
             if (accountCapital.CanRevokeAmount < amountToRevoke)
             {

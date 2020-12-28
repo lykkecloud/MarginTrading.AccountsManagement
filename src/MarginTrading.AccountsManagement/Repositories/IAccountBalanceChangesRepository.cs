@@ -21,7 +21,8 @@ namespace MarginTrading.AccountsManagement.Repositories
         
         Task<IReadOnlyList<IAccountBalanceChange>> GetAsync(string accountId, string eventSourceId);
 
-        Task<decimal> GetCompensationsForToday(string accountId);
+        Task<decimal> GetCompensationsProfit(string accountId, DateTime[] days);
+        Task<decimal> GetDividendsProfit(string accountId, DateTime[] days);
         
         Task AddAsync(IAccountBalanceChange change);
         

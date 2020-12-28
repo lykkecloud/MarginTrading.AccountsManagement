@@ -32,12 +32,34 @@ namespace MarginTrading.AccountsManagement.InternalModels
 
         public string AccountName { get; }
         
-        public AccountCapital AccountCapitalDetails { get; } = new AccountCapital();
+        public AccountCapital AccountCapitalDetails { get; }
+
+        public decimal TotalCapital { get; }
+
+        public decimal UsedMargin { get; }
+
+        public decimal UsedMarginPercent { get; }
+
+        public decimal FreeCapital { get; }
+
+        public decimal UnrealizedPnl { get; }
+
+        public decimal Balance { get; }
+
+        public decimal UnrealizedPnlDay { get; }
+
+        public decimal CurrentlyUsedMargin { get; }
+
+        public decimal InitiallyUsedMargin { get; }
+
+        public int OpenPositionsCount { get; }
 
         public AccountStat([NotNull] string accountId, DateTime created, decimal realisedPnl, decimal depositAmount,
             decimal withdrawalAmount, decimal commissionAmount, decimal otherAmount, decimal accountBalance,
             decimal prevEodAccountBalance, decimal disposableCapital, decimal unRealisedPnl, string accountName, 
-            AccountCapital accountCapitalDetails)
+            AccountCapital accountCapitalDetails, decimal totalCapital, decimal usedMargin, decimal usedMarginPercent, 
+            decimal freeCapital, decimal unrealizedPnl, decimal balance, decimal unrealizedPnlDay, decimal currentlyUsedMargin, 
+            decimal initiallyUsedMargin, int openPositionsCount)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Created = created;
@@ -52,6 +74,16 @@ namespace MarginTrading.AccountsManagement.InternalModels
             UnRealisedPnl = unRealisedPnl;
             AccountName = accountName;
             AccountCapitalDetails = accountCapitalDetails;
+            TotalCapital = totalCapital;
+            UsedMargin = usedMargin;
+            UsedMarginPercent = usedMarginPercent;
+            FreeCapital = freeCapital;
+            UnrealizedPnl = unrealizedPnl;
+            Balance = balance;
+            UnrealizedPnlDay = unrealizedPnlDay;
+            CurrentlyUsedMargin = currentlyUsedMargin;
+            InitiallyUsedMargin = initiallyUsedMargin;
+            OpenPositionsCount = openPositionsCount;
         }
     }
 }

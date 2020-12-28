@@ -12,6 +12,7 @@ using Lykke.SlackNotifications;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Extensions;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
+using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 
@@ -20,6 +21,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
     internal class Application : BrokerApplicationBase<AccountChangedEvent>
     {
         private readonly IAccountHistoryRepository _accountHistoryRepository;
+        private readonly IAccountsApi _accountsApi;
         private readonly Settings _settings;
         private readonly ILog _log;
 
@@ -28,12 +30,14 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
             ILog log,
             Settings settings, 
             CurrentApplicationInfo applicationInfo,
-            ISlackNotificationsSender slackNotificationsSender)
+            ISlackNotificationsSender slackNotificationsSender,
+            IAccountsApi accountsApi)
             : base(log, slackNotificationsSender, applicationInfo, MessageFormat.MessagePack)
         {
             _accountHistoryRepository = accountHistoryRepository;
             _log = log;
             _settings = settings;
+            _accountsApi = accountsApi;
         }
 
         protected override BrokerSettingsBase Settings => _settings;
@@ -57,12 +61,29 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
                 if (accountHistory.ChangeAmount != 0)
                 {
                     await _accountHistoryRepository.InsertAsync(accountHistory);
+                    await InvalidateCache(accountHistory.AccountId);
                 }
             }
             catch (Exception exception)
             {
                 await _log.WriteErrorAsync(nameof(AccountHistoryBroker), nameof(HandleMessage), exception);
                 throw;
+            }
+        }
+
+
+        private async Task InvalidateCache(string accountId)
+        {
+            try
+            {
+                await _accountsApi.RecalculateStat(accountId);
+            }
+            catch (Exception e)
+            {
+                await _log.WriteErrorAsync(nameof(AccountHistoryBroker), 
+                    nameof(InvalidateCache), 
+                    $"Error while invalidating cache for account {accountId}", 
+                    e);
             }
         }
 

@@ -151,16 +151,36 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
-        public async Task<decimal> GetCompensationsForToday(string accountId)
+        public Task<decimal> GetCompensationsProfit(string accountId, DateTime[] days)
+        {
+            return GetChangeAmountSummary(accountId,
+                days, 
+                includeOnlyPositiveAmounts: true, 
+                AccountBalanceChangeReasonType.CompensationPayments);
+        }
+
+        public Task<decimal> GetDividendsProfit(string accountId, DateTime[] days)
+        {
+            return GetChangeAmountSummary(accountId, 
+                days,
+                includeOnlyPositiveAmounts: true, 
+                AccountBalanceChangeReasonType.Dividend);
+        }
+
+        private async Task<decimal> GetChangeAmountSummary(string accountId, 
+            DateTime[] days,
+            bool includeOnlyPositiveAmounts, 
+            params AccountBalanceChangeReasonType[] reasonTypes)
         {
             var whereClause = "WHERE AccountId=@accountId"
-                              + " AND ChangeTimestamp > @from"
+                              + " AND Cast(ChangeTimestamp  as DATE) IN @days"
                               + " AND ReasonType IN @reasonTypes";
 
-            var reasonTypes = new[]
+            if (includeOnlyPositiveAmounts)
             {
-                AccountBalanceChangeReasonType.CompensationPayments.ToString()
-            };
+                whereClause += " AND ChangeAmount > 0";
+            }
+
 
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
@@ -168,8 +188,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                     $"SELECT SUM(ChangeAmount) FROM {TableName} WITH (NOLOCK) {whereClause}", new
                     {
                         accountId,
-                        from = _systemClock.UtcNow.UtcDateTime.Date,
-                        reasonTypes,
+                        reasonTypes = reasonTypes.Select(x => x.ToString()).ToArray(),
+                        days
                     }) ?? 0;
             }
         }

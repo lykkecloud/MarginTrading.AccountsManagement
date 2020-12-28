@@ -131,5 +131,8 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// <returns></returns>
         [Get("/api/accounts/stat/{accountId}")]
         Task<AccountStatContract> GetStat(string accountId);
+
+        [Post("/api/accounts/stat/{accountId}/recalculate")]
+        Task RecalculateStat(string accountId);
     }
 }

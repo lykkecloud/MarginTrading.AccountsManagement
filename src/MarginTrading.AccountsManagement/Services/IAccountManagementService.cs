@@ -46,7 +46,7 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task<IAccount> EnsureAccountValidAsync(string accountId, bool skipDeleteValidation = false);
 
-        Task<AccountCapital> GetAccountCapitalAsync(IAccount account);
+        Task<AccountCapital> GetAccountCapitalAsync(string accountId, bool useCache);
         
         #endregion
         
@@ -65,7 +65,7 @@ namespace MarginTrading.AccountsManagement.Services
             string comment,
             string additionalInfo);
 
-        void ClearStatsCache(string accountId);
+        Task ClearStatsCache(string accountId);
 
         #endregion
     }

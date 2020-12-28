@@ -84,6 +84,16 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 .OrderByDescending(item => item.ChangeTimestamp).ToList();
         }
 
+        public Task<decimal> GetCompensationsProfit(string accountId, DateTime[] days)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<decimal> GetDividendsProfit(string accountId, DateTime[] days)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<decimal> GetRealizedPnlAndCompensationsForToday(string accountId)
         {
             return (await _tableStorage.WhereAsync(accountId,
@@ -95,12 +105,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                          x.ReasonType == AccountBalanceChangeReasonType.CompensationPayments.ToString()))
                 .Sum(x => x.ChangeAmount);
         }
-
-        public async Task<decimal> GetCompensationsForToday(string accountId)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public async Task AddAsync(IAccountBalanceChange change)
         {
             var entity = _convertService.Convert<AccountBalanceChangeEntity>(change);

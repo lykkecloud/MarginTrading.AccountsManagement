@@ -36,7 +36,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Projections
             }
             else
             {
-                _accountManagementService.ClearStatsCache(accountId);
+                await _accountManagementService.ClearStatsCache(accountId);
             }
         }
     }
