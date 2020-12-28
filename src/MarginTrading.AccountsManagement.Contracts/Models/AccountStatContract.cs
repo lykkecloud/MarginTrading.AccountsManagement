@@ -75,7 +75,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         public decimal DisposableCapital { get; }
         
         /// <summary>
-        /// UnRealised pnl for the day
+        /// Refers to CHARGED UnRealised pnl for the day
         /// </summary>
         [Key(10)]
         public decimal UnRealisedPnl { get; }
@@ -113,9 +113,9 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         [Key(16)]
         public decimal FreeCapital { get; }
 
-        /// <summary>Unrealized PnL</summary>
+        /// <summary>Unrealized PnL from MT Core</summary>
         [Key(17)]
-        public decimal UnrealizedPnl { get; }
+        public decimal Pnl { get; }
 
         /// <summary>Sum of all cash movements except for unrealized PnL</summary>
         [Key(18)]
@@ -145,7 +145,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             decimal accountBalance, decimal prevEodAccountBalance, decimal disposableCapital,
             decimal unRealisedPnl, string accountName, AccountCapitalContract accountCapitalDetails,
             decimal totalCapital, decimal usedMargin, decimal usedMarginPercent, decimal freeCapital,
-            decimal unrealizedPnl, decimal balance, decimal unrealizedPnlDay, decimal currentlyUsedMargin,
+            decimal pnl, decimal balance, decimal unrealizedPnlDay, decimal currentlyUsedMargin,
             decimal initiallyUsedMargin, int openPositionsCount, DateTime lastBalanceChangeTime)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
@@ -165,7 +165,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
             UsedMargin = usedMargin;
             UsedMarginPercent = usedMarginPercent;
             FreeCapital = freeCapital;
-            UnrealizedPnl = unrealizedPnl;
+            Pnl = pnl;
             Balance = balance;
             UnrealizedPnlDay = unrealizedPnlDay;
             CurrentlyUsedMargin = currentlyUsedMargin;
