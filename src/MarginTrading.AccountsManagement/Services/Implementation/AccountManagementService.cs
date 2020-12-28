@@ -232,7 +232,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
-            var accountCapital = await GetAccountCapitalAsync(account, mtCoreAccountStats); 
+            var accountCapital = await GetAccountCapitalAsync(account, mtCoreAccountStats, useCache: true); 
             
             var marginPercent = 0m;
             if (mtCoreAccountStats.TotalCapital != 0)
@@ -296,22 +296,22 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return account;
         }
 
-        public async Task<AccountCapital> GetAccountCapitalAsync(string accountId)
+        public async Task<AccountCapital> GetAccountCapitalAsync(string accountId, bool useCache)
         {
             var account = await _accountsRepository.GetAsync(accountId);
             var mtCoreAccountStats = await _accountsApi.GetAccountStats(accountId);
 
-            return await GetAccountCapitalAsync(account, mtCoreAccountStats);
+            return await GetAccountCapitalAsync(account, mtCoreAccountStats, useCache);
         }
 
-        private async Task<AccountCapital> GetAccountCapitalAsync(IAccount account, Backend.Contracts.Account.AccountStatContract mtCoreAccountStat)
+        private async Task<AccountCapital> GetAccountCapitalAsync(IAccount account, Backend.Contracts.Account.AccountStatContract mtCoreAccountStat, bool useCache)
         {
             if (account == null)
                 throw new ArgumentNullException(nameof(account));
 
             var temporaryCapital = account.GetTemporaryCapital();
             
-            var realizedProfit = await GetRealizedProfit(account.Id);
+            var realizedProfit = await GetRealizedProfit(account.Id, useCache);
             var unRealizedProfit = await GetUnrealizedProfit(account.Id);
             
             return new AccountCapital(
@@ -537,18 +537,25 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return result;
         }
 
-        private async Task<(decimal deals, decimal compensations, decimal dividends, decimal total)> GetRealizedProfit(string accountId)
+        private async Task<(decimal deals, decimal compensations, decimal dividends, decimal total)> GetRealizedProfit(string accountId, bool useCache)
         {
-            var taxFileMissingDays = await GetCached(accountId, CacheCategory.GetTaxFileMissingDays, () => _taxFileMissingRepository.GetAllDaysAsync());
+            //@avolkov for some use cases (in message handlers) we should not use cache 
+            //to not duplicate logic added this ugly hack that will read from db in message handlers and will use cache in http calls
+            Task<T> GetCachedIfAllowed<T>(CacheCategory cat, Func<Task<T>> getValue)
+            {
+                return useCache ? GetCached(accountId, cat, getValue) : getValue();
+            }
+
+            var taxFileMissingDays = await GetCachedIfAllowed(CacheCategory.GetTaxFileMissingDays, () => _taxFileMissingRepository.GetAllDaysAsync());
 
             var missingDaysArray = taxFileMissingDays as DateTime[] ?? taxFileMissingDays.ToArray();
             
             LogWarningForTaxFileMissingDaysIfRequired(accountId, missingDaysArray);
             
-            var getDeals = await GetCached(accountId, CacheCategory.GetDeals, () => _dealsApi.GetTotalProfit(accountId, missingDaysArray));
+            var getDeals = await GetCachedIfAllowed(CacheCategory.GetDeals, () => _dealsApi.GetTotalProfit(accountId, missingDaysArray));
             var deals = getDeals?.Value ?? 0;
-            var compensations =  await GetCached(accountId, CacheCategory.GetCompensations, () => _accountBalanceChangesRepository.GetCompensationsProfit(accountId, missingDaysArray));
-            var dividends =  await GetCached(accountId, CacheCategory.GetDividends, () => _accountBalanceChangesRepository.GetDividendsProfit(accountId, missingDaysArray));
+            var compensations =  await GetCachedIfAllowed(CacheCategory.GetCompensations, () => _accountBalanceChangesRepository.GetCompensationsProfit(accountId, missingDaysArray));
+            var dividends =  await GetCachedIfAllowed(CacheCategory.GetDividends, () => _accountBalanceChangesRepository.GetDividendsProfit(accountId, missingDaysArray));
 
             var total = deals + compensations + dividends;
 

@@ -76,7 +76,7 @@ namespace MarginTrading.AccountsManagement.Workflow.Withdrawal
                 return;
             }
 
-            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account.Id);
+            var accountCapital = await _accountManagementService.GetAccountCapitalAsync(account.Id, useCache: false);
             if (accountCapital.Disposable < command.Amount)
             {
                 publisher.PublishEvent(new WithdrawalStartFailedInternalEvent(command.OperationId,
