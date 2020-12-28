@@ -260,7 +260,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 usedMargin: mtCoreAccountStats.UsedMargin,
                 usedMarginPercent: marginPercent,
                 freeCapital: mtCoreAccountStats.FreeMargin,
-                unrealizedPnl: mtCoreAccountStats.PnL,
+                pnl: mtCoreAccountStats.PnL,
                 balance: mtCoreAccountStats.Balance,
                 unrealizedPnlDay: mtCoreAccountStats.UnrealizedDailyPnl,
                 currentlyUsedMargin: mtCoreAccountStats.CurrentlyUsedMargin,
