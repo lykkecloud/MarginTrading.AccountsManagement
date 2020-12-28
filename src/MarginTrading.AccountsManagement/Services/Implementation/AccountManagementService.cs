@@ -18,7 +18,6 @@ using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.TradingHistory.Client;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -33,13 +32,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IEventSender _eventSender;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
-        private readonly IMemoryCache _memoryCache;
         private readonly IAccountBalanceChangesRepository _accountBalanceChangesRepository;
-        private readonly CacheSettings _cacheSettings;
         private readonly IDealsApi _dealsApi;
         private readonly IAccountsApi _accountsApi;
         private readonly IPositionsApi _positionsApi;
         private readonly IEodTaxFileMissingRepository _taxFileMissingRepository;
+        private readonly AccountsCache _cache;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
@@ -47,10 +45,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             AccountManagementSettings settings,
             IEventSender eventSender,
             ILog log,
-            ISystemClock systemClock, 
-            IMemoryCache memoryCache, 
+            ISystemClock systemClock,
+            AccountsCache cache, 
             IAccountBalanceChangesRepository accountBalanceChangesRepository, 
-            CacheSettings cacheSettings, 
             IDealsApi dealsApi, 
             IEodTaxFileMissingRepository taxFileMissingRepository, 
             IAccountsApi accountsApi,
@@ -63,9 +60,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _eventSender = eventSender;
             _log = log;
             _systemClock = systemClock;
-            _memoryCache = memoryCache;
+            _cache = cache;
             _accountBalanceChangesRepository = accountBalanceChangesRepository;
-            _cacheSettings = cacheSettings;
             _dealsApi = dealsApi;
             _taxFileMissingRepository = taxFileMissingRepository;
             _accountsApi = accountsApi;
@@ -214,7 +210,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var onDate = _systemClock.UtcNow.UtcDateTime.Date; 
 
-            var account = await GetCached(accountId, CacheCategory.GetAccount, async() =>
+            var account = await _cache.Get(accountId, AccountsCache.Category.GetAccount, async() =>
             {
                 var accfromDb = await _accountsRepository.GetAsync(accountId);
 
@@ -228,7 +224,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var mtCoreAccountStats = await _accountsApi.GetAccountStats(accountId);
 
-            var accountHistory = await GetCached(accountId, CacheCategory.GetAccountBalanceChanges, () => _accountBalanceChangesRepository.GetAsync(accountId, onDate));
+            var accountHistory = await _cache.Get(accountId, AccountsCache.Category.GetAccountBalanceChanges, () => _accountBalanceChangesRepository.GetAsync(accountId, onDate));
 
             var firstEvent = accountHistory.OrderByDescending(x => x.ChangeTimestamp).LastOrDefault();
 
@@ -396,15 +392,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 additionalInfo);
         }
 
-        public void ClearStatsCache(string accountId)
+        public Task ClearStatsCache(string accountId)
         {
             if (string.IsNullOrEmpty(accountId))
                 throw new ArgumentNullException(nameof(accountId));
 
-            foreach (var cat in Enum.GetValues(typeof(CacheCategory)).Cast<CacheCategory>())
-            {
-                InvalidateCache(accountId, cat);
-            }
+            return _cache.Invalidate(accountId);
         }
 
         #endregion
@@ -541,21 +534,21 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         {
             //@avolkov for some use cases (in message handlers) we should not use cache 
             //to not duplicate logic added this ugly hack that will read from db in message handlers and will use cache in http calls
-            Task<T> GetCachedIfAllowed<T>(CacheCategory cat, Func<Task<T>> getValue)
+            Task<T> GetCachedIfAllowed<T>(AccountsCache.Category cat, Func<Task<T>> getValue)
             {
-                return useCache ? GetCached(accountId, cat, getValue) : getValue();
+                return useCache ? _cache.Get(accountId, cat, getValue) : getValue();
             }
 
-            var taxFileMissingDays = await GetCachedIfAllowed(CacheCategory.GetTaxFileMissingDays, () => _taxFileMissingRepository.GetAllDaysAsync());
+            var taxFileMissingDays = await GetCachedIfAllowed(AccountsCache.Category.GetTaxFileMissingDays, () => _taxFileMissingRepository.GetAllDaysAsync());
 
             var missingDaysArray = taxFileMissingDays as DateTime[] ?? taxFileMissingDays.ToArray();
             
             LogWarningForTaxFileMissingDaysIfRequired(accountId, missingDaysArray);
             
-            var getDeals = await GetCachedIfAllowed(CacheCategory.GetDeals, () => _dealsApi.GetTotalProfit(accountId, missingDaysArray));
+            var getDeals = await GetCachedIfAllowed(AccountsCache.Category.GetDeals, () => _dealsApi.GetTotalProfit(accountId, missingDaysArray));
             var deals = getDeals?.Value ?? 0;
-            var compensations =  await GetCachedIfAllowed(CacheCategory.GetCompensations, () => _accountBalanceChangesRepository.GetCompensationsProfit(accountId, missingDaysArray));
-            var dividends =  await GetCachedIfAllowed(CacheCategory.GetDividends, () => _accountBalanceChangesRepository.GetDividendsProfit(accountId, missingDaysArray));
+            var compensations =  await GetCachedIfAllowed(AccountsCache.Category.GetCompensations, () => _accountBalanceChangesRepository.GetCompensationsProfit(accountId, missingDaysArray));
+            var dividends =  await GetCachedIfAllowed(AccountsCache.Category.GetDividends, () => _accountBalanceChangesRepository.GetDividendsProfit(accountId, missingDaysArray));
 
             var total = deals + compensations + dividends;
 
@@ -577,55 +570,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     new {accountId, missingDays}.ToJson(),
                     "There are days which we don't have tax file for. Therefore these days PnL will be excluded from total PnL for the account.");
             }
-        }
-
-
-
-        #endregion
-
-        #region Cache
-
-        private Task<T> GetCached<T>(string accountId, CacheCategory category, Func<Task<T>> getValue)
-        {
-            return GetCached(accountId, category, async () => (value: await getValue(), shouldCache: true));
-        }
-        private async Task<T> GetCached<T>(string accountId, CacheCategory category, Func<Task<(T value, bool shouldCache)>> getValue)
-        {
-            var cacheKey = BuildCacheKey(accountId, category);
-            if (_memoryCache.TryGetValue(cacheKey, out T cachedData))
-            {
-                return cachedData;
-            }
-
-            var result = await getValue();
-            if (result.shouldCache)
-            {
-                _memoryCache.Set(cacheKey, result, _cacheSettings.ExpirationPeriod);
-            }
-
-            return result.value;
-        }
-
-        private void InvalidateCache(string accountId, CacheCategory category)
-        {
-            var cacheKey = BuildCacheKey(accountId, category);
-            _memoryCache.Remove(cacheKey);
-        }
-
-        private string BuildCacheKey(string accountId, CacheCategory category)
-        {
-            var now = _systemClock.UtcNow.Date;
-            return $"amc.{accountId}.{category:G}.{now:yyyy-MM-dd}";
-        }
-
-        private enum CacheCategory
-        {
-            GetAccount,
-            GetAccountBalanceChanges,
-            GetCompensations,
-            GetDividends,
-            GetTaxFileMissingDays,
-            GetDeals
         }
 
         #endregion

@@ -65,7 +65,7 @@ namespace MarginTrading.AccountsManagement.Services
             string comment,
             string additionalInfo);
 
-        void ClearStatsCache(string accountId);
+        Task ClearStatsCache(string accountId);
 
         #endregion
     }
