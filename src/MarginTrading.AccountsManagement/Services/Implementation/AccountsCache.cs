@@ -83,7 +83,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private string BuildCacheKey(string accountId, Category category)
         {
             var now = _systemClock.UtcNow.Date;
-            return $"ac.{accountId}.{category:G}.{now:yyyy-MM-dd}";
+            return $"ac:{accountId}:{category:G}:{now:yyyy-MM-dd}";
         }
     }
 }
