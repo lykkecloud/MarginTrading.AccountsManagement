@@ -94,7 +94,7 @@ namespace MarginTrading.AccountsManagement
                 services.AddStackExchangeRedisCache(o =>
                 {
                     o.Configuration = _mtSettingsManager.CurrentValue.MarginTradingAccountManagement.Cache.RedisConfiguration;
-                    o.InstanceName = "AccountManagementCache";
+                    o.InstanceName = "AccountManagement.";
                 });
 
                 services.AddSingleton<AccountsCache>();
