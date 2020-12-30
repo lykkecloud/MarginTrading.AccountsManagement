@@ -3,6 +3,7 @@
 
 using JetBrains.Annotations;
 using Lykke.MarginTrading.BrokerBase.Settings;
+using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker
 {
@@ -12,6 +13,8 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         public Db Db { get; set; }
         
         public RabbitMqQueues RabbitMqQueues { get; set; }
+
+        public ServiceSettings AccountManagement { get; set; }
     }
     
     [UsedImplicitly]
@@ -32,5 +35,14 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
     public class RabbitMqQueueInfo
     {
         public string ExchangeName { get; set; }
+    }
+
+    public class ServiceSettings
+    {
+        [HttpCheck("api/isalive")]
+        public string ServiceUrl { get; set; }
+
+        [Optional]
+        public string ApiKey { get; set; }
     }
 }

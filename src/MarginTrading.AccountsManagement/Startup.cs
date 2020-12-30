@@ -91,7 +91,13 @@ namespace MarginTrading.AccountsManagement
                     }
                 });
 
-                services.AddMemoryCache();
+                services.AddStackExchangeRedisCache(o =>
+                {
+                    o.Configuration = _mtSettingsManager.CurrentValue.MarginTradingAccountManagement.Cache.RedisConfiguration;
+                    o.InstanceName = "AccountManagement:";
+                });
+
+                services.AddSingleton<AccountsCache>();
                 
                 Log = CreateLog(Configuration, _mtSettingsManager);
 

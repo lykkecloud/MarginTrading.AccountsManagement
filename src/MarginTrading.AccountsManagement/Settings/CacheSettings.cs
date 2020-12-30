@@ -9,5 +9,6 @@ namespace MarginTrading.AccountsManagement.Settings
     public class CacheSettings
     {
         public TimeSpan ExpirationPeriod { get; set; }
+        public string RedisConfiguration { get; set; }
     }
 }

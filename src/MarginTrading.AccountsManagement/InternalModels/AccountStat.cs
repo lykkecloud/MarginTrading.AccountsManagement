@@ -32,12 +32,36 @@ namespace MarginTrading.AccountsManagement.InternalModels
 
         public string AccountName { get; }
         
-        public AccountCapital AccountCapitalDetails { get; } = new AccountCapital();
+        public AccountCapital AccountCapitalDetails { get; }
+
+        public decimal TotalCapital { get; }
+
+        public decimal UsedMargin { get; }
+
+        public decimal UsedMarginPercent { get; }
+
+        public decimal FreeMargin { get; }
+
+        public decimal Pnl { get; }
+
+        public decimal Balance { get; }
+
+        public decimal UnrealizedPnlDaily { get; }
+
+        public decimal CurrentlyUsedMargin { get; }
+
+        public decimal InitiallyUsedMargin { get; }
+
+        public int OpenPositionsCount { get; }
+
+        public DateTime LastBalanceChangeTime { get; }
 
         public AccountStat([NotNull] string accountId, DateTime created, decimal realisedPnl, decimal depositAmount,
             decimal withdrawalAmount, decimal commissionAmount, decimal otherAmount, decimal accountBalance,
             decimal prevEodAccountBalance, decimal disposableCapital, decimal unRealisedPnl, string accountName, 
-            AccountCapital accountCapitalDetails)
+            AccountCapital accountCapitalDetails, decimal totalCapital, decimal usedMargin, decimal usedMarginPercent, 
+            decimal freeMargin, decimal pnl, decimal balance, decimal unrealizedPnlDaily, decimal currentlyUsedMargin, 
+            decimal initiallyUsedMargin, int openPositionsCount, DateTime lastBalanceChangeTime)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Created = created;
@@ -52,6 +76,17 @@ namespace MarginTrading.AccountsManagement.InternalModels
             UnRealisedPnl = unRealisedPnl;
             AccountName = accountName;
             AccountCapitalDetails = accountCapitalDetails;
+            TotalCapital = totalCapital;
+            UsedMargin = usedMargin;
+            UsedMarginPercent = usedMarginPercent;
+            FreeMargin = freeMargin;
+            Pnl = pnl;
+            Balance = balance;
+            UnrealizedPnlDaily = unrealizedPnlDaily;
+            CurrentlyUsedMargin = currentlyUsedMargin;
+            InitiallyUsedMargin = initiallyUsedMargin;
+            OpenPositionsCount = openPositionsCount;
+            LastBalanceChangeTime = lastBalanceChangeTime;
         }
     }
 }
