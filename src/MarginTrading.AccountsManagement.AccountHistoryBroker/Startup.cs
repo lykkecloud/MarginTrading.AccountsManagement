@@ -8,6 +8,7 @@ using Lykke.MarginTrading.BrokerBase;
 using Lykke.MarginTrading.BrokerBase.Models;
 using Lykke.MarginTrading.BrokerBase.Settings;
 using Lykke.SettingsReader;
+using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories;
 using MarginTrading.AccountsManagement.AccountHistoryBroker.Services;
 using MarginTrading.AccountsManagement.Contracts;
@@ -31,7 +32,9 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker
         {
             builder.RegisterClient<IAccountsApi>(settings.CurrentValue.AccountManagement.ServiceUrl,
                 config =>
-                    config.WithServiceName<ProblemDetails>($"Account Management"));
+                    config
+                        .WithServiceName<LykkeErrorResponse>($"Account Management")
+                        .WithOptionalApiKey(settings.CurrentValue.AccountManagement.ApiKey));
 
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
             builder.RegisterInstance(new ConvertService())
