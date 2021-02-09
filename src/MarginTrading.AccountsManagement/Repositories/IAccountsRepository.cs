@@ -19,7 +19,13 @@ namespace MarginTrading.AccountsManagement.Repositories
         
         Task<PaginatedResponse<IAccount>> GetByPagesAsync(string search = null, bool showDeleted = false,
             int? skip = null, int? take = null, bool isAscendingOrder = true);
-        
+
+        Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(int skip, int take);
+
+        Task<IClient> GetClient(string clientId);
+
+        Task UpdateClientTradingCondition(string clientId, string tradingConditionId);
+
         [ItemCanBeNull]
         Task<IAccount> GetAsync(string accountId);
 
@@ -34,8 +40,7 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task<IAccount> UpdateBalanceAsync(string operationId, string accountId,
             decimal amountDelta, bool changeLimit);
 
-        Task<IAccount> UpdateAccountAsync(string accountId, string tradingConditionId,
-            bool? isDisabled, bool? isWithdrawalDisabled);
+        Task<IAccount> UpdateAccountAsync(string accountId, bool? isDisabled, bool? isWithdrawalDisabled);
         
         Task<IAccount> DeleteAsync(string accountId);
 

@@ -79,6 +79,21 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             );
         }
 
+        public Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(int skip, int take)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IClient> GetClient(string clientId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task UpdateClientTradingCondition(string clientId, string tradingConditionId)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IAccount> GetAsync(string accountId)
         {
             var account = (await _tableStorage.GetDataAsync(x => x.RowKey == accountId)).SingleOrDefault();
@@ -134,7 +149,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return true;
         }
 
-        public async Task<IAccount> UpdateAccountAsync(string accountId, string tradingConditionId, bool? isDisabled,
+        public async Task<IAccount> UpdateAccountAsync(string accountId, bool? isDisabled,
             bool? isWithdrawalDisabled)
         {
             var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;
@@ -142,9 +157,6 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             var account = await _tableStorage.MergeAsync(pk,
                 AccountEntity.GenerateRowKey(accountId), a =>
                 {
-                    if (!string.IsNullOrEmpty(tradingConditionId))
-                        a.TradingConditionId = tradingConditionId;
-
                     if (isDisabled.HasValue)
                         a.IsDisabled = isDisabled.Value;
 
