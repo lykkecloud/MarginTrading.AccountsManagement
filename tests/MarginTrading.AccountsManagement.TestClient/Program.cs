@@ -120,8 +120,6 @@ namespace MarginTrading.AccountsManagement.TestClient
             var accountResponse = await client.Create(new CreateAccountRequest
                 {ClientId = "client1", TradingConditionId = "tc1", BaseAssetId = "ba1"}).Dump();
             await client.GetByClientAndId("client1", accountResponse.Content.Id).Dump();
-            await client.Change("client1", accountResponse.Content.Id,
-                new ChangeAccountRequest {IsDisabled = true, TradingConditionId = "tc2"}).Dump();
         }
         
         private static async Task CheckAccountsBalabceHistoryApiWorking(IHttpClientGenerator clientGenerator)

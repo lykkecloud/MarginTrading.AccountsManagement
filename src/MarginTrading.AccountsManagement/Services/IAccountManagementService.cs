@@ -48,13 +48,15 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task<AccountCapital> GetAccountCapitalAsync(string accountId, bool useCache);
         
+        Task<PaginatedResponse<IClient>> ListClientsByPagesAsync(int skip, int take);
+
+        Task<IClient> GetClient(string clientId);
+
         #endregion
-        
-        
+
         #region Modify
-        
-        Task<IAccount> UpdateAccountAsync(string accountId,
-            string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled);
+
+        Task<IAccount> UpdateAccountAsync(string accountId, bool? isDisabled, bool? isWithdrawalDisabled);
         
         Task ResetAccountAsync(string accountId);
         
@@ -66,6 +68,8 @@ namespace MarginTrading.AccountsManagement.Services
             string additionalInfo);
 
         Task ClearStatsCache(string accountId);
+
+        Task UpdateClientTradingCondition(string clientId, string tradingConditionId);
 
         #endregion
     }

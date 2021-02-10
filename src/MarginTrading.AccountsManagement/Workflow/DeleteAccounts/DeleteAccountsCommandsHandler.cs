@@ -117,7 +117,6 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
 
                     var result = await _accountsRepository.UpdateAccountAsync(
                         accountToBlock,
-                        account.TradingConditionId,
                         true,
                         true);
             
@@ -214,7 +213,6 @@ namespace MarginTrading.AccountsManagement.Workflow.DeleteAccounts
 
                     var result = await _accountsRepository.UpdateAccountAsync(
                         failedAccountId,
-                        account.TradingConditionId,
                         false,
                         false);
             
