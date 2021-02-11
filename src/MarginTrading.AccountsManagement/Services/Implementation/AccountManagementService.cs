@@ -415,7 +415,22 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     $"{tradingConditionId} does not exist");
             }
 
+            var beforeUpdate = (await _accountsRepository.GetAllAsync(clientId))
+                .ToDictionary(p=>p.Id);
+
             await _accountsRepository.UpdateClientTradingCondition(clientId, tradingConditionId);
+
+            var afterUpdate = await _accountsRepository.GetAllAsync(clientId);
+
+            foreach (var account in afterUpdate)
+            {
+                _eventSender.SendAccountChangedEvent(
+                    nameof(UpdateClientTradingCondition),
+                    account,
+                    AccountChangedEventTypeContract.Updated,
+                    Guid.NewGuid().ToString("N"),
+                    previousSnapshot: beforeUpdate[account.Id]);
+            }
         }
 
         #endregion
