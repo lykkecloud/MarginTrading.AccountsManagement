@@ -372,7 +372,7 @@ end
                 try
                 {
                     var account = await conn.QuerySingleOrDefaultAsync<AccountEntity>(
-                        $"SELECT * FROM {AccountsTableName} WITH (UPDLOCK) WHERE Id = @accountId", new {accountId}, transaction);
+                        $"SELECT a.*, c.TradingConditionId FROM {AccountsTableName} a WITH (UPDLOCK) join {ClientsTableName} c on c.Id=a.ClientId WHERE a.Id = @accountId", new {accountId}, transaction);
 
                     if (account == null)
                     {
