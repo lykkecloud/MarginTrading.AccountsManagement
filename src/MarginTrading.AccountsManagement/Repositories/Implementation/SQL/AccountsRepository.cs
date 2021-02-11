@@ -293,11 +293,11 @@ end
         {
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
-                var whereClause = "WHERE 1=1";
+                var whereClause = "WHERE exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id and a.IsDeleted = 0)";
 
                 var paginationClause = $" ORDER BY [Id] ASC OFFSET {skip} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
-                var gridReader = await conn.QueryMultipleAsync($"SELECT * FROM {ClientsTableName} {whereClause} {paginationClause}; " +
-                                                               $"SELECT COUNT(*) FROM {ClientsTableName} {whereClause}");
+                var gridReader = await conn.QueryMultipleAsync($"SELECT * FROM {ClientsTableName} c {whereClause} {paginationClause}; " +
+                                                               $"SELECT COUNT(*) FROM {ClientsTableName} c {whereClause}");
                 var clients = (await gridReader.ReadAsync<ClientEntity>()).ToList();
                 var totalCount = await gridReader.ReadSingleAsync<int>();
 
@@ -316,7 +316,9 @@ end
             {
                 var sqlParams = new { Id = clientId };
 
-                return await conn.QuerySingleOrDefaultAsync<ClientEntity>($"SELECT * FROM {ClientsTableName} where Id = @{nameof(sqlParams.Id)} ", sqlParams);
+                return await conn.QuerySingleOrDefaultAsync<ClientEntity>($"SELECT * FROM {ClientsTableName} c where c.Id = @{nameof(sqlParams.Id)} " +
+                                                                          "and exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id and a.IsDeleted = 0)", 
+                    sqlParams);
             }
         }
         
