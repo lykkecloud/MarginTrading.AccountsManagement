@@ -71,6 +71,11 @@ namespace MarginTrading.AccountsManagement.Modules
                     .As<IEodTaxFileMissingRepository>()
                     .WithParameter(TypedParameter.From(_settings.CurrentValue.MarginTradingAccountManagement.Db.ConnectionString))
                     .SingleInstance();
+
+                builder.RegisterType<SqlRepos.ComplexityWarningRepository>()
+                    .As<IComplexityWarningRepository>()
+                    .WithParameter(TypedParameter.From(_settings.CurrentValue.MarginTradingAccountManagement.Db.ConnectionString))
+                    .SingleInstance();
             }
             else if (_settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.Azure.ToString())
             {

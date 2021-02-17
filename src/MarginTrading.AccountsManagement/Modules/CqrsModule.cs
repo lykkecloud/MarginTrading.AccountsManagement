@@ -42,6 +42,7 @@ using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
+using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 
@@ -472,6 +473,13 @@ namespace MarginTrading.AccountsManagement.Modules
                 .From(_settings.ContextNames.TradingEngine).On("events")
                 .WithProjection(
                     typeof(MarketStateChangedProjection), _settings.ContextNames.TradingEngine);
+
+            contextRegistration.ListeningEvents(
+                    typeof(OrderHistoryEvent))
+                .From(_settings.ContextNames.TradingEngine).On("events")
+                .WithProjection(
+                    typeof(OrderHistoryProjection), _settings.ContextNames.TradingEngine);
+
 
             contextRegistration.ListeningEvents(
                     typeof(TaxFileUploadedEvent))

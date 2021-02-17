@@ -99,6 +99,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         public List<string> LastExecutedOperations { get; set; } = new List<string>();
 
         public string AccountName { get; set; }
+        public AccountAdditionalInfo AdditionalInfo { get; }
 
         public static string GeneratePartitionKey(string clientId)
         {

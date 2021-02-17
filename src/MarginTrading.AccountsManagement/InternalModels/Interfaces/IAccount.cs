@@ -38,5 +38,11 @@ namespace MarginTrading.AccountsManagement.InternalModels.Interfaces
 
         string AccountName { get; }
 
+        public AccountAdditionalInfo AdditionalInfo { get; }
+    }
+
+    public class AccountAdditionalInfo
+    {
+        public bool? ShouldShowProductComplexityWarning { get; set; }
     }
 }

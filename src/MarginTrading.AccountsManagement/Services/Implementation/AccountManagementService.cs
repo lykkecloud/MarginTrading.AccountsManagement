@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Exceptions;
 using MarginTrading.AccountsManagement.Extensions;
@@ -19,6 +20,7 @@ using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.TradingHistory.Client;
 using Microsoft.Extensions.Internal;
+using Microsoft.FeatureManagement;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
@@ -38,6 +40,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IPositionsApi _positionsApi;
         private readonly IEodTaxFileMissingRepository _taxFileMissingRepository;
         private readonly AccountsCache _cache;
+        private readonly IFeatureManager _featureManager;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
@@ -51,7 +54,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             IDealsApi dealsApi, 
             IEodTaxFileMissingRepository taxFileMissingRepository, 
             IAccountsApi accountsApi,
-            IPositionsApi positionsApi)
+            IPositionsApi positionsApi, 
+            IFeatureManager featureManager)
         {
             _accountsRepository = accountsRepository;
             _tradingConditionsService = tradingConditionsService;
@@ -66,6 +70,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _taxFileMissingRepository = taxFileMissingRepository;
             _accountsApi = accountsApi;
             _positionsApi = positionsApi;
+            _featureManager = featureManager;
         }
 
 
@@ -266,7 +271,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 currentlyUsedMargin: mtCoreAccountStats.CurrentlyUsedMargin,
                 initiallyUsedMargin: mtCoreAccountStats.InitiallyUsedMargin,
                 openPositionsCount: mtCoreAccountStats.OpenPositionsCount,
-                lastBalanceChangeTime: mtCoreAccountStats.LastBalanceChangeTime
+                lastBalanceChangeTime: mtCoreAccountStats.LastBalanceChangeTime,
+                additionalInfo: account.AdditionalInfo.ToJson(true)
             );
 
             return result;
@@ -433,6 +439,28 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
         }
 
+        #region ComplexityWarning
+
+
+        public async Task UpdateComplexityWarningFlag(string accountId, bool shouldShowProductComplexityWarning)
+        {
+            var previousSnapshot = await EnsureAccountValidAsync(accountId, skipDeleteValidation: true);
+
+            var updated= await _accountsRepository.UpdateAdditionalInfo(previousSnapshot.Id, s =>
+                {
+                    s.ShouldShowProductComplexityWarning = shouldShowProductComplexityWarning;
+                });
+
+            _eventSender.SendAccountChangedEvent(
+                nameof(UpdateComplexityWarningFlag),
+                updated,
+                AccountChangedEventTypeContract.Updated,
+                Guid.NewGuid().ToString("N"),
+                previousSnapshot: previousSnapshot);
+        }
+
+        #endregion
+
         #endregion
 
         #region Helpers
@@ -444,6 +472,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 ? $"{_settings.Behavior?.AccountIdPrefix}{Guid.NewGuid():N}"
                 : accountId;
 
+            var shouldShowProductComplexityWarning =  await _featureManager.IsEnabledAsync(BrokerFeature.ProductComplexityWarning) ? (bool?) true : null;
+            
             IAccount account = new Account(
                 id,
                 clientId,
@@ -456,7 +486,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 !(_settings.Behavior?.DefaultWithdrawalIsEnabled ?? true),
                 false,
                 DateTime.UtcNow,
-                accountName);
+                accountName,
+                new AccountAdditionalInfo
+                {
+                    ShouldShowProductComplexityWarning = shouldShowProductComplexityWarning
+                });
 
             await _accountsRepository.AddAsync(account);
             account = await _accountsRepository.GetAsync(accountId);
