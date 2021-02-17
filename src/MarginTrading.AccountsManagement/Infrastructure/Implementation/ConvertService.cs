@@ -5,7 +5,10 @@ using System;
 using System.Collections.Generic;
 using AutoMapper;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.Interfaces;
+using MarginTrading.AssetService.Contracts.TradingConditions;
 using Newtonsoft.Json;
 
 namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
@@ -25,6 +28,7 @@ namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
                     .ConvertUsing(Enum.Parse<AccountBalanceChangeReasonType>);
                 cfg.CreateMap<List<string>, string>().ConvertUsing(JsonConvert.SerializeObject);
                 cfg.CreateMap<string, List<string>>().ConvertUsing(JsonConvert.DeserializeObject<List<string>>);
+                cfg.CreateMap<IClient, ClientTradingConditionsContract>().ForMember(x => x.ClientId, o => o.MapFrom(s=> s.Id));
             }).CreateMapper();
         }
 

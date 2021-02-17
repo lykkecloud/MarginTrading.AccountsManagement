@@ -301,6 +301,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return await GetAccountCapitalAsync(account, mtCoreAccountStats, useCache);
         }
 
+        public Task<PaginatedResponse<IClient>> ListClientsByPagesAsync(int skip, int take)
+        {
+            return _accountsRepository.GetClientsByPagesAsync(skip, take);
+        }
+
+        public Task<IClient> GetClient(string clientId)
+        {
+            return _accountsRepository.GetClient(clientId);
+        }
+
         private async Task<AccountCapital> GetAccountCapitalAsync(IAccount account, Backend.Contracts.Account.AccountStatContract mtCoreAccountStat, bool useCache)
         {
             if (account == null)
@@ -325,11 +335,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         #region Modify
 
-        public async Task<IAccount> UpdateAccountAsync(string accountId,
-            string tradingConditionId, bool? isDisabled, bool? isWithdrawalDisabled)
+        public async Task<IAccount> UpdateAccountAsync(string accountId, bool? isDisabled, bool? isWithdrawalDisabled)
         {
-            await ValidateTradingConditionAsync(accountId, tradingConditionId);
-
             if (isDisabled ?? false)
             {
                 await ValidateStatsBeforeDisableAsync(accountId);
@@ -340,7 +347,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             var result =
                 await _accountsRepository.UpdateAccountAsync(
                     accountId,
-                    tradingConditionId,
                     isDisabled,
                     isWithdrawalDisabled);
 
@@ -401,6 +407,32 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return _cache.Invalidate(accountId);
         }
 
+        public async Task UpdateClientTradingCondition(string clientId, string tradingConditionId)
+        {
+            if (!await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
+            {
+                throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
+                    $"{tradingConditionId} does not exist");
+            }
+
+            var beforeUpdate = (await _accountsRepository.GetAllAsync(clientId))
+                .ToDictionary(p=>p.Id);
+
+            await _accountsRepository.UpdateClientTradingCondition(clientId, tradingConditionId);
+
+            var afterUpdate = await _accountsRepository.GetAllAsync(clientId);
+
+            foreach (var account in afterUpdate)
+            {
+                _eventSender.SendAccountChangedEvent(
+                    nameof(UpdateClientTradingCondition),
+                    account,
+                    AccountChangedEventTypeContract.Updated,
+                    Guid.NewGuid().ToString("N"),
+                    previousSnapshot: beforeUpdate[account.Id]);
+            }
+        }
+
         #endregion
 
         #region Helpers
@@ -457,37 +489,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 null,
                 _systemClock.UtcNow.UtcDateTime);
         }
-
-        private async Task ValidateTradingConditionAsync(string accountId,
-            string tradingConditionId)
-        {
-            if (string.IsNullOrEmpty(tradingConditionId))
-                return;
-
-            if (!await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
-            {
-                throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
-                    $"No trading condition {tradingConditionId} exists");
-            }
-
-            var account = await _accountsRepository.GetAsync(accountId);
-
-            if (account == null)
-                throw new ArgumentOutOfRangeException(
-                    $"Account with id [{accountId}] does not exist");
-
-            var currentLegalEntity = account.LegalEntity;
-            var newLegalEntity = await _tradingConditionsService.GetLegalEntityAsync(tradingConditionId);
-
-            if (currentLegalEntity != newLegalEntity)
-            {
-                throw new NotSupportedException(
-                    $"Account with id [{accountId}] has LegalEntity " +
-                    $"[{account.LegalEntity}], but trading condition with id [{tradingConditionId}] has " +
-                    $"LegalEntity [{newLegalEntity}]");
-            }
-        }
-
+        
         private async Task ValidateStatsBeforeDisableAsync(string accountId)
         {
             var stats = await _accountsApi.GetAccountStats(accountId);

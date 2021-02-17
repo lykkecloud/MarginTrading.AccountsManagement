@@ -134,5 +134,23 @@ namespace MarginTrading.AccountsManagement.Contracts
 
         [Post("/api/accounts/stat/{accountId}/recalculate")]
         Task RecalculateStat(string accountId);
+
+        /// <summary>
+        /// Gets client trading conditions
+        /// </summary>
+        [Get("/api/accounts/client-trading-conditions/{clientId}")]
+        Task<ClientTradingConditionsContract> GetClientTradingConditions([NotNull] string clientId);
+
+        /// <summary>
+        /// Gets client trading conditions
+        /// </summary>
+        [Get("/api/accounts/client-trading-conditions")]
+        Task<PaginatedResponseContract<ClientTradingConditionsContract>> ListClientsTradingConditions([Query] int skip = 0, [Query] int take = 20);
+
+        /// <summary>
+        /// Gets client trading conditions
+        /// </summary>
+        [Patch("/api/accounts/client-trading-conditions")]
+        Task UpdateClientTradingConditions([Body] UpdateClientTradingConditionRequest request);
     }
 }

@@ -7,6 +7,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -17,6 +18,7 @@ using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.Extensions.Internal;
+using MongoDB.Bson.IO;
 
 namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 {
@@ -24,11 +26,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
     {
         #region SQL
 
-        private const string TableName = "MarginTradingAccounts";
-        private const string CreateTableScript = "CREATE TABLE [{0}](" +
+        private const string CreateConstraintScript = @"
+if object_id('dbo.[FK_MarginTradingAccounts_MarginTradingClients]', 'F') is null 
+begin   
+	alter table [dbo].[MarginTradingAccounts]  with check add constraint [FK_MarginTradingAccounts_MarginTradingClients] foreign key ([ClientId])
+	references [dbo].[MarginTradingClients] ([Id])
+end;
+";
+        private const string AccountsTableName = "MarginTradingAccounts";
+        private const string CreateAccountsTableScript = "CREATE TABLE [{0}](" +
                                                  "[Id] [nvarchar] (64) NOT NULL PRIMARY KEY, " +
                                                  "[ClientId] [nvarchar] (64) NOT NULL, " +
-                                                 "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
                                                  "[BaseAssetId] [nvarchar] (64) NOT NULL, " +
                                                  "[Balance] decimal (24, 12) NOT NULL, " +
                                                  "[WithdrawTransferLimit] decimal (24, 12) NOT NULL, " +
@@ -41,6 +49,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                                  "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL, " +
                                                  "[AccountName] [nvarchar] (255), " +
                                                  "INDEX IX_{0} (ClientId, IsDeleted)" +
+                                                 ");";
+
+
+        private const string ClientsTableName = "MarginTradingClients";
+        private const string CreateClientsTableScript = "CREATE TABLE [{0}](" +
+                                                 "[Id] [nvarchar] (64) NOT NULL PRIMARY KEY, " +
+                                                 "[TradingConditionId] [nvarchar] (64) NOT NULL" +
                                                  ");";
 
         private const string DeleteProcName = "DeleteAccountData";
@@ -64,11 +79,13 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         #endregion SQL
         
-        private static Type DataType => typeof(IAccount);
-        private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
-        private static readonly string GetFields = string.Join(",", DataType.GetProperties().Select(x => "@" + x.Name));
-        private static readonly string GetUpdateClause = string.Join(",",
-            DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
+        private static Type AccountDataType => typeof(IAccount);
+        private static readonly PropertyInfo[] AccountProperties = AccountDataType.GetProperties()
+            .Where(p => p.Name != nameof(IAccount.TradingConditionId)).ToArray();
+
+        private static readonly string GetAccountColumns = string.Join(",", AccountProperties.Select(x => x.Name));
+        private static readonly string GetAccountFields = string.Join(",", AccountProperties.Select(x => "@" + x.Name));
+        private static readonly string GetAccountUpdateClause = string.Join(",", AccountProperties.Select(x => "[" + x.Name + "]=@" + x.Name));
 
         private readonly IConvertService _convertService;
         private readonly ISystemClock _systemClock;
@@ -88,7 +105,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             {
                 try
                 {
-                    conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+                    conn.CreateTableIfDoesntExists(CreateClientsTableScript, ClientsTableName);
+                    conn.CreateTableIfDoesntExists(CreateAccountsTableScript, AccountsTableName);
+                    conn.Execute(CreateConstraintScript);
                     conn.Execute(DeleteProcCreateScript);
                 }
                 catch (Exception ex)
@@ -101,13 +120,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public async Task AddAsync(IAccount account)
         {
-            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
-            {
-                await conn.ExecuteAsync(
-                    $"insert into {TableName} ({GetColumns}) values ({GetFields})", Convert(account));
-            }
+            await InsertClientIfNotExists(ClientEntity.From(account));
+            await using var conn = new SqlConnection(_settings.Db.ConnectionString);
+            await conn.ExecuteAsync($"insert into {AccountsTableName} ({GetAccountColumns}) values ({GetAccountFields})", Convert(account));
         }
-
+        
         public async Task<IReadOnlyList<IAccount>> GetAllAsync(string clientId = null, string search = null,
             bool showDeleted = false)
         {
@@ -119,11 +136,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var whereClause = "WHERE 1=1"
-                                  + (string.IsNullOrWhiteSpace(clientId) ? "" : " AND ClientId = @clientId")
-                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND AccountName LIKE @search OR Id LIKE @search")
-                                  + (showDeleted ? "" : " AND IsDeleted = 0");
+                                  + (string.IsNullOrWhiteSpace(clientId) ? "" : " AND a.ClientId = @clientId")
+                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND a.AccountName LIKE @search OR a.Id LIKE @search")
+                                  + (showDeleted ? "" : " AND a.IsDeleted = 0");
                 var accounts = await conn.QueryAsync<AccountEntity>(
-                    $"SELECT * FROM {TableName} {whereClause}", 
+                    $"SELECT a.*, c.TradingConditionId FROM {AccountsTableName} a join {ClientsTableName} c on c.Id = a.ClientId {whereClause}", 
                     new { clientId, search });
                 
                 return accounts.ToList();
@@ -140,13 +157,14 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
-                var whereClause = "WHERE 1=1"
-                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND AccountName LIKE @search OR Id LIKE @search")
-                                  + (showDeleted ? "" : " AND IsDeleted = 0");
+                var whereClause = "WHERE a.ClientId=c.Id"
+                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND a.AccountName LIKE @search OR a.Id LIKE @search")
+                                  + (showDeleted ? "" : " AND a.IsDeleted = 0");
 
                 var paginationClause = $" ORDER BY [Id] {(isAscendingOrder ? "ASC" : "DESC")} OFFSET {skip ?? 0} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
                 var gridReader = await conn.QueryMultipleAsync(
-                    $"SELECT * FROM {TableName} {whereClause} {paginationClause}; SELECT COUNT(*) FROM {TableName} {whereClause}",
+                    $"SELECT a.*, c.TradingConditionId FROM {AccountsTableName} a, {ClientsTableName} c {whereClause} {paginationClause}; " +
+                    $"SELECT COUNT(*) FROM {AccountsTableName} a, {ClientsTableName} c {whereClause}",
                     new {search});
                 var accounts = (await gridReader.ReadAsync<AccountEntity>()).ToList();
                 var totalCount = await gridReader.ReadSingleAsync<int>();
@@ -165,9 +183,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var whereClause = "WHERE 1=1 "
-                                  + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND Id = @accountId");
+                                  + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND a.Id = @accountId");
                 var accounts = await conn.QueryAsync<AccountEntity>(
-                    $"SELECT * FROM {TableName} {whereClause}", 
+                    $"SELECT a.*, c.TradingConditionId FROM {AccountsTableName} a join {ClientsTableName} c on a.ClientId=c.Id {whereClause}", 
                     new { accountId });
                 
                 return accounts.FirstOrDefault();
@@ -191,14 +209,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             });
         }
 
-        public async Task<IAccount> UpdateAccountAsync(string accountId, string tradingConditionId, bool? isDisabled,
+        public async Task<IAccount> UpdateAccountAsync(string accountId,  bool? isDisabled,
             bool? isWithdrawalDisabled)
         {
             return await GetAccountAndUpdate(accountId, a =>
             {
-                if (!string.IsNullOrEmpty(tradingConditionId))
-                    a.TradingConditionId = tradingConditionId;
-
                 if (isDisabled.HasValue)
                     a.IsDisabled = isDisabled.Value;
 
@@ -258,6 +273,74 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
         }
 
+        #region Client
+
+        private async Task InsertClientIfNotExists(ClientEntity client)
+        {
+            var sql = $@"
+begin
+   if not exists (select 1 from {ClientsTableName} where Id = @{nameof(ClientEntity.Id)})
+   begin
+       insert into {ClientsTableName} (Id, TradingConditionId) values (@{nameof(ClientEntity.Id)}, @{nameof(ClientEntity.TradingConditionId)}) 
+   end
+end
+";
+            await using var conn = new SqlConnection(_settings.Db.ConnectionString);
+            await conn.ExecuteAsync(sql, client);
+        }
+
+        public async Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(int skip, int take)
+        {
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                var whereClause = "WHERE exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id and a.IsDeleted = 0)";
+
+                var paginationClause = $" ORDER BY [Id] ASC OFFSET {skip} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
+                var gridReader = await conn.QueryMultipleAsync($"SELECT * FROM {ClientsTableName} c {whereClause} {paginationClause}; " +
+                                                               $"SELECT COUNT(*) FROM {ClientsTableName} c {whereClause}");
+                var clients = (await gridReader.ReadAsync<ClientEntity>()).ToList();
+                var totalCount = await gridReader.ReadSingleAsync<int>();
+
+                return new PaginatedResponse<IClient>(
+                    clients,
+                    skip,
+                    clients.Count,
+                    totalCount
+                );
+            }
+        }
+
+        public async Task<IClient> GetClient(string clientId)
+        {
+            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            {
+                var sqlParams = new { Id = clientId };
+
+                return await conn.QuerySingleOrDefaultAsync<ClientEntity>($"SELECT * FROM {ClientsTableName} c where c.Id = @{nameof(sqlParams.Id)} " +
+                                                                          "and exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id and a.IsDeleted = 0)", 
+                    sqlParams);
+            }
+        }
+        
+        public async Task UpdateClientTradingCondition(string clientId, string tradingConditionId)
+        {
+            var sqlParams = new { clientId, tradingConditionId };
+
+            await using var conn = new SqlConnection(_settings.Db.ConnectionString);
+
+            var affectedRows = await conn.ExecuteAsync($"update {ClientsTableName} set TradingConditionId = @{nameof(sqlParams.tradingConditionId)} " +
+                                                       $"where Id = @{nameof(sqlParams.clientId)}",
+                sqlParams);
+
+            if (affectedRows != 1)
+            {
+                throw new InvalidOperationException($"Unexpected affected rows count {affectedRows} during {nameof(UpdateClientTradingCondition)}. " +
+                                                    $"Sql params: {sqlParams.ToJson()}");
+            }
+        }
+
+        #endregion
+
         #region Private Methods
 
         private bool TryUpdateOperationsList(string operationId, AccountEntity a)
@@ -291,7 +374,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                 try
                 {
                     var account = await conn.QuerySingleOrDefaultAsync<AccountEntity>(
-                        $"SELECT * FROM {TableName} WITH (UPDLOCK) WHERE Id = @accountId", new {accountId}, transaction);
+                        $"SELECT a.*, c.TradingConditionId FROM {AccountsTableName} a WITH (UPDLOCK) join {ClientsTableName} c on c.Id=a.ClientId WHERE a.Id = @accountId", new {accountId}, transaction);
 
                     if (account == null)
                     {
@@ -303,10 +386,17 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                         throw new ValidationException($"Account with ID {accountId} is deleted");
                     }
 
+                    var tradingConditionBeforeUpdate = account.TradingConditionId;
                     handler(account);
 
+                    if (account.TradingConditionId != tradingConditionBeforeUpdate)
+                    {
+                        throw new InvalidOperationException($"Update of {account.TradingConditionId} is not allowed on per account level. " +
+                                                            $"Use Update for {ClientsTableName} table");
+                    }
+
                     await conn.ExecuteAsync(
-                        $"update {TableName} set {GetUpdateClause} where Id=@Id", account, transaction);
+                        $"update {AccountsTableName} set {GetAccountUpdateClause} where Id=@Id", account, transaction);
 
                     transaction.Commit();
 

@@ -9,10 +9,8 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.Common.Log;
 using Lykke.Snow.Mdm.Contracts.Api;
 using Lykke.Snow.Mdm.Contracts.Models.Contracts;
-using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -136,6 +134,47 @@ namespace MarginTrading.AccountsManagement.Controllers
         }
 
         /// <summary>
+        /// Gets client trading conditions
+        /// </summary>
+        [HttpGet]
+        [Route("client-trading-conditions/{clientId}")]
+        public async Task<ClientTradingConditionsContract> GetClientTradingConditions([NotNull] string clientId)
+        {
+            var result = await _accountManagementService.GetClient(clientId.RequiredNotNullOrWhiteSpace(nameof(clientId)));
+
+            return _convertService.Convert<IClient, ClientTradingConditionsContract>(result);
+        }
+
+        /// <summary>
+        /// Gets paginated client  trading conditions. Both skip and take must be set or unset.
+        /// </summary>
+        [HttpGet]
+        [Route("client-trading-conditions")]
+        public async Task<Contracts.PaginatedResponseContract<ClientTradingConditionsContract>> ListClientsTradingConditions([FromQuery] int skip = 0, [FromQuery] int take = 20)
+        {
+            if (take <= 0 || skip < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
+            }
+
+            var result = await _accountManagementService.ListClientsByPagesAsync(skip, take);
+            return new Contracts.PaginatedResponseContract<ClientTradingConditionsContract>(
+                result.Contents.Select(x=> _convertService.Convert<IClient,ClientTradingConditionsContract>(x)).ToList(),
+                result.Start,
+                result.Size,
+                result.TotalSize
+            );
+        }
+
+        [HttpPatch]
+        [Route("client-trading-conditions")]
+        public  Task UpdateClientTradingConditions(UpdateClientTradingConditionRequest request)
+        {
+            return _accountManagementService.UpdateClientTradingCondition(clientId: request.ClientId,
+                tradingConditionId: request.TradingConditionId);
+        }
+        
+        /// <summary>
         /// Creates an account
         /// </summary>
         [HttpPost]
@@ -200,8 +239,7 @@ namespace MarginTrading.AccountsManagement.Controllers
             [FromBody] [NotNull] ChangeAccountRequest request)
         {
             if (request.IsDisabled == null &&
-                request.IsWithdrawalDisabled == null &&
-                string.IsNullOrEmpty(request.TradingConditionId))
+                request.IsWithdrawalDisabled == null)
             {
                 return await GetById(accountId);
             }
@@ -209,7 +247,6 @@ namespace MarginTrading.AccountsManagement.Controllers
             try
             {
                 var result = await _accountManagementService.UpdateAccountAsync(accountId,
-                    request.TradingConditionId,
                     request.IsDisabled,
                     request.IsWithdrawalDisabled);
 
