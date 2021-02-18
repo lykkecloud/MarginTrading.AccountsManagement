@@ -169,6 +169,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             return account;
         }
 
+        public Task<IAccount> UpdateAdditionalInfo(string accountId, Action<AccountAdditionalInfo> mutate)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<IAccount> DeleteAsync(string accountId)
         {
             var pk = (await _tableStorage.GetDataRowKeyOnlyAsync(accountId)).Single().PartitionKey;

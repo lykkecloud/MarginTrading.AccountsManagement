@@ -39,5 +39,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         List<string> IAccount.LastExecutedOperations => JsonConvert.DeserializeObject<List<string>>(LastExecutedOperations);
         public string AccountName { get; set; }
         public string LastExecutedOperations { get; set; } = "[]";
+
+        AccountAdditionalInfo IAccount.AdditionalInfo => JsonConvert.DeserializeObject<AccountAdditionalInfo>(AdditionalInfo);
+        public string AdditionalInfo { get; set; } = "{}";
     }
 }

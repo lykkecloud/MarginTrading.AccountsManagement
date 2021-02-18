@@ -28,8 +28,7 @@ namespace MarginTrading.AccountsManagement.Services
         Task<IReadOnlyList<IAccount>> CreateAccountsForNewBaseAssetAsync(string tradingConditionId, string baseAssetId);
         
         #endregion
-        
-        
+
         #region Get
         
         Task<IReadOnlyList<IAccount>> ListAsync(string search, bool showDeleted = false);
@@ -70,6 +69,12 @@ namespace MarginTrading.AccountsManagement.Services
         Task ClearStatsCache(string accountId);
 
         Task UpdateClientTradingCondition(string clientId, string tradingConditionId);
+
+        #endregion
+
+        #region ComplexityWarning
+
+        Task UpdateComplexityWarningFlag(string accountId, bool shouldShowProductComplexityWarning);
 
         #endregion
     }

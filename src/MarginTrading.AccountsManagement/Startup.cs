@@ -23,7 +23,9 @@ using Lykke.Snow.Common.Startup;
 using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
+using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Extensions;
+using MarginTrading.AccountsManagement.HostedServices;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Modules;
@@ -104,6 +106,8 @@ namespace MarginTrading.AccountsManagement
                 services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(Log));
 
                 services.AddApplicationInsightsTelemetry();
+                services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MarginTradingAccountManagement.BrokerId);
+                services.AddHostedService<ProductComplexityHostedService>();
             }
             catch (Exception ex)
             {

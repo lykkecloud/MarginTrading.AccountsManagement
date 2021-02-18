@@ -46,6 +46,7 @@ end;
                                                  "[IsDeleted] [bit] NOT NULL, " +
                                                  "[ModificationTimestamp] [DateTime] NOT NULL, " +
                                                  "[TemporaryCapital] [nvarchar] (MAX) NOT NULL, " +
+                                                 "[AdditionalInfo] [nvarchar] (MAX) NOT NULL, " +
                                                  "[LastExecutedOperations] [nvarchar] (MAX) NOT NULL, " +
                                                  "[AccountName] [nvarchar] (255), " +
                                                  "INDEX IX_{0} (ClientId, IsDeleted)" +
@@ -219,6 +220,21 @@ end;
 
                 if (isWithdrawalDisabled.HasValue)
                     a.IsWithdrawalDisabled = isWithdrawalDisabled.Value;
+            });
+        }
+
+        public Task<IAccount> UpdateAdditionalInfo(string accountId, Action<AccountAdditionalInfo> mutate)
+        {
+            return GetAccountAndUpdate(accountId, a =>
+            {
+                var additionalInfo = ((IAccount) a).AdditionalInfo;
+                if (additionalInfo == null)
+                {
+                    throw new InvalidOperationException($"{nameof(additionalInfo)} is null, this should not happen");
+                }
+
+                mutate(additionalInfo);
+                a.AdditionalInfo = additionalInfo.ToJson(true);
             });
         }
 
@@ -412,6 +428,11 @@ end
 
         private AccountEntity Convert(IAccount account)
         {
+            if (account.AdditionalInfo == null)
+            {
+                throw new ArgumentException($"AdditionalInfo is null for {account.Id}", nameof(account.AdditionalInfo));
+            }
+
             return new AccountEntity
             {
                 Id = account.Id,
@@ -427,6 +448,7 @@ end
                 TemporaryCapital = account.TemporaryCapital.ToJson(),
                 LastExecutedOperations = account.LastExecutedOperations.ToJson(),
                 AccountName = account.AccountName,
+                AdditionalInfo = account.AdditionalInfo.ToJson(true)
             };
         }
         

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.SettingsReader.Attributes;
@@ -50,5 +51,14 @@ namespace MarginTrading.AccountsManagement.Settings
         public CacheSettings Cache { get; set; }
 
         public string BrokerId { get; set; }
+
+        [Optional] 
+        public int ComplexityWarningsCount { get; set; } = 2;
+
+        [Optional]
+        public TimeSpan ComplexityWarningExpiration { get; set; } = TimeSpan.FromDays(3 * 365);
+
+        [Optional]
+        public TimeSpan ComplexityWarningExpirationCheckPeriod { get; set; } = TimeSpan.FromMinutes(5);
     }
 }

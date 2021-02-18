@@ -13,7 +13,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
     {
         public Account([NotNull] string id, [NotNull] string clientId, [NotNull] string tradingConditionId, 
             [NotNull] string baseAssetId, decimal balance, decimal withdrawTransferLimit, [NotNull] string legalEntity, 
-            bool isDisabled, bool isWithdrawalDisabled, bool isDeleted, DateTime modificationTimestamp, string accountName)
+            bool isDisabled, bool isWithdrawalDisabled, bool isDeleted, DateTime modificationTimestamp, string accountName, AccountAdditionalInfo additionalInfo)
         {
             Id = id.RequiredNotNullOrWhiteSpace(nameof(id));
             ClientId = clientId.RequiredNotNullOrWhiteSpace(nameof(clientId));
@@ -27,6 +27,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
             IsDeleted = isDeleted;
             ModificationTimestamp = modificationTimestamp;
             AccountName = accountName;
+            AdditionalInfo = additionalInfo ?? throw new ArgumentNullException(nameof(additionalInfo));
         }
 
         public string Id { get; }
@@ -56,5 +57,6 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public List<string> LastExecutedOperations { get; set; } = new List<string>();
 
         public string AccountName { get; }
+        public AccountAdditionalInfo AdditionalInfo { get; }
     }
 }
