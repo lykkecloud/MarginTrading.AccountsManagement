@@ -13,6 +13,7 @@ using Common;
 using Common.Log;
 using Dapper;
 using Lykke.Logs.MsSql.Extensions;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
