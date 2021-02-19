@@ -11,6 +11,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.Exceptions;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
@@ -272,7 +273,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 initiallyUsedMargin: mtCoreAccountStats.InitiallyUsedMargin,
                 openPositionsCount: mtCoreAccountStats.OpenPositionsCount,
                 lastBalanceChangeTime: mtCoreAccountStats.LastBalanceChangeTime,
-                additionalInfo: account.AdditionalInfo.ToJson(true)
+                additionalInfo: account.AdditionalInfo.Serialize()
             );
 
             return result;

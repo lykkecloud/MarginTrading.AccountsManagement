@@ -9,6 +9,7 @@ using AutoMapper;
 using AzureStorage;
 using Common.Log;
 using Lykke.SettingsReader;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
