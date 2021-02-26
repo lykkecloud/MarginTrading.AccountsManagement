@@ -168,7 +168,7 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         [HttpPatch]
         [Route("client-trading-conditions")]
-        public  Task UpdateClientTradingConditions(UpdateClientTradingConditionRequest request)
+        public  Task UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionRequest request)
         {
             return _accountManagementService.UpdateClientTradingCondition(clientId: request.ClientId,
                 tradingConditionId: request.TradingConditionId);
