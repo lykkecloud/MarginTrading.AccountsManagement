@@ -139,7 +139,7 @@ end;
             {
                 var whereClause = "WHERE 1=1"
                                   + (string.IsNullOrWhiteSpace(clientId) ? "" : " AND a.ClientId = @clientId")
-                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND a.AccountName LIKE @search OR a.Id LIKE @search")
+                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND (a.AccountName LIKE @search OR a.Id LIKE @search)")
                                   + (showDeleted ? "" : " AND a.IsDeleted = 0");
                 var accounts = await conn.QueryAsync<AccountEntity>(
                     $"SELECT a.*, c.TradingConditionId FROM {AccountsTableName} a join {ClientsTableName} c on c.Id = a.ClientId {whereClause}", 
@@ -160,7 +160,7 @@ end;
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var whereClause = "WHERE a.ClientId=c.Id"
-                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND a.AccountName LIKE @search OR a.Id LIKE @search")
+                                  + (string.IsNullOrWhiteSpace(search) ? "" : " AND (a.AccountName LIKE @search OR a.Id LIKE @search)")
                                   + (showDeleted ? "" : " AND a.IsDeleted = 0");
 
                 var paginationClause = $" ORDER BY [Id] {(isAscendingOrder ? "ASC" : "DESC")} OFFSET {skip ?? 0} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
@@ -175,7 +175,7 @@ end;
                     accounts, 
                     skip ?? 0, 
                     accounts.Count, 
-                    !take.HasValue ? accounts.Count : totalCount
+                    totalCount
                 );
             }
         }
