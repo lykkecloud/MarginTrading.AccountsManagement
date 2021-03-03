@@ -8,5 +8,6 @@ namespace MarginTrading.AccountsManagement.Settings
     [UsedImplicitly]
     public class RabbitMqSettings
     {
+        public SubscriptionSettings OrderHistory { get;set; }
     }
 }
