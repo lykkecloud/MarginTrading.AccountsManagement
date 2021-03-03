@@ -1,0 +1,107 @@
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Common.Log;
+using Lykke.Middlewares;
+using Lykke.Middlewares.Mappers;
+using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
+using MarginTrading.AccountsManagement.Extensions.AdditionalInfo;
+using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.Repositories;
+using MarginTrading.AccountsManagement.Services;
+using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Contracts.Orders;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.FeatureManagement;
+using BrokerFeature = Lykke.Snow.Mdm.Contracts.BrokerFeatures.BrokerFeature;
+
+namespace MarginTrading.AccountsManagement.Workflow.ProductComplexity
+{
+    public class OrderHistoryListener : HostedServiceMiddleware, IHostedService
+    {
+        private readonly IComplexityWarningRepository _complexityWarningRepository;
+        private readonly IAccountManagementService _accountManagementService;
+        private readonly IFeatureManager _featureManager;
+        private readonly AccountManagementSettings _settings;
+        private readonly ILogger<OrderHistoryListener> _log;
+        private readonly RabbitMqSubscriber<OrderHistoryEvent> _subscriber;
+
+        public OrderHistoryListener(IComplexityWarningRepository complexityWarningRepository, 
+            IAccountManagementService accountManagementService,
+            IFeatureManager featureManager,
+            AccountManagementSettings settings, 
+            ILogger<OrderHistoryListener> log,
+            RabbitMqSubscriber<OrderHistoryEvent> subscriber):base(new DefaultLogLevelMapper(), log)
+        {
+            _complexityWarningRepository = complexityWarningRepository;
+            _accountManagementService = accountManagementService;
+            _featureManager = featureManager;
+            _settings = settings;
+            _log = log;
+            _subscriber = subscriber;
+        }
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            _subscriber
+                .Subscribe(@event => this.DecorateAndHandle(() => this.Handle(@event)))
+                .Start();
+
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _subscriber.Stop();
+
+            return Task.CompletedTask;
+        }
+
+        private async Task Handle(OrderHistoryEvent e)
+        {
+            if (!await _featureManager.IsEnabledAsync(BrokerFeature.ProductComplexityWarning))
+            {
+                return;
+            }
+
+            if (_settings.ComplexityWarningsCount <= 0) 
+            {
+                throw new InvalidOperationException($"Broker {_settings.BrokerId} feature {BrokerFeature.ProductComplexityWarning} is enabled, " +
+                                                    $"but {nameof(_settings.ComplexityWarningsCount)} = {_settings.ComplexityWarningsCount} is not valid ");
+            }
+
+            var order = e.OrderSnapshot;
+            var isBasicOrder = new[]
+                {
+                    OrderTypeContract.Market,
+                    OrderTypeContract.Limit,
+                    OrderTypeContract.Stop
+                }
+                .Contains(order.Type);
+
+            if (!isBasicOrder || !order.ProductComplexityConfirmationReceived())
+            {
+                return;
+            }
+
+            _log.LogInformation($"Product complexity confirmation received for account {order.AccountId} and orderId {order.Id}");
+
+            var entity = await _complexityWarningRepository.GetOrCreate(order.AccountId,
+                () => ComplexityWarningState.Start(order.AccountId));
+
+            entity.OnConfirmedOrderReceived(order.Id, order.CreatedTimestamp, _settings.ComplexityWarningsCount, out var confirmationFlagShouldBeSwitched);
+
+            if (confirmationFlagShouldBeSwitched)
+            {
+                await _accountManagementService.UpdateComplexityWarningFlag(order.AccountId, shouldShowProductComplexityWarning: false);
+
+                _log.LogInformation($"Flag {BrokerFeature.ProductComplexityWarning} for account {entity.AccountId} is switched to off");
+            }
+
+            await _complexityWarningRepository.Save(entity);
+        }
+    }
+}

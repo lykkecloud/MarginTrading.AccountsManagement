@@ -475,13 +475,6 @@ namespace MarginTrading.AccountsManagement.Modules
                     typeof(MarketStateChangedProjection), _settings.ContextNames.TradingEngine);
 
             contextRegistration.ListeningEvents(
-                    typeof(OrderHistoryEvent))
-                .From(_settings.ContextNames.TradingEngine).On("events")
-                .WithProjection(
-                    typeof(OrderHistoryProjection), _settings.ContextNames.TradingEngine);
-
-
-            contextRegistration.ListeningEvents(
                     typeof(TaxFileUploadedEvent))
                 .From(_settings.ContextNames.BookKeeper).On("events")
                 .WithProjection(
