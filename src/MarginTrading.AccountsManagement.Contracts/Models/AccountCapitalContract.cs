@@ -13,7 +13,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         /// </summary>
         [Key(0)] 
         public decimal Balance { get; }
-        
+
         /// <summary>
         /// The temporary capital
         /// </summary>
@@ -55,11 +55,18 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         /// </summary>
         [Key(7)]
         public string AssetId { get; }
+        
+        /// <summary>
+        /// The account total capital
+        /// </summary>
+        [Key(8)]
+        public decimal TotalCapital { get; }
 
-        public AccountCapitalContract(decimal balance, decimal totalRealisedPnl, decimal totalUnRealisedPnl,
+        public AccountCapitalContract(decimal balance, decimal totalCapital, decimal totalRealisedPnl, decimal totalUnRealisedPnl,
             decimal temporary, decimal compensations, string assetId, decimal disposable, decimal canRevokeAmount)
         {
             Balance = balance;
+            TotalCapital = totalCapital;
             TotalRealisedPnl = totalRealisedPnl;
             TotalUnRealisedPnl = totalUnRealisedPnl;
             Temporary = temporary;
