@@ -13,6 +13,11 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public decimal Balance { get; }
         
         /// <summary>
+        /// The account total capital
+        /// </summary>
+        public decimal TotalCapital { get; }
+        
+        /// <summary>
         /// The temporary capital
         /// </summary>
         public decimal Temporary { get; }
@@ -47,7 +52,8 @@ namespace MarginTrading.AccountsManagement.InternalModels
         /// </summary>
         public string AssetId { get; }
 
-        public AccountCapital(decimal balance, 
+        public AccountCapital(decimal balance,
+            decimal totalCapital,
             decimal totalRealisedPnl,
             decimal totalUnRealisedPnl,
             decimal temporary,
@@ -59,6 +65,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
                 throw new ArgumentNullException(nameof(assetId));
             
             Balance = balance;
+            TotalCapital = totalCapital;
             Temporary = temporary;
             Compensations = compensations;
             AssetId = assetId;
@@ -66,7 +73,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
             TotalUnRealisedPnl = totalUnRealisedPnl;
 
             var balanceProtected = Math.Max(0,
-                Balance - (
+                TotalCapital - (
                     Math.Max(0, Temporary) +
                     Math.Max(0, totalRealisedPnl) +
                     Math.Max(0, totalUnRealisedPnl)));
@@ -74,7 +81,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
             Disposable = Math.Max(0, balanceProtected - usedMargin);
                     
             CanRevokeAmount = Math.Max(0,
-                Balance - (
+                TotalCapital - (
                     Math.Max(0, totalRealisedPnl) + 
                     Math.Max(0, totalUnRealisedPnl)));
         }

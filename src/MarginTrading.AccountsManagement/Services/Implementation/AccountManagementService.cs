@@ -323,6 +323,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             
             return new AccountCapital(
                 account.Balance, 
+                mtCoreAccountStat.TotalCapital,
                 totalRealisedPnl: realizedProfit.total,
                 unRealizedProfit,
                 temporaryCapital, 
