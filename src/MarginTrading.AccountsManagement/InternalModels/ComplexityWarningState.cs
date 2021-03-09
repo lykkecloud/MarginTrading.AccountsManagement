@@ -44,11 +44,11 @@ namespace MarginTrading.AccountsManagement.InternalModels
 
         public byte[] RowVersion { get; private set; }
 
-        public Dictionary<string, OrderInfo> ConfirmedOrders { get; set; }
+        public Dictionary<string, OrderInfo> ConfirmedOrders { get; private set; }
 
-        public bool ShouldShowComplexityWarning { get; set; }
+        public bool ShouldShowComplexityWarning { get; private set; }
 
-        public DateTime? SwitchedToFalseAt { get; set; }
+        public DateTime? SwitchedToFalseAt { get; private set; }
 
         public void OnConfirmedOrderReceived(string orderId, DateTime ts, int minOrdersToSwitchFlag, out  bool confirmationFlagSwitched)
         {
