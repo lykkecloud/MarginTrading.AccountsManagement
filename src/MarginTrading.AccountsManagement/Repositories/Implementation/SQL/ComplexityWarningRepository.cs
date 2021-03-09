@@ -15,10 +15,12 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
     public class ComplexityWarningRepository : IComplexityWarningRepository
     {
         private readonly string _connectionString;
+        private readonly ILog _log;
 
         public ComplexityWarningRepository(string connectionString, ILog log)
         {
             _connectionString = connectionString;
+            _log = log;
             connectionString.InitializeSqlObject("dbo.ComplexityWarning.sql", log);
         }
 
@@ -40,8 +42,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             }
             catch (SqlException e) when(e.Number == 2627 || e.Number == 2601) // unique constraint violation
             {
-
-                throw new InvalidOperationException($"Optimistic concurrency happened while insert of product complexity state for account {accountId}", e);
+                await _log.WriteWarningAsync(nameof(ComplexityWarningRepository), nameof(GetOrCreate),
+                    $"Optimistic concurrency control violated: Entity with id {accountId} already exists,  use that value");
             }
 
             return (await conn.GetAsync<DbSchema>(accountId)).ToDomain();
