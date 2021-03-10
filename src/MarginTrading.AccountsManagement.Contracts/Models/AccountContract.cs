@@ -46,5 +46,8 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
 
         [Key(11)]
         public string AccountName { get; set; }
+
+        [Key(12)]
+        public string AdditionalInfo { get; set; }
     }
 }

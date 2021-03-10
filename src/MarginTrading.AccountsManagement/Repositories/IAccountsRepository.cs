@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
@@ -42,6 +43,9 @@ namespace MarginTrading.AccountsManagement.Repositories
 
         Task<IAccount> UpdateAccountAsync(string accountId, bool? isDisabled, bool? isWithdrawalDisabled);
         
+
+        Task<IAccount> UpdateAdditionalInfo(string accountId, Action<AccountAdditionalInfo> mutate);
+
         Task<IAccount> DeleteAsync(string accountId);
 
         Task<IAccount> UpdateAccountTemporaryCapitalAsync(string accountId,

@@ -42,6 +42,7 @@ using MarginTrading.AccountsManagement.Workflow.UpdateBalance.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Commands;
 using MarginTrading.AccountsManagement.Workflow.Withdrawal.Events;
+using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 

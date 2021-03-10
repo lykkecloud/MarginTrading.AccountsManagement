@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 
 namespace MarginTrading.AccountsManagement.InternalModels.Interfaces
 {
@@ -38,5 +39,8 @@ namespace MarginTrading.AccountsManagement.InternalModels.Interfaces
 
         string AccountName { get; }
 
+        public AccountAdditionalInfo AdditionalInfo { get; }
     }
+
+
 }

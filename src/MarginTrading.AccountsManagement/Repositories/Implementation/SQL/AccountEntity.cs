@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using Newtonsoft.Json;
@@ -39,5 +40,8 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         List<string> IAccount.LastExecutedOperations => JsonConvert.DeserializeObject<List<string>>(LastExecutedOperations);
         public string AccountName { get; set; }
         public string LastExecutedOperations { get; set; } = "[]";
+
+        AccountAdditionalInfo IAccount.AdditionalInfo => JsonConvert.DeserializeObject<AccountAdditionalInfo>(AdditionalInfo);
+        public string AdditionalInfo { get; set; } = "{}";
     }
 }

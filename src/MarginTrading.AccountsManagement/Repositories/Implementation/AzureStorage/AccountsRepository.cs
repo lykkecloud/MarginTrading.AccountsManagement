@@ -9,6 +9,7 @@ using AutoMapper;
 using AzureStorage;
 using Common.Log;
 using Lykke.SettingsReader;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Infrastructure;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
@@ -167,6 +168,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
                 });
 
             return account;
+        }
+
+        public Task<IAccount> UpdateAdditionalInfo(string accountId, Action<AccountAdditionalInfo> mutate)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<IAccount> DeleteAsync(string accountId)

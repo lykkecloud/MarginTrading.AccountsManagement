@@ -56,12 +56,14 @@ namespace MarginTrading.AccountsManagement.InternalModels
 
         public DateTime LastBalanceChangeTime { get; }
 
+        public string AdditionalInfo { get; set; }
+
         public AccountStat([NotNull] string accountId, DateTime created, decimal realisedPnl, decimal depositAmount,
             decimal withdrawalAmount, decimal commissionAmount, decimal otherAmount, decimal accountBalance,
             decimal prevEodAccountBalance, decimal disposableCapital, decimal unRealisedPnl, string accountName, 
             AccountCapital accountCapitalDetails, decimal totalCapital, decimal usedMargin, decimal usedMarginPercent, 
             decimal freeMargin, decimal pnl, decimal balance, decimal unrealizedPnlDaily, decimal currentlyUsedMargin, 
-            decimal initiallyUsedMargin, int openPositionsCount, DateTime lastBalanceChangeTime)
+            decimal initiallyUsedMargin, int openPositionsCount, DateTime lastBalanceChangeTime, string additionalInfo)
         {
             AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
             Created = created;
@@ -87,6 +89,7 @@ namespace MarginTrading.AccountsManagement.InternalModels
             InitiallyUsedMargin = initiallyUsedMargin;
             OpenPositionsCount = openPositionsCount;
             LastBalanceChangeTime = lastBalanceChangeTime;
+            AdditionalInfo = additionalInfo;
         }
     }
 }

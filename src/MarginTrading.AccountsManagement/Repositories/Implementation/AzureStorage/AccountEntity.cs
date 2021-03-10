@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Lykke.AzureStorage.Tables;
 using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.AzureStorage.Tables.Entity.ValueTypesMerging;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
@@ -99,6 +100,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
         public List<string> LastExecutedOperations { get; set; } = new List<string>();
 
         public string AccountName { get; set; }
+        public AccountAdditionalInfo AdditionalInfo { get; }
 
         public static string GeneratePartitionKey(string clientId)
         {
