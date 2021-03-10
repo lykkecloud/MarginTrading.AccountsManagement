@@ -47,7 +47,7 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task<AccountCapital> GetAccountCapitalAsync(string accountId, bool useCache);
         
-        Task<PaginatedResponse<IClient>> ListClientsByPagesAsync(int skip, int take);
+        Task<PaginatedResponse<IClient>> ListClientsByPagesAsync(string tradingConditionId, int skip, int take);
 
         Task<IClient> GetClient(string clientId);
 

@@ -306,15 +306,14 @@ end
             await conn.ExecuteAsync(sql, client);
         }
 
-        public async Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(int skip, int take)
+        public async Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(string tradingConditionId, int skip, int take)
         {
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
-                var whereClause = "WHERE exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id and a.IsDeleted = 0)";
-
+                var whereClause = $"WHERE exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id){(string.IsNullOrEmpty(tradingConditionId) ? "" : " and c.TradingConditionId = @tradingConditionId")}";
                 var paginationClause = $" ORDER BY [Id] ASC OFFSET {skip} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
                 var gridReader = await conn.QueryMultipleAsync($"SELECT * FROM {ClientsTableName} c {whereClause} {paginationClause}; " +
-                                                               $"SELECT COUNT(*) FROM {ClientsTableName} c {whereClause}");
+                                                               $"SELECT COUNT(*) FROM {ClientsTableName} c {whereClause}", new {tradingConditionId});
                 var clients = (await gridReader.ReadAsync<ClientEntity>()).ToList();
                 var totalCount = await gridReader.ReadSingleAsync<int>();
 

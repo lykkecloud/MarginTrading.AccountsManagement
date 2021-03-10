@@ -80,7 +80,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             );
         }
 
-        public Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(int skip, int take)
+        public Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(string tradingConditionId, int skip, int take)
         {
             throw new NotImplementedException();
         }
