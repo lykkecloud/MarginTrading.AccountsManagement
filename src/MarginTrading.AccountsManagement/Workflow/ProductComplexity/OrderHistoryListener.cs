@@ -44,13 +44,24 @@ namespace MarginTrading.AccountsManagement.Workflow.ProductComplexity
             _log = log;
             _subscriber = subscriber;
         }
-        public Task StartAsync(CancellationToken cancellationToken)
+        
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
+            if (!await _featureManager.IsEnabledAsync(BrokerFeature.ProductComplexityWarning))
+            {
+                _log.LogInformation("{Component} not started because product complexity warning feature is disabled for broker", nameof(OrderHistoryListener));
+                return;
+            }
+            
+            if (_settings.ComplexityWarningsCount <= 0) 
+            {
+                throw new InvalidOperationException($"Broker {_settings.BrokerId} feature {BrokerFeature.ProductComplexityWarning} is enabled, " +
+                                                    $"but {nameof(_settings.ComplexityWarningsCount)} = {_settings.ComplexityWarningsCount} is not valid ");
+            }
+            
             _subscriber
-                .Subscribe(@event => this.DecorateAndHandle(() => this.Handle(@event)))
+                .Subscribe(this.Handle)
                 .Start();
-
-            return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
@@ -62,17 +73,6 @@ namespace MarginTrading.AccountsManagement.Workflow.ProductComplexity
 
         private async Task Handle(OrderHistoryEvent e)
         {
-            if (!await _featureManager.IsEnabledAsync(BrokerFeature.ProductComplexityWarning))
-            {
-                return;
-            }
-
-            if (_settings.ComplexityWarningsCount <= 0) 
-            {
-                throw new InvalidOperationException($"Broker {_settings.BrokerId} feature {BrokerFeature.ProductComplexityWarning} is enabled, " +
-                                                    $"but {nameof(_settings.ComplexityWarningsCount)} = {_settings.ComplexityWarningsCount} is not valid ");
-            }
-
             var order = e.OrderSnapshot;
             var isBasicOrder = new[]
                 {
