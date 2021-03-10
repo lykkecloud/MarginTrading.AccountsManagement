@@ -1,4 +1,6 @@
-﻿using Lykke.RabbitMqBroker;
+﻿using System;
+using Lykke.Common.Log;
+using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Snow.Common.Startup;
 using MarginTrading.AccountsManagement.Settings;
@@ -17,15 +19,20 @@ namespace MarginTrading.AccountsManagement.Workflow.ProductComplexity
             
             services.AddSingleton(ctx => new RabbitMqSubscriber<OrderHistoryEvent>(
                     settings.MarginTradingAccountManagement.RabbitMq.OrderHistory,
-                    new DefaultErrorHandlingStrategy(
-                        new LykkeLoggerAdapter<RabbitMqSubscriber<OrderHistoryEvent>>(
-                            ctx.GetRequiredService<ILogger<RabbitMqSubscriber<OrderHistoryEvent>>>()),
-                        settings.MarginTradingAccountManagement.RabbitMq.OrderHistory))
+                    BuildErrorHandlingStrategy(ctx, settings.MarginTradingAccountManagement.RabbitMq.OrderHistory))
                 .SetMessageDeserializer(new JsonMessageDeserializer<OrderHistoryEvent>())
                 .SetMessageReadStrategy(new MessageReadQueueStrategy())
                 .SetLogger(new LykkeLoggerAdapter<RabbitMqSubscriber<OrderHistoryEvent>>(
                     ctx.GetRequiredService<ILogger<RabbitMqSubscriber<OrderHistoryEvent>>>()))
                 .CreateDefaultBinding());
+        }
+
+        private static IErrorHandlingStrategy BuildErrorHandlingStrategy(IServiceProvider provider, SubscriptionSettings settings)
+        {
+            var logFactory = provider.GetRequiredService<ILogFactory>();
+            var dlqStrategy = new DeadQueueErrorHandlingStrategy(logFactory, settings);
+            
+            return new ResilientErrorHandlingStrategy(logFactory, settings, TimeSpan.FromSeconds(1), next: dlqStrategy);
         }
     }
 }
