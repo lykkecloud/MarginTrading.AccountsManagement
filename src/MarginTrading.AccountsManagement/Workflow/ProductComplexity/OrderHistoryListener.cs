@@ -60,7 +60,7 @@ namespace MarginTrading.AccountsManagement.Workflow.ProductComplexity
             }
             
             _subscriber
-                .Subscribe(@event => this.DecorateAndHandle(() => this.Handle(@event)))
+                .Subscribe(this.Handle)
                 .Start();
         }
 
