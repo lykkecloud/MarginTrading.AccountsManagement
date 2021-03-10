@@ -1,5 +1,7 @@
 ﻿using System;
+using Common.Log;
 using Lykke.Common.Log;
+using Lykke.Logs;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Snow.Common.Startup;
@@ -29,10 +31,10 @@ namespace MarginTrading.AccountsManagement.Workflow.ProductComplexity
 
         private static IErrorHandlingStrategy BuildErrorHandlingStrategy(IServiceProvider provider, SubscriptionSettings settings)
         {
-            var logFactory = provider.GetRequiredService<ILogFactory>();
-            var dlqStrategy = new DeadQueueErrorHandlingStrategy(logFactory, settings);
+            var logger = new LykkeLoggerAdapter<RabbitMqSubscriber<OrderHistoryEvent>>(provider.GetRequiredService<ILogger<RabbitMqSubscriber<OrderHistoryEvent>>>());
+            var dlqStrategy = new DeadQueueErrorHandlingStrategy(logger, settings);
             
-            return new ResilientErrorHandlingStrategy(logFactory, settings, TimeSpan.FromSeconds(1), next: dlqStrategy);
+            return new ResilientErrorHandlingStrategy(logger, settings, TimeSpan.FromSeconds(1), next: dlqStrategy);
         }
     }
 }
