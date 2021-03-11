@@ -450,6 +450,27 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             }
         }
 
+        public async Task UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates)
+        {
+            var clientsInDb =  (await _accountsRepository.GetClients(updates.Select(p => p.clientId)))
+                                                    .ToDictionary(p => p.Id);
+            
+            foreach (var (clientId, tradingConditionId) in updates)
+            {
+                if (!clientsInDb.TryGetValue(clientId, out var existedClient))
+                {
+                    throw new ArgumentException($"Client {clientId} not exist");
+                }
+
+                if (existedClient.TradingConditionId == tradingConditionId)
+                {
+                    continue;
+                }
+
+                await UpdateClientTradingCondition(clientId, tradingConditionId);
+            }
+        }
+
         #region ComplexityWarning
 
 
