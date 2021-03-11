@@ -148,9 +148,15 @@ namespace MarginTrading.AccountsManagement.Contracts
         Task<PaginatedResponseContract<ClientTradingConditionsContract>> ListClientsTradingConditions([Query] int skip = 0, [Query] int take = 20);
 
         /// <summary>
-        /// Gets client trading conditions
+        /// Updates client trading conditions
         /// </summary>
         [Patch("/api/accounts/client-trading-conditions")]
         Task UpdateClientTradingConditions([Body] UpdateClientTradingConditionRequest request);
+
+        /// <summary>
+        /// Updates client trading conditions
+        /// </summary>
+        [Patch("/api/accounts/client-trading-conditions/bulk")]
+        Task UpdateClientTradingConditions([Body] UpdateClientTradingConditionsBulkRequest request);
     }
 }

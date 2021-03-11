@@ -22,6 +22,7 @@ namespace MarginTrading.AccountsManagement.Repositories
             int? skip = null, int? take = null, bool isAscendingOrder = true);
 
         Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(int skip, int take);
+        Task<IEnumerable<IClient>> GetClients(IEnumerable<string> clientIds);
 
         Task<IClient> GetClient(string clientId);
 

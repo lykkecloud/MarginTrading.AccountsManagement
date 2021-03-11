@@ -174,6 +174,13 @@ namespace MarginTrading.AccountsManagement.Controllers
                 tradingConditionId: request.TradingConditionId);
         }
         
+        [HttpPatch]
+        [Route("client-trading-conditions/bulk")]
+        public  Task UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionsBulkRequest request)
+        {
+            return _accountManagementService.UpdateClientTradingConditions(request.Updates.Select(p => (p.ClientId, p.TradingConditionId)).ToList());
+        }
+        
         /// <summary>
         /// Creates an account
         /// </summary>
