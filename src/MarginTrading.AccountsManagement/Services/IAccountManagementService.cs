@@ -70,6 +70,8 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task UpdateClientTradingCondition(string clientId, string tradingConditionId);
 
+        Task UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates);
+
         #endregion
 
         #region ComplexityWarning
