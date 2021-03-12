@@ -51,6 +51,7 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task<IClient> GetClient(string clientId);
 
+        Task<IEnumerable<IClient>> GetAllClients();
         #endregion
 
         #region Modify
