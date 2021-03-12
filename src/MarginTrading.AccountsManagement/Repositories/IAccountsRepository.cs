@@ -24,6 +24,7 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(string tradingConditionId, int skip, int take);
         
         Task<IEnumerable<IClient>> GetClients(IEnumerable<string> clientIds);
+        Task<IEnumerable<IClient>> GetAllClients();
 
         Task<IClient> GetClient(string clientId);
 
