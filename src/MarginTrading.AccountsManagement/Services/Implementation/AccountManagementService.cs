@@ -22,6 +22,7 @@ using MarginTrading.Backend.Contracts;
 using MarginTrading.TradingHistory.Client;
 using Microsoft.Extensions.Internal;
 using Microsoft.FeatureManagement;
+using Newtonsoft.Json.Schema;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
@@ -425,6 +426,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             var beforeUpdate = (await _accountsRepository.GetAllAsync(clientId))
                 .ToDictionary(p=>p.Id);
+
+            foreach (var accountId in beforeUpdate.Keys)
+            {
+                var positions = await _positionsApi.ListAsyncByPages(accountId, skip: 0, take:1);
+                if (positions.Size > 0)
+                {
+                    throw new Exception($"Client {clientId} has open positions for account {accountId}.");
+                }
+            }
 
             await _accountsRepository.UpdateClientTradingCondition(clientId, tradingConditionId);
 
