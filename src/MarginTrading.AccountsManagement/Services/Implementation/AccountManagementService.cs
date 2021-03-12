@@ -313,6 +313,11 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return _accountsRepository.GetClientsByPagesAsync(skip, take);
         }
 
+        public Task<IEnumerable<IClient>> GetAllClients()
+        {
+            return _accountsRepository.GetAllClients();
+        }
+
         public Task<IClient> GetClient(string clientId)
         {
             return _accountsRepository.GetClient(clientId);

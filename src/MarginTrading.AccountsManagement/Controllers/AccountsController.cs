@@ -165,6 +165,15 @@ namespace MarginTrading.AccountsManagement.Controllers
                 result.TotalSize
             );
         }
+        
+        [HttpGet]
+        [Route("client-trading-conditions/all")]
+        public async Task<IEnumerable<ClientTradingConditionsContract>> GetAllTradingConditions()
+        {
+            var result = await _accountManagementService.GetAllClients();
+
+            return result.Select(x => _convertService.Convert<IClient, ClientTradingConditionsContract>(x)).ToList();
+        }
 
         [HttpPatch]
         [Route("client-trading-conditions")]
