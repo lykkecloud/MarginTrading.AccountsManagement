@@ -9,12 +9,14 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Snow.Common.Model;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.Exceptions;
 using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.ErrorCodes;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Settings;
@@ -420,12 +422,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return _cache.Invalidate(accountId);
         }
 
-        public async Task UpdateClientTradingCondition(string clientId, string tradingConditionId)
+        public async Task<Result<TradingConditionErrorCodes>> UpdateClientTradingCondition(string clientId, string tradingConditionId)
         {
             if (!await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
             {
-                throw new ArgumentOutOfRangeException(nameof(tradingConditionId),
-                    $"{tradingConditionId} does not exist");
+                _log.WriteWarning(nameof(AccountManagementService), nameof(tradingConditionId), $"{tradingConditionId} does not exist");
+
+                return new Result<TradingConditionErrorCodes>(TradingConditionErrorCodes.TradingConditionNotFound);
             }
 
             var beforeUpdate = (await _accountsRepository.GetAllAsync(clientId))
@@ -436,7 +439,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 var positions = await _positionsApi.ListAsyncByPages(accountId, skip: 0, take:1);
                 if (positions.Size > 0)
                 {
-                    throw new Exception($"Client {clientId} has open positions for account {accountId}.");
+                    _log.WriteWarning(nameof(AccountManagementService), nameof(accountId), $"Client {clientId} has open positions for account {accountId}.");
+                    return new Result<TradingConditionErrorCodes>(TradingConditionErrorCodes.ClientHasOpenPositions);
                 }
             }
 
@@ -453,6 +457,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     Guid.NewGuid().ToString("N"),
                     previousSnapshot: beforeUpdate[account.Id]);
             }
+
+            return new Result<TradingConditionErrorCodes>();
         }
 
         public async Task UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates)
