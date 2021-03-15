@@ -170,7 +170,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         
         [HttpGet]
         [Route("client-trading-conditions/all")]
-        public async Task<IEnumerable<ClientTradingConditionsContract>> GetAllTradingConditions()
+        public async Task<IEnumerable<ClientTradingConditionsContract>> GetAllClientTradingConditions()
         {
             var result = await _accountManagementService.GetAllClients();
 
