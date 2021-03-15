@@ -11,6 +11,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Snow.Mdm.Contracts.Api;
 using Lykke.Snow.Mdm.Contracts.Models.Contracts;
+using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -26,6 +27,7 @@ using Refit;
 using MarginTrading.AccountsManagement.Exceptions;
 using MarginTrading.AccountsManagement.Contracts.ErrorCodes;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
+using MarginTrading.AccountsManagement.InternalModels.ErrorCodes;
 
 namespace MarginTrading.AccountsManagement.Controllers
 {
@@ -177,10 +179,21 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         [HttpPatch]
         [Route("client-trading-conditions")]
-        public  Task UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionRequest request)
+        public  async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionRequest request)
         {
-            return _accountManagementService.UpdateClientTradingCondition(clientId: request.ClientId,
+            var result = await _accountManagementService.UpdateClientTradingCondition(clientId: request.ClientId,
                 tradingConditionId: request.TradingConditionId);
+
+            var response = new ErrorCodeResponse<TradingConditionErrorCodesContract>();
+            if (result.IsFailed)
+            {
+                response.ErrorCode =
+                    _convertService.Convert<TradingConditionErrorCodes, TradingConditionErrorCodesContract>(
+                        result.Error.Value);
+            }
+            
+
+            return response;
         }
         
         [HttpPatch]
