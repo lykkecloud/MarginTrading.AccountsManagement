@@ -164,6 +164,6 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// Updates client trading conditions
         /// </summary>
         [Patch("/api/accounts/client-trading-conditions/bulk")]
-        Task UpdateClientTradingConditions([Body] UpdateClientTradingConditionsBulkRequest request);
+        Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([Body] UpdateClientTradingConditionsBulkRequest request);
     }
 }
