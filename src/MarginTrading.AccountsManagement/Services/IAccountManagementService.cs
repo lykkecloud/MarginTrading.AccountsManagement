@@ -4,7 +4,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Snow.Common.Model;
 using MarginTrading.AccountsManagement.InternalModels;
+using MarginTrading.AccountsManagement.InternalModels.ErrorCodes;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 
 namespace MarginTrading.AccountsManagement.Services
@@ -69,7 +71,7 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task ClearStatsCache(string accountId);
 
-        Task UpdateClientTradingCondition(string clientId, string tradingConditionId);
+        Task<Result<TradingConditionErrorCodes>> UpdateClientTradingCondition(string clientId, string tradingConditionId);
 
         Task UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates);
 

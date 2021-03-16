@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Api;
+using MarginTrading.AccountsManagement.Contracts.ErrorCodes;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using Refit;
 
@@ -157,7 +158,7 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// Updates client trading conditions
         /// </summary>
         [Patch("/api/accounts/client-trading-conditions")]
-        Task UpdateClientTradingConditions([Body] UpdateClientTradingConditionRequest request);
+        Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([Body] UpdateClientTradingConditionRequest request);
 
         /// <summary>
         /// Updates client trading conditions
