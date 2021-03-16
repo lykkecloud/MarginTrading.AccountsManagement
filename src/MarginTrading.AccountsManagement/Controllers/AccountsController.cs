@@ -179,7 +179,7 @@ namespace MarginTrading.AccountsManagement.Controllers
 
         [HttpPatch]
         [Route("client-trading-conditions")]
-        public  async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionRequest request)
+        public async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionRequest request)
         {
             var result = await _accountManagementService.UpdateClientTradingCondition(clientId: request.ClientId,
                 tradingConditionId: request.TradingConditionId);
@@ -198,9 +198,18 @@ namespace MarginTrading.AccountsManagement.Controllers
         
         [HttpPatch]
         [Route("client-trading-conditions/bulk")]
-        public  Task UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionsBulkRequest request)
+        public async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionsBulkRequest request)
         {
-            return _accountManagementService.UpdateClientTradingConditions(request.Updates.Select(p => (p.ClientId, p.TradingConditionId)).ToList());
+            var updates = request.Updates.Select(p => (p.ClientId, p.TradingConditionId)).ToList();
+            var result = await _accountManagementService.UpdateClientTradingConditions(updates);
+
+            var response = new ErrorCodeResponse<TradingConditionErrorCodesContract>();
+            if (result.IsFailed)
+            {
+                response.ErrorCode = _convertService.Convert<TradingConditionErrorCodes, TradingConditionErrorCodesContract>(result.Error.Value);
+            }
+
+            return response;
         }
         
         /// <summary>

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using Lykke.Snow.Common.Model;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -461,7 +462,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return new Result<TradingConditionErrorCodes>();
         }
 
-        public async Task UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates)
+        public async Task<Result<TradingConditionErrorCodes>> UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates)
         {
             var clientsInDb =  (await _accountsRepository.GetClients(updates.Select(p => p.clientId)))
                                                     .ToDictionary(p => p.Id);
@@ -470,7 +471,10 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             {
                 if (!clientsInDb.TryGetValue(clientId, out var existedClient))
                 {
-                    throw new ArgumentException($"Client {clientId} not exist");
+                    _log.WriteWarning(nameof(AccountManagementService),
+                        new {clientId}.ToJson(), 
+                        $"Client {clientId} not exist");
+                    return new Result<TradingConditionErrorCodes>(TradingConditionErrorCodes.ClientNotFound);
                 }
 
                 if (existedClient.TradingConditionId == tradingConditionId)
@@ -480,6 +484,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
                 await UpdateClientTradingCondition(clientId, tradingConditionId);
             }
+
+            return new Result<TradingConditionErrorCodes>();
         }
 
         #region ComplexityWarning

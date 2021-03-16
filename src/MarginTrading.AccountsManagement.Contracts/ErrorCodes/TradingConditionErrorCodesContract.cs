@@ -8,5 +8,6 @@ namespace MarginTrading.AccountsManagement.Contracts.ErrorCodes
         None,
         TradingConditionNotFound,
         ClientHasOpenPositions,
+        ClientNotFound
     }
 }
