@@ -483,7 +483,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     continue;
                 }
 
-                await UpdateClientTradingCondition(clientId, tradingConditionId);
+                var tradingConditionUpdateResult = await UpdateClientTradingCondition(clientId, tradingConditionId);
+                if (tradingConditionUpdateResult.IsFailed)
+                    return tradingConditionUpdateResult;
             }
 
             return new Result<TradingConditionErrorCodes>();
