@@ -20,22 +20,22 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public async Task<bool> IsTradingConditionExistsAsync(string tradingConditionId)
         {
-            return await _tradingConditionsApi.Get(tradingConditionId) != null;
+            return await _tradingConditionsApi.GetByClientProfileId(tradingConditionId) != null;
         }
 
         public async Task<bool> IsBaseAssetExistsAsync(string tradingConditionId, string baseAssetId)
         {
-            return (await _tradingConditionsApi.Get(tradingConditionId))?.BaseAssets.Contains(baseAssetId) == true;
+            return (await _tradingConditionsApi.GetByClientProfileId(tradingConditionId))?.BaseAssets.Contains(baseAssetId) == true;
         }
 
         public async Task<string> GetLegalEntityAsync(string tradingConditionId)
         {
-            return (await _tradingConditionsApi.Get(tradingConditionId))?.LegalEntity;
+            return (await _tradingConditionsApi.GetByClientProfileId(tradingConditionId))?.LegalEntity;
         }
 
         public async Task<IEnumerable<string>> GetBaseAccountAssetsAsync(string tradingConditionId)
         {
-            return (await _tradingConditionsApi.Get(tradingConditionId))?.BaseAssets;
+            return (await _tradingConditionsApi.GetByClientProfileId(tradingConditionId))?.BaseAssets;
         }
 
         public async Task<string> GetDefaultTradingConditionIdAsync()
