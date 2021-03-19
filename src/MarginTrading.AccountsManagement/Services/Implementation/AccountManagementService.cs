@@ -308,9 +308,9 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return await GetAccountCapitalAsync(account, mtCoreAccountStats, useCache);
         }
 
-        public Task<PaginatedResponse<IClient>> ListClientsByPagesAsync(int skip, int take)
+        public Task<PaginatedResponse<IClient>> ListClientsByPagesAsync(string tradingConditionId, int skip, int take)
         {
-            return _accountsRepository.GetClientsByPagesAsync(skip, take);
+            return _accountsRepository.GetClientsByPagesAsync(tradingConditionId, skip, take);
         }
 
         public Task<IClient> GetClient(string clientId)
