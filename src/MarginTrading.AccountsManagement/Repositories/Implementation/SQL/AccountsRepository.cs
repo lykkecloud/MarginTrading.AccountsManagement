@@ -325,7 +325,7 @@ end
                 );
             }
         }
-
+        
         public async Task<IEnumerable<IClient>> GetClients(IEnumerable<string> clientIds)
         {
             await using var conn = new SqlConnection(_settings.Db.ConnectionString);
@@ -339,14 +339,16 @@ end
             return await conn.QueryAsync<ClientEntity>($"select * from {ClientsTableName}");
         }
 
-        public async Task<IClient> GetClient(string clientId)
+        public async Task<IClient> GetClient(string clientId, bool includeDeleted)
         {
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
                 var sqlParams = new { Id = clientId };
 
-                return await conn.QuerySingleOrDefaultAsync<ClientEntity>($"SELECT * FROM {ClientsTableName} c where c.Id = @{nameof(sqlParams.Id)} " +
-                                                                          $"and exists (select 1 from {AccountsTableName} a where a.ClientId = c.Id and a.IsDeleted = 0)", 
+                return await conn.QuerySingleOrDefaultAsync<ClientEntity>(
+                    $"SELECT * FROM {ClientsTableName} c where c.Id = @{nameof(sqlParams.Id)} " +
+                    $"and exists (select 1 from {AccountsTableName} a where a.ClientId = c.Id" +
+                    (includeDeleted ? "" : " and a.IsDeleted = 0") + ")",
                     sqlParams);
             }
         }
