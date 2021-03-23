@@ -7,6 +7,7 @@ namespace MarginTrading.AccountsManagement.Repositories
 {
     public interface IComplexityWarningRepository
     {
+        void Initialize();
         Task<ComplexityWarningState> GetOrCreate(string accountId, Func<ComplexityWarningState> factory);
         Task Save(ComplexityWarningState entity);
         Task<IEnumerable<ComplexityWarningState>> GetExpired(DateTime timestamp);

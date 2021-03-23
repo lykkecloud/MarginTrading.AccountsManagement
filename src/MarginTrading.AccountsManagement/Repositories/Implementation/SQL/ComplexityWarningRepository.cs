@@ -21,7 +21,11 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             _connectionString = connectionString;
             _log = log;
-            connectionString.InitializeSqlObject("dbo.ComplexityWarning.sql", log);
+        }
+
+        public void Initialize()
+        {
+            _connectionString.InitializeSqlObject("dbo.ComplexityWarning.sql", _log);
         }
 
         public async Task<ComplexityWarningState> GetOrCreate(string accountId, Func<ComplexityWarningState> factory)
