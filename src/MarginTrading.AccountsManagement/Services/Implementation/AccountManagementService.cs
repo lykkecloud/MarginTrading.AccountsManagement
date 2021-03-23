@@ -42,6 +42,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IEodTaxFileMissingRepository _taxFileMissingRepository;
         private readonly AccountsCache _cache;
         private readonly IFeatureManager _featureManager;
+        private readonly IAuditService _auditService;
 
         public AccountManagementService(IAccountsRepository accountsRepository,
             ITradingConditionsService tradingConditionsService,
@@ -56,7 +57,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             IEodTaxFileMissingRepository taxFileMissingRepository, 
             IAccountsApi accountsApi,
             IPositionsApi positionsApi, 
-            IFeatureManager featureManager)
+            IFeatureManager featureManager,
+            IAuditService auditService)
         {
             _accountsRepository = accountsRepository;
             _tradingConditionsService = tradingConditionsService;
@@ -72,6 +74,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _accountsApi = accountsApi;
             _positionsApi = positionsApi;
             _featureManager = featureManager;
+            _auditService = auditService;
         }
 
 
@@ -415,7 +418,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return _cache.Invalidate(accountId);
         }
 
-        public async Task UpdateClientTradingCondition(string clientId, string tradingConditionId)
+        public async Task UpdateClientTradingCondition(string clientId, string tradingConditionId, string username, string correlationId)
         {
             if (!await _tradingConditionsService.IsTradingConditionExistsAsync(tradingConditionId))
             {
@@ -448,6 +451,12 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     Guid.NewGuid().ToString("N"),
                     previousSnapshot: beforeUpdate[account.Id]);
             }
+
+            await _auditService.TryAuditTradingConditionUpdate(correlationId,
+                username,
+                clientId,
+                tradingConditionId,
+                beforeUpdate.First().Value.TradingConditionId);
         }
 
         #region ComplexityWarning

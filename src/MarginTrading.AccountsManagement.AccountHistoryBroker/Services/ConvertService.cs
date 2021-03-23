@@ -4,7 +4,7 @@
 using System;
 using AutoMapper;
 using JetBrains.Annotations;
-using MarginTrading.AccountsManagement.AccountHistoryBroker.Models;
+using AccountBalanceChangeReasonType = MarginTrading.AccountsManagement.AccountHistoryBroker.Models.AccountBalanceChangeReasonType;
 
 namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Services
 {
@@ -17,7 +17,6 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Services
         {
             return new MapperConfiguration(cfg =>
             {
-                // todo: add some global configurations here?
                 cfg.CreateMap<AccountBalanceChangeReasonType, string>().ConvertUsing(x => x.ToString());
             }).CreateMapper();
         }

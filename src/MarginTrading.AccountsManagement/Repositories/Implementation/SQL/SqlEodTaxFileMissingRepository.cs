@@ -22,12 +22,16 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public SqlEodTaxFileMissingRepository(string connectionString, ILog log) : base(connectionString)
         {
             _log = log;
-            connectionString.InitializeSqlObject("dbo.TaxFileMissing.sql", log);
+        }
+
+        public void Initialize()
+        {
+            ConnectionString.InitializeSqlObject("dbo.TaxFileMissing.sql", _log);
             ExecCreateOrAlter("dbo.addTaxFileMissing.sql");
             ExecCreateOrAlter("dbo.removeTaxFileMissing.sql");
             ExecCreateOrAlter("dbo.getTaxFileMissing.sql");
         }
-        
+
         public async Task AddAsync(DateTime tradingDay)
         {
             try

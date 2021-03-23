@@ -4,13 +4,12 @@
 using System;
 using System.Collections.Generic;
 using AutoMapper;
-using Common;
 using JetBrains.Annotations;
+using MarginTrading.AccountsManagement.Contracts.Audit;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
-using MarginTrading.AssetService.Contracts.TradingConditions;
 using Newtonsoft.Json;
 
 namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
@@ -24,7 +23,6 @@ namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
         {
             return new MapperConfiguration(cfg =>
             {
-                // todo: add some global configurations here?
                 cfg.CreateMap<AccountBalanceChangeReasonType, string>().ConvertUsing(x => x.ToString());
                 cfg.CreateMap<string, AccountBalanceChangeReasonType>()
                     .ConvertUsing(Enum.Parse<AccountBalanceChangeReasonType>);
@@ -34,6 +32,10 @@ namespace MarginTrading.AccountsManagement.Infrastructure.Implementation
                     .ForMember(p => p.AdditionalInfo,
                         s => s.ResolveUsing(x => x.AdditionalInfo.Serialize()));
                 cfg.CreateMap<IClient, ClientTradingConditionsContract>().ForMember(x => x.ClientId, o => o.MapFrom(s=> s.Id));
+                
+                //Audit
+                cfg.CreateMap<AuditModel, AuditContract>();
+                cfg.CreateMap<GetAuditLogsRequest, AuditLogsFilterDto>();
             }).CreateMapper();
         }
 
