@@ -310,7 +310,7 @@ end
         {
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
-                var whereClause = "WHERE exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id and a.IsDeleted = 0)";
+                var whereClause = $"WHERE exists (select 1 from {AccountsTableName} a where a.ClientId = c.Id and a.IsDeleted = 0)";
 
                 var paginationClause = $" ORDER BY [Id] ASC OFFSET {skip} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
                 var gridReader = await conn.QueryMultipleAsync($"SELECT * FROM {ClientsTableName} c {whereClause} {paginationClause}; " +
@@ -334,7 +334,7 @@ end
                 var sqlParams = new { Id = clientId };
 
                 return await conn.QuerySingleOrDefaultAsync<ClientEntity>($"SELECT * FROM {ClientsTableName} c where c.Id = @{nameof(sqlParams.Id)} " +
-                                                                          "and exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id and a.IsDeleted = 0)", 
+                                                                          $"and exists (select 1 from {AccountsTableName} a where a.ClientId = c.Id and a.IsDeleted = 0)", 
                     sqlParams);
             }
         }
