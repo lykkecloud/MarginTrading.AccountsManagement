@@ -210,7 +210,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         public async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionsBulkRequest request)
         {
             var updates = request.Updates.Select(p => (p.ClientId, p.TradingConditionId)).ToList();
-            var result = await _accountManagementService.UpdateClientTradingConditions(updates);
+            var result = await _accountManagementService.UpdateClientTradingConditions(updates, request.Username, this.TryGetCorrelationId());
 
             var response = new ErrorCodeResponse<TradingConditionErrorCodesContract>();
             if (result.IsFailed)

@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.Common.Log;
 using Lykke.Snow.Common.Model;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -25,7 +24,6 @@ using MarginTrading.Backend.Contracts;
 using MarginTrading.TradingHistory.Client;
 using Microsoft.Extensions.Internal;
 using Microsoft.FeatureManagement;
-using Newtonsoft.Json.Schema;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
 {
@@ -472,7 +470,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return new Result<TradingConditionErrorCodes>();
         }
 
-        public async Task<Result<TradingConditionErrorCodes>> UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates)
+        public async Task<Result<TradingConditionErrorCodes>> UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates, string username, string correlationId)
         {
             var clientsInDb =  (await _accountsRepository.GetClients(updates.Select(p => p.clientId)))
                                                     .ToDictionary(p => p.Id);
@@ -492,7 +490,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     continue;
                 }
 
-                var tradingConditionUpdateResult = await UpdateClientTradingCondition(clientId, tradingConditionId);
+                var tradingConditionUpdateResult = await UpdateClientTradingCondition(clientId, tradingConditionId, username, correlationId);
                 if (tradingConditionUpdateResult.IsFailed)
                     return tradingConditionUpdateResult;
             }
