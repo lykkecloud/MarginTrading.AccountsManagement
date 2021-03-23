@@ -95,7 +95,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             throw new NotImplementedException();
         }
 
-        public Task<IClient> GetClient(string clientId)
+        public Task<IClient> GetClient(string clientId, bool includeDeleted)
         {
             throw new NotImplementedException();
         }
