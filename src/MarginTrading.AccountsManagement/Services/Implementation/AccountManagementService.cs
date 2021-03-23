@@ -448,7 +448,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 }
             }
 
-            var clientBeforeUpdate = await _accountsRepository.GetClient(clientId, true);
+            var clientToAudit = await _accountsRepository.GetClient(clientId, true);
             await _accountsRepository.UpdateClientTradingCondition(clientId, tradingConditionId);
 
             var afterUpdate = await _accountsRepository.GetAllAsync(clientId);
@@ -467,15 +467,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 username,
                 clientId,
                 tradingConditionId,
-                clientBeforeUpdate.TradingConditionId);
-
+                clientToAudit.TradingConditionId);
+            
             return new Result<TradingConditionErrorCodes>();
         }
 
         public async Task<Result<TradingConditionErrorCodes>> UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates)
         {
             var clientsInDb =  (await _accountsRepository.GetClients(updates.Select(p => p.clientId)))
-                                                    .ToDictionary(p => p.Id);
+                .ToDictionary(p => p.Id);
             
             foreach (var (clientId, tradingConditionId) in updates)
             {
