@@ -3,6 +3,8 @@
 
 using System;
 using JetBrains.Annotations;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Refit;
 
 namespace MarginTrading.AccountsManagement.Contracts.Audit
@@ -26,11 +28,13 @@ namespace MarginTrading.AccountsManagement.Contracts.Audit
         /// <summary>
         /// The action type to filter upon
         /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
         public AuditEventType? ActionType { get; set; }
 
         /// <summary>
         /// The audit log data types to filter upon
         /// </summary>
+        [JsonConverter(typeof(StringEnumConverter))]
         [Query(CollectionFormat.Multi)]
         public AuditDataType[] DataTypes { get; set; }
 
