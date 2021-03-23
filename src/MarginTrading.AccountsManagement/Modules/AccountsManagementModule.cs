@@ -76,6 +76,11 @@ namespace MarginTrading.AccountsManagement.Modules
                     .As<IComplexityWarningRepository>()
                     .WithParameter(TypedParameter.From(_settings.CurrentValue.MarginTradingAccountManagement.Db.ConnectionString))
                     .SingleInstance();
+
+                builder.RegisterType<SqlRepos.AuditRepository>()
+                    .As<IAuditRepository>()
+                    .WithParameter(TypedParameter.From(_settings.CurrentValue.MarginTradingAccountManagement.Db.ConnectionString))
+                    .SingleInstance();
             }
             else if (_settings.CurrentValue.MarginTradingAccountManagement.Db.StorageMode == StorageMode.Azure.ToString())
             {
@@ -101,6 +106,8 @@ namespace MarginTrading.AccountsManagement.Modules
             builder.RegisterType<AccuracyService>().As<IAccuracyService>().SingleInstance();
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
             builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance();
+            builder.RegisterType<AuditService>().As<IAuditService>().SingleInstance();
+            builder.RegisterType<StartupManager>().As<IStartupManager>().SingleInstance();
         }
     }
 }
