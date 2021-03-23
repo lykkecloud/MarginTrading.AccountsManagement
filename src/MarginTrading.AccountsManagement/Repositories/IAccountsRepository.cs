@@ -23,7 +23,7 @@ namespace MarginTrading.AccountsManagement.Repositories
 
         Task<PaginatedResponse<IClient>> GetClientsByPagesAsync(int skip, int take);
 
-        Task<IClient> GetClient(string clientId);
+        Task<IClient> GetClient(string clientId, bool includeDeleted = false);
 
         Task UpdateClientTradingCondition(string clientId, string tradingConditionId);
 
