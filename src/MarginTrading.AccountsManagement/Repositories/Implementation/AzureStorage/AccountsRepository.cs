@@ -85,6 +85,16 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.AzureStor
             throw new NotImplementedException();
         }
 
+        public Task<IEnumerable<IClient>> GetAllClients()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<IClient>> GetClients(IEnumerable<string> clientIds)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<IClient> GetClient(string clientId)
         {
             throw new NotImplementedException();

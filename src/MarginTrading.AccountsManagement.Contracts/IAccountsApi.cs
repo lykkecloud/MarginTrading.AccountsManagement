@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Api;
+using MarginTrading.AccountsManagement.Contracts.ErrorCodes;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using Refit;
 
@@ -146,11 +147,23 @@ namespace MarginTrading.AccountsManagement.Contracts
         /// </summary>
         [Get("/api/accounts/client-trading-conditions")]
         Task<PaginatedResponseContract<ClientTradingConditionsContract>> ListClientsTradingConditions([Query] string tradingConditionId, [Query] int skip = 0, [Query] int take = 20);
+        
+        /// <summary>
+        /// Gets all client trading conditions
+        /// </summary>
+        [Get("/api/accounts/client-trading-conditions/all")]
+        Task<IEnumerable<ClientTradingConditionsContract>> GetAllClientTradingConditions();
 
         /// <summary>
-        /// Gets client trading conditions
+        /// Updates client trading conditions
         /// </summary>
         [Patch("/api/accounts/client-trading-conditions")]
-        Task UpdateClientTradingConditions([Body] UpdateClientTradingConditionRequest request);
+        Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([Body] UpdateClientTradingConditionRequest request);
+
+        /// <summary>
+        /// Updates client trading conditions
+        /// </summary>
+        [Patch("/api/accounts/client-trading-conditions/bulk")]
+        Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([Body] UpdateClientTradingConditionsBulkRequest request);
     }
 }

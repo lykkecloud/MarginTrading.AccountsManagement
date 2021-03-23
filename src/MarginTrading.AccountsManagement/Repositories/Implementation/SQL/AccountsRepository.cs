@@ -326,6 +326,19 @@ end
             }
         }
 
+        public async Task<IEnumerable<IClient>> GetClients(IEnumerable<string> clientIds)
+        {
+            await using var conn = new SqlConnection(_settings.Db.ConnectionString);
+            var sqlParams = new { clientIds };
+            return  await conn.QueryAsync<ClientEntity>($"select * from {ClientsTableName} where Id in @{nameof(sqlParams.clientIds)}", sqlParams);
+        }
+
+        public async Task<IEnumerable<IClient>> GetAllClients()
+        {
+            await using var conn = new SqlConnection(_settings.Db.ConnectionString);
+            return await conn.QueryAsync<ClientEntity>($"select * from {ClientsTableName}");
+        }
+
         public async Task<IClient> GetClient(string clientId)
         {
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
