@@ -447,7 +447,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 }
             }
 
-            var clientBeforeUpdate = await _accountsRepository.GetClient(clientId);
+            var clientToAudit = await _accountsRepository.GetClient(clientId, true);
             await _accountsRepository.UpdateClientTradingCondition(clientId, tradingConditionId);
 
             var afterUpdate = await _accountsRepository.GetAllAsync(clientId);
@@ -466,7 +466,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 username,
                 clientId,
                 tradingConditionId,
-                clientBeforeUpdate.TradingConditionId);
+                clientToAudit.TradingConditionId);
 
             return new Result<TradingConditionErrorCodes>();
         }

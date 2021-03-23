@@ -26,7 +26,7 @@ namespace MarginTrading.AccountsManagement.Repositories
         Task<IEnumerable<IClient>> GetClients(IEnumerable<string> clientIds);
         Task<IEnumerable<IClient>> GetAllClients();
 
-        Task<IClient> GetClient(string clientId);
+        Task<IClient> GetClient(string clientId, bool includeDeleted = false);
 
         Task UpdateClientTradingCondition(string clientId, string tradingConditionId);
 
