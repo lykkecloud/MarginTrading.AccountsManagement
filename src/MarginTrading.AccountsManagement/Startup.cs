@@ -84,15 +84,16 @@ namespace MarginTrading.AccountsManagement
                 services.AddSwaggerGen(options =>
                 {
                     options.DefaultLykkeConfiguration("v1", ServiceName + " API");
-                    var contractsXmlPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, 
+                    var contractsXmlPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath,
                         "MarginTrading.AccountsManagement.Contracts.xml");
                     options.IncludeXmlComments(contractsXmlPath);
                     options.OperationFilter<CustomOperationIdOperationFilter>();
-                    if (!string.IsNullOrWhiteSpace(_mtSettingsManager.CurrentValue.MarginTradingAccountManagementServiceClient?.ApiKey))
+                    if (!string.IsNullOrWhiteSpace(_mtSettingsManager.CurrentValue
+                        .MarginTradingAccountManagementServiceClient?.ApiKey))
                     {
                         options.AddApiKeyAwareness();
                     }
-                });
+                }).AddSwaggerGenNewtonsoftSupport();
 
                 services.AddStackExchangeRedisCache(o =>
                 {
