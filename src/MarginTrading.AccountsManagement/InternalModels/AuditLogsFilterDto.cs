@@ -12,9 +12,9 @@ namespace MarginTrading.AccountsManagement.InternalModels
 
         public string UserName { get; set; }
 
-        public AuditEventType? ActionType { get; set; }
+        public string ActionType { get; set; }
 
-        public AuditDataType[] DataTypes { get; set; }
+        public string[] DataTypes { get; set; }
 
         public string ReferenceId { get; set; }
 
