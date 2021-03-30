@@ -1,4 +1,4 @@
-CREATE OR ALTER PROCEDURE [dbo].[SP_UpdateDealCommissionParamsOnAccountHistory](
+CREATE OR ALTER PROCEDURE [dbo].[UpdateDealCommissionParamsOnAccountHistory](
     @ChangeAmount decimal(24, 12),
     @ReasonType [nvarchar](64),
     @EventSourceId [nvarchar](128)
