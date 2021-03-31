@@ -42,27 +42,29 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             take = PaginationHelper.GetTake(take);
 
+            var sqlFilter = filter.AddSqlLikeWildcards();
+
             var whereClause = "WHERE 1=1 "
-                              + (!string.IsNullOrWhiteSpace(filter.UserName)
-                                  ? " AND LOWER(UserName) like LOWER(%@UserName%)"
+                              + (!string.IsNullOrWhiteSpace(sqlFilter.UserName)
+                                  ? " AND LOWER(UserName) like LOWER(@UserName)"
                                   : "")
-                              + (!string.IsNullOrWhiteSpace(filter.CorrelationId)
+                              + (!string.IsNullOrWhiteSpace(sqlFilter.CorrelationId)
                                   ? " AND CorrelationId=@CorrelationId"
                                   : "")
-                              + (!string.IsNullOrWhiteSpace(filter.ReferenceId)
-                                  ? " AND LOWER(ReferenceId) like LOWER(%@ReferenceId%)"
+                              + (!string.IsNullOrWhiteSpace(sqlFilter.ReferenceId)
+                                  ? " AND LOWER(ReferenceId) like LOWER(@ReferenceId)"
                                   : "")
-                              + (filter.DataTypes.Any() ? " AND DataType IN @DataTypes" : "")
-                              + (filter.ActionType != null ? " AND Type=@ActionType" : "")
-                              + (filter.StartDateTime != null ? " AND Timestamp >= @StartDateTime" : "")
-                              + (filter.EndDateTime != null ? " AND Timestamp <= @EndDateTime" : "");
+                              + (sqlFilter.DataTypes.Any() ? " AND DataType IN @DataTypes" : "")
+                              + (sqlFilter.ActionType != null ? " AND Type=@ActionType" : "")
+                              + (sqlFilter.StartDateTime != null ? " AND Timestamp >= @StartDateTime" : "")
+                              + (sqlFilter.EndDateTime != null ? " AND Timestamp <= @EndDateTime" : "");
             
-            var paginationClause = $" ORDER BY [Timestamp] ASC OFFSET {skip ?? 0} ROWS FETCH NEXT {take} ROWS ONLY";
+            var paginationClause = $" ORDER BY [Timestamp] DESC OFFSET {skip ?? 0} ROWS FETCH NEXT {take} ROWS ONLY";
 
             await using var conn = new SqlConnection(_connectionString);
 
             var gridReader = await conn.QueryMultipleAsync(
-                $"SELECT {GetColumns} FROM MarginTradingAccountsAuditTrail WITH (NOLOCK) {whereClause} {paginationClause}; SELECT COUNT(*) FROM MarginTradingAccountsAuditTrail {whereClause}", filter);
+                $"SELECT {GetColumns} FROM MarginTradingAccountsAuditTrail WITH (NOLOCK) {whereClause} {paginationClause}; SELECT COUNT(*) FROM MarginTradingAccountsAuditTrail {whereClause}", sqlFilter);
 
             var contents = (await gridReader.ReadAsync<DbSchema>())
                 .Select(x => x.ToDomain())

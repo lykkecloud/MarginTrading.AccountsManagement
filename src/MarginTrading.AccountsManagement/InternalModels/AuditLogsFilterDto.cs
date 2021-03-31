@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using MarginTrading.AccountsManagement.Dal.Common;
 
 namespace MarginTrading.AccountsManagement.InternalModels
 {
@@ -21,5 +22,19 @@ namespace MarginTrading.AccountsManagement.InternalModels
         public DateTime? StartDateTime { get; set; }
 
         public DateTime? EndDateTime { get; set; }
+
+        public AuditLogsFilterDto AddSqlLikeWildcards()
+        {
+            return new AuditLogsFilterDto
+            {
+                ActionType = ActionType,
+                CorrelationId = CorrelationId,
+                DataTypes = DataTypes,
+                ReferenceId = ReferenceId.AddLikeWildcards(),
+                UserName = UserName.AddLikeWildcards(),
+                EndDateTime = EndDateTime,
+                StartDateTime = StartDateTime
+            };
+        }
     }
 }
