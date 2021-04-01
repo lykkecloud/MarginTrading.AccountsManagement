@@ -41,7 +41,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public async Task<PaginatedResponse<AuditModel>> GetAll(AuditLogsFilterDto filter, int? skip, int? take)
         {
             take = PaginationHelper.GetTake(take);
-
+            
             var sqlFilter = filter.AddSqlLikeWildcards();
 
             var whereClause = "WHERE 1=1 "
@@ -52,7 +52,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
                                   ? " AND CorrelationId=@CorrelationId"
                                   : "")
                               + (!string.IsNullOrWhiteSpace(sqlFilter.ReferenceId)
-                                  ? " AND LOWER(ReferenceId) like LOWER(@ReferenceId)"
+                                  ? " AND LOWER(DataReference) like LOWER(@ReferenceId)"
                                   : "")
                               + (sqlFilter.DataTypes.Any() ? " AND DataType IN @DataTypes" : "")
                               + (sqlFilter.ActionType != null ? " AND Type=@ActionType" : "")
