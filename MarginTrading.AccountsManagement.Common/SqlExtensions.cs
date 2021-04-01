@@ -39,6 +39,9 @@ namespace MarginTrading.AccountsManagement.Dal.Common
         /// <returns></returns>
         public static string AddLikeWildcards(this string source)
         {
+            if (string.IsNullOrWhiteSpace(source))
+                return source;
+            
             return source
                 .AddFirstSymbolIfNotExists(WildcardCharacterAnyString)
                 .AddLastSymbolIfNotExists(WildcardCharacterAnyString);
