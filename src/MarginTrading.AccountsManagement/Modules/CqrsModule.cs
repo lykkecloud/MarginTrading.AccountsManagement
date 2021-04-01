@@ -300,10 +300,8 @@ namespace MarginTrading.AccountsManagement.Modules
         private IRegistration RegisterNegativeProtectionSaga()
         {
             return RegisterSaga<NegativeProtectionSaga>()
-                .ListeningEvents(
-                    typeof(LiquidationFinishedEvent),
-                    typeof(LiquidationFailedEvent))
-                .From(_contextNames.TradingEngine)
+                .ListeningEvents(typeof(AccountChangedEvent))
+                .From(_contextNames.AccountsManagement)
                 .On(DefaultRoute)
                 .PublishingCommands(
                     typeof(NotifyNegativeProtectionInternalCommand))
