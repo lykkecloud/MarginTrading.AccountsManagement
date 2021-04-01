@@ -17,8 +17,9 @@ namespace MarginTrading.AccountsManagement.Services
         /// Charging is called with a special type "CompensationPayments", event is logged in a common way.
         /// </summary>
         /// <param name="operationId"></param>
-        /// <param name="account"></param>
+        /// <param name="accountId"></param>
+        /// <param name="balance"></param>
         /// <returns></returns>
-        Task<decimal?> CheckAsync(string operationId, IAccount account);
+        Task<decimal?> CheckAsync(string operationId, string accountId, decimal balance);
     }
 }

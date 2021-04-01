@@ -4,7 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using MarginTrading.AccountsManagement.InternalModels;
-using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Settings;
 using Microsoft.Extensions.Internal;
 
@@ -26,17 +25,17 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _negativeProtectionAutoCompensation = accountManagementSettings.NegativeProtectionAutoCompensation;
         }
         
-        public async Task<decimal?> CheckAsync(string operationId, IAccount account)
+        public async Task<decimal?> CheckAsync(string operationId, string accountId, decimal balance)
         {
-            if (account == null || account.Balance >= 0)
+            if (balance >= 0)
                 return null;
             
-            var amount = Math.Abs(account.Balance);
+            var amount = Math.Abs(balance);
 
             if (_negativeProtectionAutoCompensation)
             {
                 await _sendBalanceCommandsService.ChargeManuallyAsync(
-                    account.Id,
+                    accountId,
                     amount,
                     $"{operationId}-negative-protection",
                     "Negative protection",

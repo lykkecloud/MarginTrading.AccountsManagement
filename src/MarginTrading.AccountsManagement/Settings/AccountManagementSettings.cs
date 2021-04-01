@@ -39,9 +39,6 @@ namespace MarginTrading.AccountsManagement.Settings
         [Optional] 
         public bool NegativeProtectionAutoCompensation { get; set; } = true;
 
-        [Optional]
-        public int NegativeProtectionTimeoutMs { get; set; } = 30000;
-
         [Optional, CanBeNull]
         public ChaosSettings ChaosKitty { get; set; }
         
