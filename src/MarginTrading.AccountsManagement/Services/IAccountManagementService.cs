@@ -80,7 +80,7 @@ namespace MarginTrading.AccountsManagement.Services
 
         #region ComplexityWarning
 
-        Task UpdateComplexityWarningFlag(string accountId, bool shouldShowProductComplexityWarning);
+        Task UpdateComplexityWarningFlag(string accountId, bool shouldShowProductComplexityWarning, string orderId = null);
 
         #endregion
     }

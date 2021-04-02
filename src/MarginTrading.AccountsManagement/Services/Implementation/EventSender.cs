@@ -29,15 +29,16 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
         public void SendAccountChangedEvent(string source, IAccount account, AccountChangedEventTypeContract eventType,
             string operationId, AccountBalanceChangeContract balanceChangeContract = null, 
-            IAccount previousSnapshot = null)
+            IAccount previousSnapshot = null,
+            string orderId = null)
         {
-            var metadata = previousSnapshot != null
-                ? new AccountChangeMetadata
-                {
-                    PreviousAccountSnapshot =
-                        _convertService.Convert<IAccount, AccountContract>(previousSnapshot)
-                }
-                : null;
+            var metadata = new AccountChangeMetadata {OrderId = orderId};
+
+            if (previousSnapshot != null)
+            {
+                metadata.PreviousAccountSnapshot =
+                    _convertService.Convert<IAccount, AccountContract>(previousSnapshot);
+            }
 
             CqrsEngine.PublishEvent(
                 new AccountChangedEvent(
