@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Common;
-using Common.Log;   
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -19,16 +18,13 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         private readonly IConvertService _convertService;
         public ICqrsEngine CqrsEngine { get; set; }//property injection
         private readonly CqrsContextNamesSettings _contextNames;
-        private readonly ILog _log;
 
         public EventSender(
             IConvertService convertService,
-            CqrsContextNamesSettings contextNames,
-            ILog log)
+            CqrsContextNamesSettings contextNames)
         {
             _convertService = convertService;
             _contextNames = contextNames;
-            _log = log;
         }
 
         public void SendAccountChangedEvent(string source, IAccount account, AccountChangedEventTypeContract eventType,
@@ -36,7 +32,6 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             IAccount previousSnapshot = null,
             string orderId = null)
         {
-            _log.WriteInfo(nameof(EventSender), nameof(SendAccountChangedEvent), $"SendAccountChangedEvent: AccountId {account.Id}, OrderId {orderId}");
             var metadata = new AccountChangeMetadata {OrderId = orderId};
 
             if (previousSnapshot != null)
