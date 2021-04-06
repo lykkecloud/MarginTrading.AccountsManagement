@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using Lykke.Snow.Common.Model;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -505,6 +506,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         public async Task UpdateComplexityWarningFlag(string accountId, bool shouldShowProductComplexityWarning,
             string orderId = null)
         {
+            _log.WriteInfo(nameof(AccountManagementService), nameof(UpdateComplexityWarningFlag), $"UpdateComplexityWarningFlag: AccountId {accountId}, OrderId: {orderId}");
             var previousSnapshot = await EnsureAccountValidAsync(accountId, skipDeleteValidation: true);
 
             var updated= await _accountsRepository.UpdateAdditionalInfo(previousSnapshot.Id, s =>

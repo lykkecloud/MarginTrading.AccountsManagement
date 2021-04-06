@@ -96,6 +96,7 @@ namespace MarginTrading.AccountsManagement.Workflow.ProductComplexity
 
             if (confirmationFlagShouldBeSwitched)
             {
+                _log.LogWarning(nameof(OrderHistoryListener), nameof(Handle), $"Listener: AccountId {order.AccountId}, OrderId: {order.Id}");
                 await _accountManagementService.UpdateComplexityWarningFlag(order.AccountId, shouldShowProductComplexityWarning: false, order.Id);
 
                 _log.LogInformation($"Flag {BrokerFeature.ProductComplexityWarning} for account {entity.AccountId} is switched to off");
