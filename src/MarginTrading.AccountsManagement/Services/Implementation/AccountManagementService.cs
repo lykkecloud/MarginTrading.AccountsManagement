@@ -472,7 +472,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             return new Result<TradingConditionErrorCodes>();
         }
 
-        public async Task<Result<TradingConditionErrorCodes>> UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates)
+        public async Task<Result<TradingConditionErrorCodes>> UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates, string username, string correlationId)
         {
             var clientsInDb =  (await _accountsRepository.GetClients(updates.Select(p => p.clientId)))
                 .ToDictionary(p => p.Id);
@@ -492,7 +492,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                     continue;
                 }
 
-                var tradingConditionUpdateResult = await UpdateClientTradingCondition(clientId, tradingConditionId);
+                var tradingConditionUpdateResult = await UpdateClientTradingCondition(clientId, tradingConditionId, username, correlationId);
                 if (tradingConditionUpdateResult.IsFailed)
                     return tradingConditionUpdateResult;
             }
