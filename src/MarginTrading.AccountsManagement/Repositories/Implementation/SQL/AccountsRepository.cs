@@ -310,7 +310,7 @@ end
         {
             using (var conn = new SqlConnection(_settings.Db.ConnectionString))
             {
-                var whereClause = $"WHERE exists (select 1 from {AccountsTableName} a where a.ClientId = c.Id){(string.IsNullOrEmpty(tradingConditionId) ? "" : " and c.TradingConditionId = @tradingConditionId")}";
+                var whereClause = $"WHERE exists (select 1 from MarginTradingAccounts a where a.ClientId = c.Id and a.IsDeleted = 0){(string.IsNullOrEmpty(tradingConditionId) ? "" : " and c.TradingConditionId = @tradingConditionId")}";
                 var paginationClause = $" ORDER BY [Id] ASC OFFSET {skip} ROWS FETCH NEXT {PaginationHelper.GetTake(take)} ROWS ONLY";
                 var gridReader = await conn.QueryMultipleAsync($"SELECT * FROM {ClientsTableName} c {whereClause} {paginationClause}; " +
                                                                $"SELECT COUNT(*) FROM {ClientsTableName} c {whereClause}", new {tradingConditionId});
@@ -325,7 +325,7 @@ end
                 );
             }
         }
-
+        
         public async Task<IEnumerable<IClient>> GetClients(IEnumerable<string> clientIds)
         {
             await using var conn = new SqlConnection(_settings.Db.ConnectionString);
