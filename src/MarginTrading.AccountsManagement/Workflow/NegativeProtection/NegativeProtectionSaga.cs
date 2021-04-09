@@ -21,6 +21,8 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
         private readonly INegativeProtectionService _negativeProtectionService;
         private readonly IAccountsRepository _accountsRepository;
         private readonly ISystemClock _systemClock;
+        
+        public static string CompensationTransactionSource = "NegativeProtectionService";
 
         public NegativeProtectionSaga(
             CqrsContextNamesSettings contextNames,
@@ -41,9 +43,15 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
                 return;
             if (evt.BalanceChange == null)
                 return;
+            // Protection: do not consider own transactions
+            if (evt.Source == CompensationTransactionSource)
+                return;
             
             var account = await _accountsRepository.GetAsync(evt.Account.Id);
-            var amount = await _negativeProtectionService.CheckAsync(evt.OperationId, evt.Account.Id, evt.BalanceChange.Balance);
+            var amount = await _negativeProtectionService.CheckAsync(evt.OperationId,
+                evt.Account.Id,
+                evt.BalanceChange.Balance,
+                evt.BalanceChange.ChangeAmount);
 
             if (account == null || amount == null)
             {
