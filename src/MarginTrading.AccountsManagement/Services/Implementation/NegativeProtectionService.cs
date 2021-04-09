@@ -1,10 +1,11 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
+using static System.Math;
 using System.Threading.Tasks;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
+using MarginTrading.AccountsManagement.Workflow.NegativeProtection;
 using Microsoft.Extensions.Internal;
 
 namespace MarginTrading.AccountsManagement.Services.Implementation
@@ -25,21 +26,23 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
             _negativeProtectionAutoCompensation = accountManagementSettings.NegativeProtectionAutoCompensation;
         }
         
-        public async Task<decimal?> CheckAsync(string operationId, string accountId, decimal balance)
+        public async Task<decimal?> CheckAsync(string operationId, string accountId, decimal newBalance, decimal changeAmount)
         {
-            if (balance >= 0)
+            if (newBalance >= 0)
                 return null;
-            
-            var amount = Math.Abs(balance);
+
+            // If the balance had already been negative before change happened we compensate only changeAmount
+            // If the balance had been positive before change happened we compensate the difference 
+            var compensationAmount = newBalance < changeAmount ? Abs(changeAmount) : Abs(newBalance); 
 
             if (_negativeProtectionAutoCompensation)
             {
                 await _sendBalanceCommandsService.ChargeManuallyAsync(
                     accountId,
-                    amount,
+                    compensationAmount, 
                     $"{operationId}-negative-protection",
                     "Negative protection",
-                    nameof(NegativeProtectionService),
+                    NegativeProtectionSaga.CompensationTransactionSource,
                     null,
                     AccountBalanceChangeReasonType.CompensationPayments,
                     operationId,
@@ -48,7 +51,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 );
             }
 
-            return amount;
+            return compensationAmount;
         }
     }
 }
