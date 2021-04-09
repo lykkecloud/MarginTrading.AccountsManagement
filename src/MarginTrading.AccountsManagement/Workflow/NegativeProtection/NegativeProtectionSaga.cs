@@ -42,8 +42,6 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
                 return;
             if (evt.BalanceChange == null)
                 return;
-            if (evt.Source == nameof(NegativeProtectionService))
-                return;
             
             var account = await _accountsRepository.GetAsync(evt.Account.Id);
             var amount = await _negativeProtectionService.CheckAsync(evt.OperationId, evt.Account.Id, evt.BalanceChange.Balance);
