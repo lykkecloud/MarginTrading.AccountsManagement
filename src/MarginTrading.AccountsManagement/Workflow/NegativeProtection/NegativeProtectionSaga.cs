@@ -9,6 +9,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AccountsManagement.Repositories;
 using MarginTrading.AccountsManagement.Services;
+using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection.Commands;
 using Microsoft.Extensions.Internal;
@@ -40,6 +41,8 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
             if (evt.EventType != AccountChangedEventTypeContract.BalanceUpdated)
                 return;
             if (evt.BalanceChange == null)
+                return;
+            if (evt.Source == nameof(NegativeProtectionService))
                 return;
             
             var account = await _accountsRepository.GetAsync(evt.Account.Id);
