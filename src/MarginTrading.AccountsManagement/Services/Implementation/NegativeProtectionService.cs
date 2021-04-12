@@ -28,7 +28,7 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         
         public async Task<decimal?> CheckAsync(string operationId, string accountId, decimal newBalance, decimal changeAmount)
         {
-            if (newBalance >= 0)
+            if (newBalance >= 0 || changeAmount > 0)
                 return null;
 
             // If the balance had already been negative before change happened we compensate only changeAmount
