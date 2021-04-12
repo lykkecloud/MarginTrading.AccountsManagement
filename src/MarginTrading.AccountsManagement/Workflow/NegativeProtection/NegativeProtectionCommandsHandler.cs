@@ -32,9 +32,7 @@ namespace MarginTrading.AccountsManagement.Workflow.NegativeProtection
                 command.ClientId,
                 command.AccountId,
                 command.Amount,
-                _accountManagementSettings.NegativeProtectionAutoCompensation,
-                command.OpenPositionsRemainingOnAccount,
-                command.CurrentTotalCapital
+                _accountManagementSettings.NegativeProtectionAutoCompensation
             ));
         }
     }
