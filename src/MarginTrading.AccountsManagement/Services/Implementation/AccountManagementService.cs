@@ -493,7 +493,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
         #region ComplexityWarning
 
 
-        public async Task UpdateComplexityWarningFlag(string accountId, bool shouldShowProductComplexityWarning)
+        public async Task UpdateComplexityWarningFlag(string accountId, bool shouldShowProductComplexityWarning,
+            string orderId = null)
         {
             var previousSnapshot = await EnsureAccountValidAsync(accountId, skipDeleteValidation: true);
 
@@ -507,7 +508,8 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
                 updated,
                 AccountChangedEventTypeContract.Updated,
                 Guid.NewGuid().ToString("N"),
-                previousSnapshot: previousSnapshot);
+                previousSnapshot: previousSnapshot,
+                orderId: orderId);
         }
 
         #endregion

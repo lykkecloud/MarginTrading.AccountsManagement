@@ -12,5 +12,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Models
         /// Account state before action, that generated event
         /// </summary>
         public AccountContract PreviousAccountSnapshot { get; set; }
+
+        /// <summary>
+        /// Id of the order that disabled "handwritten confirm required" flag
+        /// </summary>
+        public string OrderId { get; set; }
     }
 }
