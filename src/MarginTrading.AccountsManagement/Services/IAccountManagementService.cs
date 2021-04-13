@@ -72,9 +72,9 @@ namespace MarginTrading.AccountsManagement.Services
 
         Task ClearStatsCache(string accountId);
 
-        Task<Result<TradingConditionErrorCodes>> UpdateClientTradingCondition(string clientId, string tradingConditionId);
+        Task<Result<TradingConditionErrorCodes>> UpdateClientTradingCondition(string clientId, string tradingConditionId, string username, string correlationId);
 
-        Task<Result<TradingConditionErrorCodes>> UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates);
+        Task<Result<TradingConditionErrorCodes>> UpdateClientTradingConditions(IReadOnlyList<(string clientId, string tradingConditionId)> updates, string username, string correlationId);
 
         #endregion
 

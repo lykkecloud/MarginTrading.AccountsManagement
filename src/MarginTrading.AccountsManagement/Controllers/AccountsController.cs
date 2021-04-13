@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Snow.Common.Startup;
 using Lykke.Snow.Mdm.Contracts.Api;
 using Lykke.Snow.Mdm.Contracts.Models.Contracts;
 using MarginTrading.AccountsManagement.Contracts;
@@ -177,41 +178,51 @@ namespace MarginTrading.AccountsManagement.Controllers
             return result.Select(x => _convertService.Convert<IClient, ClientTradingConditionsContract>(x)).ToList();
         }
 
+        /// <summary>
+        /// Update trading condition for client across all accounts
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPatch]
         [Route("client-trading-conditions")]
-        public async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionRequest request)
+        public async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([FromBody] UpdateClientTradingConditionRequest request)
         {
-            var result = await _accountManagementService.UpdateClientTradingCondition(clientId: request.ClientId,
-                tradingConditionId: request.TradingConditionId);
+            var result = await _accountManagementService.UpdateClientTradingCondition(request.ClientId,
+                request.TradingConditionId,
+                request.Username,
+                this.TryGetCorrelationId());
 
             var response = new ErrorCodeResponse<TradingConditionErrorCodesContract>();
             if (result.IsFailed)
             {
                 response.ErrorCode =
-                    _convertService.Convert<TradingConditionErrorCodes, TradingConditionErrorCodesContract>(
-                        result.Error.Value);
+                    _convertService.Convert<TradingConditionErrorCodes, TradingConditionErrorCodesContract>(result.Error.Value);
             }
             
 
             return response;
         }
-        
+
         [HttpPatch]
         [Route("client-trading-conditions/bulk")]
-        public async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions([FromBody]UpdateClientTradingConditionsBulkRequest request)
+        public async Task<ErrorCodeResponse<TradingConditionErrorCodesContract>> UpdateClientTradingConditions(
+            [FromBody] UpdateClientTradingConditionsBulkRequest request)
         {
             var updates = request.Updates.Select(p => (p.ClientId, p.TradingConditionId)).ToList();
-            var result = await _accountManagementService.UpdateClientTradingConditions(updates);
+            var result = await _accountManagementService.UpdateClientTradingConditions(updates, 
+                request.Username, 
+                this.TryGetCorrelationId());
 
             var response = new ErrorCodeResponse<TradingConditionErrorCodesContract>();
             if (result.IsFailed)
             {
-                response.ErrorCode = _convertService.Convert<TradingConditionErrorCodes, TradingConditionErrorCodesContract>(result.Error.Value);
+                response.ErrorCode =
+                    _convertService.Convert<TradingConditionErrorCodes, TradingConditionErrorCodesContract>(result.Error.Value);
             }
 
             return response;
         }
-        
+
         /// <summary>
         /// Creates an account
         /// </summary>
@@ -300,7 +311,7 @@ namespace MarginTrading.AccountsManagement.Controllers
         /// Delete accounts. For TEST purposes only!
         /// </summary>
         [HttpPost("delete")]
-        public async Task Delete([Body] List<string> accountIds)
+        public Task Delete([Body] List<string> accountIds)
         {
             accountIds.RequiredNotNullOrEmpty(nameof(accountIds), $"{nameof(accountIds)} must be set.");
 
@@ -311,6 +322,8 @@ namespace MarginTrading.AccountsManagement.Controllers
                 AccountIds = accountIds,
                 Comment = "Started from API for test purposes.",
             });
+            
+            return Task.CompletedTask;
         }
 
         #endregion CRUD
@@ -635,11 +648,6 @@ namespace MarginTrading.AccountsManagement.Controllers
         private AccountContract Convert(IAccount account)
         {
             return _convertService.Convert<IAccount, AccountContract>(account);
-        }
-
-        private Account Convert(AccountContract account)
-        {
-            return _convertService.Convert<AccountContract, Account>(account);
         }
     }
 }

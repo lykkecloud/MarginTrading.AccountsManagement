@@ -28,6 +28,7 @@ using MarginTrading.AccountsManagement.Extensions;
 using MarginTrading.AccountsManagement.Infrastructure.Implementation;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Modules;
+using MarginTrading.AccountsManagement.Services;
 using MarginTrading.AccountsManagement.Services.Implementation;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.ProductComplexity;
@@ -83,15 +84,16 @@ namespace MarginTrading.AccountsManagement
                 services.AddSwaggerGen(options =>
                 {
                     options.DefaultLykkeConfiguration("v1", ServiceName + " API");
-                    var contractsXmlPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath, 
+                    var contractsXmlPath = Path.Combine(PlatformServices.Default.Application.ApplicationBasePath,
                         "MarginTrading.AccountsManagement.Contracts.xml");
                     options.IncludeXmlComments(contractsXmlPath);
                     options.OperationFilter<CustomOperationIdOperationFilter>();
-                    if (!string.IsNullOrWhiteSpace(_mtSettingsManager.CurrentValue.MarginTradingAccountManagementServiceClient?.ApiKey))
+                    if (!string.IsNullOrWhiteSpace(_mtSettingsManager.CurrentValue
+                        .MarginTradingAccountManagementServiceClient?.ApiKey))
                     {
                         options.AddApiKeyAwareness();
                     }
-                });
+                }).AddSwaggerGenNewtonsoftSupport();
 
                 services.AddStackExchangeRedisCache(o =>
                 {
@@ -178,6 +180,8 @@ namespace MarginTrading.AccountsManagement
             {
                 // NOTE: Service not yet receives and processes requests here
                 Program.AppHost.WriteLogs(Environment, LogLocator.Log);
+
+                await ApplicationContainer.Resolve<IStartupManager>().StartAsync();
 
                 await Log.WriteMonitorAsync("", "", "Started");
             }

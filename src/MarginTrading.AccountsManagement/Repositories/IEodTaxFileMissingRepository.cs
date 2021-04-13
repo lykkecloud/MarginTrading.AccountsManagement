@@ -9,6 +9,7 @@ namespace MarginTrading.AccountsManagement.Repositories
 {
     public interface IEodTaxFileMissingRepository
     {
+        void Initialize();
         Task AddAsync(DateTime tradingDay);
         Task RemoveAsync(DateTime tradingDay);
         Task<IEnumerable<DateTime>> GetAllDaysAsync();
