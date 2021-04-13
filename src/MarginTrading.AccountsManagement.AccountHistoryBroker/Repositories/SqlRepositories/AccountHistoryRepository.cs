@@ -33,7 +33,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
             _settings = settings;
             _convertService = convertService;
             _settings.Db.ConnString.InitializeSqlObject("dbo.AccountHistory.sql", log);
-            _settings.Db.ConnString.InitializeSqlObject("dbo.SP_UpdateDealCommissionParamsOnAccountHistory.sql", log);
+            _settings.Db.ConnString.InitializeSqlObject("dbo.UpdateDealCommissionParamsOnAccountHistory.sql", log);
         }
 
         public async Task InsertAsync(IAccountHistory obj)
@@ -88,7 +88,7 @@ namespace MarginTrading.AccountsManagement.AccountHistoryBroker.Repositories.Sql
 
                     using (var conn = new SqlConnection(_settings.Db.ConnString))
                     {
-                        await conn.ExecuteAsync("[dbo].[SP_UpdateDealCommissionParamsOnAccountHistory]",
+                        await conn.ExecuteAsync("[dbo].[UpdateDealCommissionParamsOnAccountHistory]",
                             new
                             {
                                 ChangeAmount = obj.ChangeAmount,
