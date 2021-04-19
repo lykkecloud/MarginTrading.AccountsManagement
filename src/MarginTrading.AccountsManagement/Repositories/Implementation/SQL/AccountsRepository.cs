@@ -205,8 +205,6 @@ end;
 
                     if (changeLimit)
                         account.WithdrawTransferLimit += amountDelta;
-                    
-                    account.ModificationTimestamp = _systemClock.UtcNow.UtcDateTime;
                 }
             });
         }
@@ -425,6 +423,8 @@ end
                         throw new InvalidOperationException($"Update of {account.TradingConditionId} is not allowed on per account level. " +
                                                             $"Use Update for {ClientsTableName} table");
                     }
+
+                    account.ModificationTimestamp = _systemClock.UtcNow.UtcDateTime;
 
                     await conn.ExecuteAsync(
                         $"update {AccountsTableName} set {GetAccountUpdateClause} where Id=@Id", account, transaction);
