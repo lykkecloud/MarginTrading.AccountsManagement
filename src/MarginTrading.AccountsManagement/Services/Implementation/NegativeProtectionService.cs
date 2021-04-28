@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Common;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.InternalModels.Interfaces;
 using MarginTrading.AccountsManagement.Settings;
@@ -35,13 +36,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             if (_negativeProtectionAutoCompensation)
             {
+                var auditLog = new {CreatedAt = DateTime.UtcNow};
+                
                 await _sendBalanceCommandsService.ChargeManuallyAsync(
                     account.Id,
                     amount,
                     $"{operationId}-negative-protection",
                     "Negative protection",
                     nameof(NegativeProtectionService),
-                    null,
+                    auditLog.ToJson(),
                     AccountBalanceChangeReasonType.CompensationPayments,
                     operationId,
                     null,
