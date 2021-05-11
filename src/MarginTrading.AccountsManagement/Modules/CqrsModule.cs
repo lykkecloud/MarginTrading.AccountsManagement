@@ -277,11 +277,13 @@ namespace MarginTrading.AccountsManagement.Modules
                     typeof(UpdateBalanceInternalCommand),
                     typeof(ChangeBalanceCommand))
                 .On(DefaultRoute)
+                .ProcessingOptions(DefaultRoute).MultiThreaded(10).QueueCapacity(1024)
                 .WithCommandsHandler<UpdateBalanceCommandsHandler>()
                 .PublishingEvents(
                     typeof(AccountChangedEvent),
                     typeof(AccountBalanceChangeFailedEvent))
-                .With(DefaultPipeline);
+                .With(DefaultPipeline)
+                .ProcessingOptions(DefaultPipeline).MultiThreaded(10).QueueCapacity(1024);
         }
 
         private IRegistration RegisterClosePositionSaga()
