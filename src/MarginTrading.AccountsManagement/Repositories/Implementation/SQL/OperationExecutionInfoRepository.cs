@@ -37,7 +37,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         private static readonly string GetUpdateClause = string.Join(",", 
             DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
-        private readonly AccountManagementSettings _settings;
+        private readonly string _connectionString;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
 
@@ -45,10 +45,10 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
             ILog log, ISystemClock systemClock)
         {
             _log = log;
-            _settings = settings;
+            _connectionString = settings.Db.ConnectionString;
             _systemClock = systemClock;
             
-            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            using (var conn = new SqlConnection(_connectionString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
@@ -64,22 +64,21 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             try
             {
-                using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+                using (var conn = new SqlConnection(_connectionString))
                 {
+                    var entity = Convert(factory(), _systemClock.UtcNow.UtcDateTime);
+
+                    // Here "update when matched" is made as a workaround to get the entity back within inserted
+                    // collection when it has already existed before
                     var operationInfo = await conn.QueryFirstOrDefaultAsync<OperationExecutionInfoEntity>(
-                        $"SELECT * FROM {TableName} WHERE Id=@operationId and OperationName=@operationName",
-                        new {operationId, operationName});
-
-                    if (operationInfo == null)
-                    {
-                        var entity = Convert(factory(), _systemClock.UtcNow.UtcDateTime);
-
-                        await conn.ExecuteAsync(
-                            $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
-
-                        return Convert<TData>(entity);
-                    }
-
+                        $@"MERGE {TableName} AS target 
+USING (SELECT @Id, @OperationName) AS source (Id, OperationName)
+ON (target.Id = source.Id AND target.OperationName = source.OperationName)
+WHEN MATCHED THEN UPDATE SET target.Id = source.Id
+WHEN NOT MATCHED THEN
+    INSERT ({GetColumns}) VALUES ({GetFields})
+OUTPUT inserted.*;", entity);
+                    
                     return Convert<TData>(operationInfo);
                 }
             }
@@ -92,7 +91,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
 
         public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
         {
-            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            using (var conn = new SqlConnection(_connectionString))
             {
                 var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
                     $"SELECT * FROM {TableName} WHERE Id = @id and OperationName=@operationName",
@@ -105,9 +104,9 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         public async Task SaveAsync<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             var entity = Convert(executionInfo, _systemClock.UtcNow.UtcDateTime);
-            var affectedRows = 0;
+            int affectedRows;
             
-            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            using (var conn = new SqlConnection(_connectionString))
             {
                 try
                 {
@@ -145,7 +144,7 @@ namespace MarginTrading.AccountsManagement.Repositories.Implementation.SQL
         {
             var entity = Convert(executionInfo, _systemClock.UtcNow.UtcDateTime);
             
-            using (var conn = new SqlConnection(_settings.Db.ConnectionString))
+            using (var conn = new SqlConnection(_connectionString))
             {
                 try
                 {
