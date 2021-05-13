@@ -69,6 +69,7 @@ namespace MarginTrading.AccountsManagement
             try
             {
                 services
+                    .AddApplicationInsightsTelemetry()
                     .AddControllers()
                     .AddNewtonsoftJson(options =>
                     {
