@@ -108,7 +108,6 @@ namespace MarginTrading.AccountsManagement
 
                 services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(Log));
 
-                services.AddApplicationInsightsTelemetry();
                 services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MarginTradingAccountManagement.BrokerId);
                 services.AddProductComplexity(_mtSettingsManager.CurrentValue);
             }
