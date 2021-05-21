@@ -69,6 +69,7 @@ namespace MarginTrading.AccountsManagement
             try
             {
                 services
+                    .AddApplicationInsightsTelemetry()
                     .AddControllers()
                     .AddNewtonsoftJson(options =>
                     {
@@ -107,7 +108,6 @@ namespace MarginTrading.AccountsManagement
 
                 services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(Log));
 
-                services.AddApplicationInsightsTelemetry();
                 services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MarginTradingAccountManagement.BrokerId);
                 services.AddProductComplexity(_mtSettingsManager.CurrentValue);
             }
