@@ -10,6 +10,12 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// <summary>
     /// Event is produced when negative protection is launched on any account.
     /// </summary>
+    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    /// ============================= MODIFICATION RESTRICTION NOTE =========================================
+    /// Please note, this contract modification has to go throw confirmation procedure with BNPP since it
+    /// is used for notification purposes and there is a source code which deserializes this kind of messages 
+    /// ====================================== END OF NOTE ==================================================
+    /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
     [MessagePackObject]
     public class NegativeProtectionEvent
     {
@@ -62,4 +68,10 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
             IsAutoCompensated = isAutoCompensated;
         }
     }
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // ============================= MODIFICATION RESTRICTION NOTE =========================================
+    // Please note, this contract modification has to go throw confirmation procedure with BNPP since it
+    // is used for notification purposes and there is a source code which deserializes this kind of messages 
+    // ====================================== END OF NOTE ==================================================
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 }
