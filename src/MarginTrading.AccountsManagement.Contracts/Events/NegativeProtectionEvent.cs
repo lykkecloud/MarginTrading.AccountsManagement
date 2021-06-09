@@ -12,7 +12,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     /// </summary>
     /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     /// ============================= MODIFICATION RESTRICTION NOTE =========================================
-    /// Please note, this contract modification has to go throw confirmation procedure with BNPP since it
+    /// Please note, this contract modification has to go through confirmation procedure with BNPP since it
     /// is used for notification purposes and there is a source code which deserializes this kind of messages 
     /// ====================================== END OF NOTE ==================================================
     /// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
@@ -70,7 +70,7 @@ namespace MarginTrading.AccountsManagement.Contracts.Events
     }
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // ============================= MODIFICATION RESTRICTION NOTE =========================================
-    // Please note, this contract modification has to go throw confirmation procedure with BNPP since it
+    // Please note, this contract modification has to go through confirmation procedure with BNPP since it
     // is used for notification purposes and there is a source code which deserializes this kind of messages 
     // ====================================== END OF NOTE ==================================================
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
