@@ -1,8 +1,10 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using static System.Math;
 using System.Threading.Tasks;
+using Common;
 using MarginTrading.AccountsManagement.InternalModels;
 using MarginTrading.AccountsManagement.Settings;
 using MarginTrading.AccountsManagement.Workflow.NegativeProtection;
@@ -37,13 +39,15 @@ namespace MarginTrading.AccountsManagement.Services.Implementation
 
             if (_negativeProtectionAutoCompensation)
             {
+                var auditLog = new {CreatedAt = DateTime.UtcNow};
+                
                 await _sendBalanceCommandsService.ChargeManuallyAsync(
                     accountId,
                     compensationAmount, 
                     $"{operationId}-negative-protection",
                     "Negative protection",
                     NegativeProtectionSaga.CompensationTransactionSource,
-                    null,
+                    auditLog.ToJson(),
                     AccountBalanceChangeReasonType.CompensationPayments,
                     operationId,
                     null,
